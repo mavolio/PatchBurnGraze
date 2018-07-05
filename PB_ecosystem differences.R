@@ -1,6 +1,7 @@
 library(tidyverse)
 library(codyn)
 library(vegan)
+library(gridExtra)
 
 theme_set(theme_bw(12))
 
@@ -21,7 +22,7 @@ calibrate<-dp_calibration%>%
          total = (Lvgrass+Forbs+Pdead+Woody)*10)
 
 #2011
-summary(lm(Diskht~total-1, data = subset(calibrate, Recyear == 2011))) #hgt = 0.37519*biomass # 2011 is odd using the average of all other years instead. hgt = 0.028253*biomass
+summary(lm(Diskht~total-1, data = subset(calibrate, Recyear == 2011))) #hgt = 0.37519*biomass 
 #2012
 summary(lm(Diskht~total-1, data = subset(calibrate, Recyear == 2012))) #hgt = 0.019592*biomass
 #2013
@@ -37,11 +38,32 @@ summary(lm(Diskht~live-1, data = subset(calibrate, Recyear == 2017))) #hgt = 0.0
 
   
 dp2<-dp%>%
-  mutate(treatment = ifelse(Watershed == "c01a"|Watershed == "c1sb", "A", "PB"))%>%
-  mutate(replicate = ifelse(Watershed == "c01A", "A1", ifelse(Watershed == "C1SB", "A2", ifelse(Watershed == "C03A"|Watershed == "C03B"|Watershed == "C03C", "PB1", "PB2"))))%>%
-  mutate(id = paste(Watershed, Transect, Plot, treatment, replicate, sep = "_"))%>%
-  filter(RecYear > 2010)%>%
-  mutate(biomass = )
+  mutate(ws = toupper(Watershed))%>%
+  mutate(treatment = ifelse(ws == "C01A"|ws == "C1SB", "A", "PB"))%>%
+  mutate(replicate = ifelse(ws == "C01A", "A1", ifelse(ws == "C1SB", "A2", ifelse(ws == "C03A"|ws == "C03B"|ws == "C03C", "PB1", "PB2"))))%>%
+  filter(Recyear > 2010)%>%
+  mutate(hgt = (ADiskHT + BDiskHT)/2,
+         biomass = ifelse(Recyear == 2011, hgt/0.37519, 
+                   ifelse(Recyear == 2012, hgt/0.019592, 
+                   ifelse(Recyear == 2013, hgt/0.036573, 
+                   ifelse(Recyear == 2014, hgt/0.026650,
+                   ifelse(Recyear == 2015, hgt/0.024470,
+                   ifelse(Recyear == 2016, hgt/0.027521, hgt/0.034714)))))))
+
+dp_ave<-dp2%>%
+  group_by(ws, Recyear, treatment, replicate, Transect)%>%
+  summarize(biomass2 = mean(biomass))%>%
+  ungroup()%>%
+  group_by(ws, Recyear, treatment, replicate)%>%
+  summarize(biomass3 = mean(biomass2))%>%
+  ungroup()%>%
+  group_by(treatment, Recyear, replicate)%>%
+  summarize(biomass4 = mean(biomass3))%>%
+  ungroup()%>%
+  group_by(Recyear, treatment)%>%
+  summarize(ave = mean(biomass4),
+            sd = sd(biomass4))%>%
+  mutate(se = sd / sqrt(2))
 
 ###plants
 clean<-plant%>%
@@ -97,7 +119,52 @@ mean_rich<-Richness%>%
   group_by(treatment, RecYear)%>%
   summarize(mrich=mean(rrich), se=(sd(rrich)/sqrt(2)))
 
-###
+###grasshoppers
+gh2<-grasshoppers%>%
+  filter(Watershed != "001D")%>%
+  filter(Watershed != "004B")%>%
+  filter(Recyear > 2010)%>%
+  mutate(treatment = ifelse(Watershed == "C01A"|Watershed == "C1SB", "A", "PB"))%>%
+  mutate(replicate = ifelse(Watershed == "C01A", "A1", ifelse(Watershed == "C1SB", "A2", ifelse(Watershed == "C03A"|Watershed == "C03B"|Watershed == "C03C", "PB1", "PB2"))))%>%
+  group_by(Recyear, Watershed, Site, treatment, replicate)%>%
+  summarize(num = sum(Count))
+
+gh_ave<-gh2%>%
+  group_by(Watershed, Recyear, treatment, replicate, Site)%>%
+  summarize(num2 = mean(num))%>%
+  ungroup()%>%
+  group_by(Watershed, Recyear, treatment, replicate)%>%
+  summarize(num3 = mean(num2))%>%
+  ungroup()%>%
+  group_by(treatment, Recyear, replicate)%>%
+  summarize(num4 = mean(num3))%>%
+  ungroup()%>%
+  group_by(Recyear, treatment)%>%
+  summarize(ave = mean(num4),
+            sd = sd(num4))%>%
+  mutate(se = sd / sqrt(2))
+
+##birds
+birds2<-birds%>%
+  filter(Watershed != "1D")%>%
+  mutate(treatment = ifelse(Watershed == "C1A","A", "PB"))%>%
+  mutate(present = ifelse(Vdetection == 1 |Sdetection == 1|Cdetection == 1|Fly == 1|Flush == 1, 1, 0))%>%
+  mutate(num = ifelse(is.na(GroupSize), 1, GroupSize))%>%
+  mutate(count = present*num)%>%
+  filter(!is.na(count))
+
+birds_ave<-birds2%>%
+  group_by(Recyear, Watershed, Transect, Direction, DayofYear, treatment)%>%
+  summarize(number = sum(count))%>%
+  group_by(Recyear, Watershed, Transect, treatment)%>%
+  summarize(number2 = mean(number))%>%
+  group_by(Recyear, Watershed, treatment)%>%
+  summarise(number3 = mean(number2))%>%
+  group_by(Recyear, treatment)%>%
+  summarize(ave = mean(number3))
+  
+
+  
 
 
 ##graphing all of this
@@ -109,3 +176,31 @@ ggplot(data = mean_rich, aes(x = as.factor(RecYear), y = mrich, color = treatmen
   geom_line(aes(group = treatment),position=position_dodge(width = 0.2))+
   ylab("Rarified Richness")+
   xlab("Year")
+
+diskpasture<-
+  ggplot(data = dp_ave, aes(x = as.factor(Recyear), y = ave, color = treatment))+
+  geom_point(size = 2, position=position_dodge(width = 0.2))+
+  geom_errorbar(stat = 'identity', position = 'dodge', aes(ymin=ave - se, ymax = ave +se), width = 0.3)+
+  scale_color_manual(name = "Treatment", labels = c("Annual Burn", "Patch Burn"), values = c("blue3","green3"))+
+  geom_line(aes(group = treatment),position=position_dodge(width = 0.2))+
+  ylab("Plant Biomass (g m-2)")+
+  xlab("Year")
+
+grasshops<-
+  ggplot(data = gh_ave, aes(x = as.factor(Recyear), y = ave, color = treatment))+
+  geom_point(size = 2, position=position_dodge(width = 0.2))+
+  geom_errorbar(stat = 'identity', position = 'dodge', aes(ymin=ave - se, ymax = ave +se), width = 0.3)+
+  scale_color_manual(name = "Treatment", labels = c("Annual Burn", "Patch Burn"), values = c("blue3","green3"))+
+  geom_line(aes(group = treatment),position=position_dodge(width = 0.2))+
+  ylab("Number of Grasshoppers")+
+  xlab("Year")
+
+birdz<-
+  ggplot(data = birds_ave, aes(x = as.factor(Recyear), y = ave, color = treatment))+
+  geom_point(size = 2, position=position_dodge(width = 0.2))+
+  scale_color_manual(name = "Treatment", labels = c("Annual Burn", "Patch Burn"), values = c("blue3","green3"))+
+  geom_line(aes(group = treatment),position=position_dodge(width = 0.2))+
+  ylab("Number of Birds")+
+  xlab("Year")
+
+grid.arrange(birdz, grasshops, plants, diskpasture, ncol = 1 )
