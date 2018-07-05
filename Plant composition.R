@@ -109,7 +109,7 @@ mds<-metaMDS(wide[,6:142], distance = "bray", trymax = 100)
 mdsScores<-data.frame(scores(mds, display = "sites"))%>%
   bind_cols(plotInfo)
 
-ggplot(data = mdsScores, aes(x = NMDS1, y = NMDS2, color = Watershed, shape = treatment))+
+ggplot(data = mdsScores, aes(x = NMDS1, y = NMDS2, color = treatment, shape = replicate))+
   geom_point(size = 8)
 
 #permanova
