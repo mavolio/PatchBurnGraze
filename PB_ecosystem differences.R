@@ -15,6 +15,8 @@ grasshoppers<-read.csv("C:\\Users\\megha\\Dropbox\\Grants\\USDA 2018\\data from 
 
 birds<-read.csv("C:\\Users\\megha\\Dropbox\\Grants\\USDA 2018\\data from konza\\Birds\\PBG051.csv")
 
+production<-read.csv("C:\\Users\\megha\\Dropbox\\Grants\\USDA 2018\\data from konza\\Production\\PBG021_ANPP.csv")
+
 ###Disk Pasture 
 
 calibrate<-dp_calibration%>%
@@ -164,6 +166,30 @@ birds_ave<-birds2%>%
   summarize(ave = mean(number3))
   
 
+##grass forb
+prod2<-production%>%
+  mutate(ws = toupper(Watershed))%>%
+  mutate(treatment = ifelse(ws == "C01A"|ws == "C1SB", "A", "PB"))%>%
+  mutate(replicate = ifelse(ws == "C01A", "A1", ifelse(ws == "C1SB", "A2", ifelse(ws == "C03A"|ws == "C03B"|ws == "C03C", "PB1", "PB2"))))%>%
+  filter(RecYear > 2010)%>%
+  filter(Treatment == "u")%>%
+  mutate(gf = Forbs/Lvgrass)
+
+gf_ave<-prod2%>%
+  group_by(ws, RecYear, Cage, treatment, replicate)%>%
+  summarize(gf2 = mean(gf))%>%
+  ungroup()%>%
+  group_by(ws, RecYear, treatment, replicate)%>%
+  summarize(gf3 = mean(gf2))%>%
+  ungroup()%>%
+  group_by(RecYear, treatment, replicate)%>%
+  summarize(gf4 = mean(gf3))%>%
+  ungroup()%>%
+  group_by(RecYear, treatment)%>%
+  summarize(ave = mean(gf4),
+            sd = sd(gf4))%>%
+  mutate(se = sd / sqrt(2))
+  
   
 
 
@@ -204,3 +230,12 @@ birdz<-
   xlab("Year")
 
 grid.arrange(birdz, grasshops, plants, diskpasture, ncol = 1 )
+
+gf<-
+  ggplot(data = gf_ave, aes(x = as.factor(RecYear), y = ave, color = treatment))+
+  geom_point(size = 2, position=position_dodge(width = 0.2))+
+  geom_errorbar(stat = 'identity', position = 'dodge', aes(ymin=ave - se, ymax = ave +se), width = 0.3)+
+  scale_color_manual(name = "Treatment", labels = c("Annual Burn", "Patch Burn"), values = c("blue3","green3"))+
+  geom_line(aes(group = treatment),position=position_dodge(width = 0.2))+
+  ylab("Forb to Grass Ratio")+
+  xlab("Year")
