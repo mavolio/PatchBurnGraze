@@ -17,8 +17,11 @@ birds<-read.csv("C:\\Users\\megha\\Dropbox\\Grants\\USDA 2018\\data from konza\\
 
 production<-read.csv("C:\\Users\\megha\\Dropbox\\Grants\\USDA 2018\\data from konza\\Production\\PBG021_ANPP.csv")
 
-###Disk Pasture 
+fire<-read.csv("C:\\Users\\megha\\Dropbox\\Grants\\USDA 2018\\data from konza\\KFH011.csv")
 
+ysb<-read.csv("C:\\Users\\megha\\Dropbox\\Grants\\USDA 2018\\data from konza\\YearsSinceBurn.csv")
+
+###Disk Pasture 
 calibrate<-dp_calibration%>%
   mutate(live = (Lvgrass+Forbs+Woody)*10,
          total = (Lvgrass+Forbs+Pdead+Woody)*10)
@@ -195,37 +198,33 @@ gf_ave<-prod2%>%
 
 ##graphing all of this
 plants<-
-ggplot(data = mean_rich, aes(x = as.factor(RecYear), y = mrich, color = treatment))+
-  geom_point(size = 2, position=position_dodge(width = 0.2))+
-  geom_errorbar(stat = 'identity', position = 'dodge', aes(ymin=mrich - se, ymax = mrich +se), width = 0.3)+
-  scale_color_manual(name = "Treatment", labels = c("Annual Burn", "Patch Burn"), values = c("blue3","green3"))+
-  geom_line(aes(group = treatment),position=position_dodge(width = 0.2))+
+ggplot(data = mean_rich, aes(x = as.factor(RecYear), y = mrich, fill = treatment))+
+  geom_bar(position=position_dodge(), stat = "identity")+
+  geom_errorbar(stat = 'identity', position = position_dodge(0.9), aes(ymin=mrich - se, ymax = mrich +se), width = 0.3, size = 1)+
+  scale_fill_manual(name = "Treatment", labels = c("Annual Burn", "Patch Burn"), values = c("chocolate","cornflowerblue"))+
   ylab("Rarified Richness")+
   xlab("Year")
 
 diskpasture<-
-  ggplot(data = dp_ave, aes(x = as.factor(Recyear), y = ave, color = treatment))+
-  geom_point(size = 2, position=position_dodge(width = 0.2))+
-  geom_errorbar(stat = 'identity', position = 'dodge', aes(ymin=ave - se, ymax = ave +se), width = 0.3)+
-  scale_color_manual(name = "Treatment", labels = c("Annual Burn", "Patch Burn"), values = c("blue3","green3"))+
-  geom_line(aes(group = treatment),position=position_dodge(width = 0.2))+
+  ggplot(data = dp_ave, aes(x = as.factor(Recyear), y = ave, fill = treatment))+
+  geom_bar(position=position_dodge(), stat = "identity")+
+  geom_errorbar(stat = 'identity', position = position_dodge(0.9), aes(ymin=ave - se, ymax = ave +se), width = 0.3, size = 1)+
+  scale_fill_manual(name = "Treatment", labels = c("Annual Burn", "Patch Burn"), values = c("chocolate","cornflowerblue"))+
   ylab("Plant Biomass (g m-2)")+
   xlab("Year")
 
 grasshops<-
-  ggplot(data = gh_ave, aes(x = as.factor(Recyear), y = ave, color = treatment))+
-  geom_point(size = 2, position=position_dodge(width = 0.2))+
-  geom_errorbar(stat = 'identity', position = 'dodge', aes(ymin=ave - se, ymax = ave +se), width = 0.3)+
-  scale_color_manual(name = "Treatment", labels = c("Annual Burn", "Patch Burn"), values = c("blue3","green3"))+
-  geom_line(aes(group = treatment),position=position_dodge(width = 0.2))+
+  ggplot(data = gh_ave, aes(x = as.factor(Recyear), y = ave, fill = treatment))+
+  geom_bar(position=position_dodge(), stat = "identity")+
+  geom_errorbar(stat = 'identity', position = position_dodge(0.9), aes(ymin=ave - se, ymax = ave +se), width = 0.3, size = 1)+
+  scale_fill_manual(name = "Treatment", labels = c("Annual Burn", "Patch Burn"), values = c("chocolate","cornflowerblue"))+
   ylab("Number of Grasshoppers")+
   xlab("Year")
 
 birdz<-
-  ggplot(data = birds_ave, aes(x = as.factor(Recyear), y = ave, color = treatment))+
-  geom_point(size = 2, position=position_dodge(width = 0.2))+
-  scale_color_manual(name = "Treatment", labels = c("Annual Burn", "Patch Burn"), values = c("blue3","green3"))+
-  geom_line(aes(group = treatment),position=position_dodge(width = 0.2))+
+  ggplot(data = birds_ave, aes(x = as.factor(Recyear), y = ave, fill = treatment))+
+  geom_bar(position=position_dodge(), stat = "identity")+
+  scale_fill_manual(name = "Treatment", labels = c("Annual Burn", "Patch Burn"), values = c("chocolate","cornflowerblue"))+
   ylab("Number of Birds")+
   xlab("Year")
 
@@ -239,3 +238,34 @@ gf<-
   geom_line(aes(group = treatment),position=position_dodge(width = 0.2))+
   ylab("Forb to Grass Ratio")+
   xlab("Year")
+
+###looking at fire.
+
+#use this to get fire data
+fire2<-fire%>%
+  filter(Code == "C01A"|Code == "C1SB"|Code == "C03A"|Code == "C03B"|Code == "C03C"|Code == "C3SA"|Code =="C3SB"|Code == "C3SC")%>%
+  filter(Year > 2008)%>%
+  mutate(fire = 1, Watershed = Code, Recyear = Year)
+
+
+#dp
+
+dp3<-dp2%>%
+  select(-Watershed)%>%
+  mutate(Watershed = ws)%>%
+  left_join(fire2)%>%
+  mutate(Fire = ifelse(is.na(fire), 0, fire))
+
+dp_ave_patch<-dp3%>%
+  group_by(Watershed, Recyear, Fire, treatment, replicate, Transect)%>%
+  summarize(biomass2 = mean(biomass))%>%
+  ungroup()%>%
+  group_by(Watershed, Fire, Recyear, treatment, replicate)%>%
+  summarize(biomass3 = mean(biomass2))%>%
+  ungroup()%>%
+  group_by(Fire, treatment)%>%
+  summarize(ave = mean(biomass3),
+            sd = sd(biomass3))%>%
+  mutate(se = sd / sqrt(2))
+
+
