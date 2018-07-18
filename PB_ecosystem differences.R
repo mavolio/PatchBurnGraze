@@ -4,7 +4,7 @@ library(vegan)
 library(gridExtra)
 
 theme_set(theme_bw(12))
-
+#work
 plant<-read.csv("C:\\Users\\megha\\Dropbox\\Grants\\USDA 2018\\data from konza\\plant composition\\PBG011.csv")
 
 dp_calibration<-read.csv("C:\\Users\\megha\\Dropbox\\Grants\\USDA 2018\\data from konza\\Production\\PBG031_Disk Pasture.csv")
@@ -20,6 +20,24 @@ production<-read.csv("C:\\Users\\megha\\Dropbox\\Grants\\USDA 2018\\data from ko
 fire<-read.csv("C:\\Users\\megha\\Dropbox\\Grants\\USDA 2018\\data from konza\\KFH011.csv")
 
 ysb<-read.csv("C:\\Users\\megha\\Dropbox\\Grants\\USDA 2018\\data from konza\\YearsSinceBurn.csv")
+
+#home laptop
+plant<-read.csv("~/Dropbox/Grants/USDA 2018/data from konza/plant composition/PBG011.csv")
+
+dp_calibration<-read.csv("~/Dropbox/Grants/USDA 2018/data from konza/Production/PBG031_Disk Pasture.csv")
+
+dp<-read.csv("~/Dropbox/Grants/USDA 2018/data from konza/Production/PBG032_0_Disk Pasture.csv")
+
+grasshoppers<-read.csv("~/Dropbox/Grants/USDA 2018/data from konza/grasshopper data/PBG081_0_density.csv")
+
+birds<-read.csv("~/Dropbox/Grants/USDA 2018/data from konza/Birds/PBG051.csv")
+
+production<-read.csv("~/Dropbox/Grants/USDA 2018/data from konza/Production/PBG021_ANPP.csv")
+
+fire<-read.csv("~/Dropbox/Grants/USDA 2018/data from konza/KFH011.csv")
+
+ysb<-read.csv("~/Dropbox/Grants/USDA 2018/data from konza/YearsSinceBurn.csv")
+ysb_birds<-read.csv("~/Dropbox/Grants/USDA 2018/data from konza/YearsSinceBurn_birds.csv")
 
 ###Disk Pasture 
 calibrate<-dp_calibration%>%
@@ -132,7 +150,8 @@ gh2<-grasshoppers%>%
   mutate(treatment = ifelse(Watershed == "C01A"|Watershed == "C1SB", "A", "PB"))%>%
   mutate(replicate = ifelse(Watershed == "C01A", "A1", ifelse(Watershed == "C1SB", "A2", ifelse(Watershed == "C03A"|Watershed == "C03B"|Watershed == "C03C", "PB1", "PB2"))))%>%
   group_by(Recyear, Watershed, Site, treatment, replicate)%>%
-  summarize(num = sum(Count))
+  summarize(num = sum(Count))%>%
+  filter(Watershed != "C01B")
 
 gh_ave<-gh2%>%
   group_by(Watershed, Recyear, treatment, replicate, Site)%>%
@@ -253,19 +272,79 @@ fire2<-fire%>%
 dp3<-dp2%>%
   select(-Watershed)%>%
   mutate(Watershed = ws)%>%
-  left_join(fire2)%>%
-  mutate(Fire = ifelse(is.na(fire), 0, fire))
+  left_join(ysb)
 
 dp_ave_patch<-dp3%>%
-  group_by(Watershed, Recyear, Fire, treatment, replicate, Transect)%>%
+  group_by(Watershed, Recyear, ysb, treatment, Transect)%>%
   summarize(biomass2 = mean(biomass))%>%
   ungroup()%>%
-  group_by(Watershed, Fire, Recyear, treatment, replicate)%>%
+  group_by(Watershed, ysb, Recyear, treatment)%>%
   summarize(biomass3 = mean(biomass2))%>%
   ungroup()%>%
-  group_by(Fire, treatment)%>%
+  group_by(ysb, treatment)%>%
   summarize(ave = mean(biomass3),
             sd = sd(biomass3))%>%
-  mutate(se = sd / sqrt(2))
+  mutate(se = sd / sqrt(2))%>%
+  mutate(response = "Standing Biomass")
 
+##plant rich
+rich<-community_structure(clean, time.var = "RecYear", abundance.var = "CoverClass", replicate.var = "id")%>%
+  separate(id, into=c("Watershed", "Transect", "Plot", "treatment", "replicate"), sep = "_")%>%
+  mutate(Recyear = RecYear)
 
+ave_rich<-rich%>%
+  left_join(ysb)%>%
+  group_by(Recyear, Watershed, Transect, treatment, ysb)%>%
+  summarize(r1 = mean(richness))%>%
+  ungroup()%>%
+  group_by(Recyear, Watershed, treatment, ysb)%>%
+  summarize(r2 = mean(r1))%>%
+  ungroup()%>%
+  group_by(ysb, treatment)%>%
+  summarize(ave = mean(r2),
+            sd = sd(r2))%>%
+  mutate(se = sd / sqrt(2))%>%
+  mutate(response = "Plant Richness")
+
+#grasshoppers
+gh_ave_patch<-gh2%>%
+  left_join(ysb)%>%
+  filter(Watershed != "C01B")%>%
+  group_by(Watershed, Recyear, treatment, ysb, Site)%>%
+  summarize(num2 = mean(num))%>%
+  ungroup()%>%
+  group_by(Watershed, Recyear, treatment, ysb)%>%
+  summarize(num3 = mean(num2))%>%
+  ungroup()%>%
+  group_by(ysb, treatment)%>%
+  summarize(ave = mean(num3),
+            sd = sd(num3))%>%
+  mutate(se = sd / sqrt(2))%>%
+  mutate(response = "Grasshoppers")
+
+#birds
+birds_ave_patch<-birds2%>%
+  left_join(ysb_birds)%>%
+  group_by(Recyear, Watershed, Transect, Direction, DayofYear, treatment, ysb)%>%
+  summarize(number = sum(count))%>%
+  group_by(Recyear, Watershed, Transect, treatment, ysb)%>%
+  summarize(number2 = mean(number))%>%
+  group_by(Recyear, Watershed, treatment, ysb)%>%
+  summarise(number3 = mean(number2))%>%
+  group_by(ysb, treatment)%>%
+  summarize(ave = mean(number3),
+            sd = sd(number3))%>%
+  mutate(se = sd / sqrt(2))%>%
+  mutate(response = "Birds")
+
+patch_all<-rbind(dp_ave_patch, birds_ave_patch, gh_ave_patch, ave_rich)%>%
+  mutate(ysb2 = paste(treatment, ysb, sep = ""))
+
+ggplot(data=patch_all, aes(x = ysb2, y = ave, fill = treatment))+
+  geom_bar(stat = "identity")+
+  geom_errorbar(aes(ymin = ave - se, ymax = ave + se), width = 0.3)+
+  scale_fill_manual(name = "Treatment", label=c("Annual Burn", "Patch Burn"), values = c("chocolate", "cornflowerblue"))+
+  xlab("Years Since Burn")+
+  ylab("")+
+  facet_wrap(~response, ncol= 1, scale="free")
+  
