@@ -20,24 +20,25 @@ production<-read.csv("C:\\Users\\megha\\Dropbox\\Grants\\USDA 2018\\data from ko
 fire<-read.csv("C:\\Users\\megha\\Dropbox\\Grants\\USDA 2018\\data from konza\\KFH011.csv")
 
 ysb<-read.csv("C:\\Users\\megha\\Dropbox\\Grants\\USDA 2018\\data from konza\\YearsSinceBurn.csv")
+ysb_birds<-read.csv("C:\\Users\\megha\\Dropbox\\Grants\\USDA 2018\\data from konza\\YearsSinceBurn_birds.csv")
 
-#home laptop
-plant<-read.csv("~/Dropbox/Grants/USDA 2018/data from konza/plant composition/PBG011.csv")
-
-dp_calibration<-read.csv("~/Dropbox/Grants/USDA 2018/data from konza/Production/PBG031_Disk Pasture.csv")
-
-dp<-read.csv("~/Dropbox/Grants/USDA 2018/data from konza/Production/PBG032_0_Disk Pasture.csv")
-
-grasshoppers<-read.csv("~/Dropbox/Grants/USDA 2018/data from konza/grasshopper data/PBG081_0_density.csv")
-
-birds<-read.csv("~/Dropbox/Grants/USDA 2018/data from konza/Birds/PBG051.csv")
-
-production<-read.csv("~/Dropbox/Grants/USDA 2018/data from konza/Production/PBG021_ANPP.csv")
-
-fire<-read.csv("~/Dropbox/Grants/USDA 2018/data from konza/KFH011.csv")
-
-ysb<-read.csv("~/Dropbox/Grants/USDA 2018/data from konza/YearsSinceBurn.csv")
-ysb_birds<-read.csv("~/Dropbox/Grants/USDA 2018/data from konza/YearsSinceBurn_birds.csv")
+# #home laptop
+# plant<-read.csv("~/Dropbox/Grants/USDA 2018/data from konza/plant composition/PBG011.csv")
+# 
+# dp_calibration<-read.csv("~/Dropbox/Grants/USDA 2018/data from konza/Production/PBG031_Disk Pasture.csv")
+# 
+# dp<-read.csv("~/Dropbox/Grants/USDA 2018/data from konza/Production/PBG032_0_Disk Pasture.csv")
+# 
+# grasshoppers<-read.csv("~/Dropbox/Grants/USDA 2018/data from konza/grasshopper data/PBG081_0_density.csv")
+# 
+# birds<-read.csv("~/Dropbox/Grants/USDA 2018/data from konza/Birds/PBG051.csv")
+# 
+# production<-read.csv("~/Dropbox/Grants/USDA 2018/data from konza/Production/PBG021_ANPP.csv")
+# 
+# fire<-read.csv("~/Dropbox/Grants/USDA 2018/data from konza/KFH011.csv")
+# 
+# ysb<-read.csv("~/Dropbox/Grants/USDA 2018/data from konza/YearsSinceBurn.csv")
+# ysb_birds<-read.csv("~/Dropbox/Grants/USDA 2018/data from konza/YearsSinceBurn_birds.csv")
 
 ###Disk Pasture 
 calibrate<-dp_calibration%>%
@@ -213,51 +214,6 @@ gf_ave<-prod2%>%
   mutate(se = sd / sqrt(2))
   
   
-
-
-##graphing all of this
-plants<-
-ggplot(data = mean_rich, aes(x = as.factor(RecYear), y = mrich, fill = treatment))+
-  geom_bar(position=position_dodge(), stat = "identity")+
-  geom_errorbar(stat = 'identity', position = position_dodge(0.9), aes(ymin=mrich - se, ymax = mrich +se), width = 0.3, size = 1)+
-  scale_fill_manual(name = "Treatment", labels = c("Annual Burn", "Patch Burn"), values = c("chocolate","cornflowerblue"))+
-  ylab("Rarified Richness")+
-  xlab("Year")
-
-diskpasture<-
-  ggplot(data = dp_ave, aes(x = as.factor(Recyear), y = ave, fill = treatment))+
-  geom_bar(position=position_dodge(), stat = "identity")+
-  geom_errorbar(stat = 'identity', position = position_dodge(0.9), aes(ymin=ave - se, ymax = ave +se), width = 0.3, size = 1)+
-  scale_fill_manual(name = "Treatment", labels = c("Annual Burn", "Patch Burn"), values = c("chocolate","cornflowerblue"))+
-  ylab("Plant Biomass (g m-2)")+
-  xlab("Year")
-
-grasshops<-
-  ggplot(data = gh_ave, aes(x = as.factor(Recyear), y = ave, fill = treatment))+
-  geom_bar(position=position_dodge(), stat = "identity")+
-  geom_errorbar(stat = 'identity', position = position_dodge(0.9), aes(ymin=ave - se, ymax = ave +se), width = 0.3, size = 1)+
-  scale_fill_manual(name = "Treatment", labels = c("Annual Burn", "Patch Burn"), values = c("chocolate","cornflowerblue"))+
-  ylab("Number of Grasshoppers")+
-  xlab("Year")
-
-birdz<-
-  ggplot(data = birds_ave, aes(x = as.factor(Recyear), y = ave, fill = treatment))+
-  geom_bar(position=position_dodge(), stat = "identity")+
-  scale_fill_manual(name = "Treatment", labels = c("Annual Burn", "Patch Burn"), values = c("chocolate","cornflowerblue"))+
-  ylab("Number of Birds")+
-  xlab("Year")
-
-grid.arrange(birdz, grasshops, plants, diskpasture, ncol = 1 )
-
-gf<-
-  ggplot(data = gf_ave, aes(x = as.factor(RecYear), y = ave, color = treatment))+
-  geom_point(size = 2, position=position_dodge(width = 0.2))+
-  geom_errorbar(stat = 'identity', position = 'dodge', aes(ymin=ave - se, ymax = ave +se), width = 0.3)+
-  scale_color_manual(name = "Treatment", labels = c("Annual Burn", "Patch Burn"), values = c("blue3","green3"))+
-  geom_line(aes(group = treatment),position=position_dodge(width = 0.2))+
-  ylab("Forb to Grass Ratio")+
-  xlab("Year")
-
 ###looking at fire.
 
 #use this to get fire data
@@ -285,7 +241,7 @@ dp_ave_patch<-dp3%>%
   summarize(ave = mean(biomass3),
             sd = sd(biomass3))%>%
   mutate(se = sd / sqrt(2))%>%
-  mutate(response = "Standing Biomass")
+  mutate(ysb2 = paste(treatment, ysb, sep = ""))
 
 ##plant rich
 rich<-community_structure(clean, time.var = "RecYear", abundance.var = "CoverClass", replicate.var = "id")%>%
@@ -304,7 +260,7 @@ ave_rich<-rich%>%
   summarize(ave = mean(r2),
             sd = sd(r2))%>%
   mutate(se = sd / sqrt(2))%>%
-  mutate(response = "Plant Richness")
+  mutate(ysb2 = paste(treatment, ysb, sep = ""))
 
 #grasshoppers
 gh_ave_patch<-gh2%>%
@@ -320,7 +276,7 @@ gh_ave_patch<-gh2%>%
   summarize(ave = mean(num3),
             sd = sd(num3))%>%
   mutate(se = sd / sqrt(2))%>%
-  mutate(response = "Grasshoppers")
+  mutate(ysb2 = paste(treatment, ysb, sep = ""))
 
 #birds
 birds_ave_patch<-birds2%>%
@@ -335,16 +291,79 @@ birds_ave_patch<-birds2%>%
   summarize(ave = mean(number3),
             sd = sd(number3))%>%
   mutate(se = sd / sqrt(2))%>%
-  mutate(response = "Birds")
-
-patch_all<-rbind(dp_ave_patch, birds_ave_patch, gh_ave_patch, ave_rich)%>%
   mutate(ysb2 = paste(treatment, ysb, sep = ""))
 
-ggplot(data=patch_all, aes(x = ysb2, y = ave, fill = treatment))+
+##graphing all of this
+plants<-
+ggplot(data = mean_rich, aes(x = as.factor(RecYear), y = mrich, color = treatment))+
+  geom_point(position=position_dodge(width = 0.3), size = 4)+
+  geom_errorbar(position = position_dodge(width = 0.3), aes(ymin=mrich - se, ymax = mrich +se), size = 1)+
+  scale_color_manual(name = "Treatment", labels = c("Annual Burn", "Patch Burn"), values = c("chocolate","cornflowerblue"))+
+  geom_line(aes(group = treatment),position=position_dodge(width = 0.3), size = 1)+
+  ylab("Plant Sp. Richness")+
+  xlab("Year")+
+  theme(legend.position = "none")
+
+diskpasture<-
+  ggplot(data = dp_ave, aes(x = as.factor(Recyear), y = ave, color = treatment))+
+  geom_point(position=position_dodge(width = 0.3), size = 4)+
+  geom_errorbar(position = position_dodge(width = 0.3), aes(ymin=ave - se, ymax = ave +se), size = 1)+
+  scale_color_manual(name = "Treatment", labels = c("Annual Burn", "Patch Burn"), values = c("chocolate","cornflowerblue"))+
+  geom_line(aes(group = treatment),position=position_dodge(width = 0.3), size = 1)+
+  ylab("Plant Biomass")+
+  xlab("Year")+
+  theme(legend.position = "none")
+
+grasshops<-
+  ggplot(data = gh_ave, aes(x = as.factor(Recyear), y = ave, color = treatment))+
+  geom_point(position=position_dodge(width = 0.3), size = 4)+
+  geom_errorbar(position = position_dodge(width = 0.3), aes(ymin=ave - se, ymax = ave +se), size = 1)+
+  scale_color_manual(name = "Treatment", labels = c("Annual Burn", "Patch Burn"), values = c("chocolate","cornflowerblue"))+
+  geom_line(aes(group = treatment),position=position_dodge(width = 0.3), size = 1)+
+  ylab("Grasshopper Count")+
+  xlab("Year")+
+  theme(legend.position = "none")
+
+birdz<-
+  ggplot(data = birds_ave, aes(x = as.factor(Recyear), y = ave, color = treatment))+
+  geom_point(position=position_dodge(width = 0.3), size = 4)+
+  scale_color_manual(name = "Treatment", labels = c("Annual Burn", "Patch Burn"), values = c("chocolate","cornflowerblue"))+
+  geom_line(aes(group = treatment),position=position_dodge(width = 0.3), size = 1)+
+  ylab("Bird Count")+
+  xlab("Year")+
+  theme(legend.position = "none")
+
+plants_patch<-
+ggplot(data=ave_rich, aes(x = ysb2, y = ave, fill = treatment))+
   geom_bar(stat = "identity")+
-  geom_errorbar(aes(ymin = ave - se, ymax = ave + se), width = 0.3)+
+  geom_errorbar(aes(ymin = ave - se, ymax = ave + se), width = 0.3, size = 1)+
   scale_fill_manual(name = "Treatment", label=c("Annual Burn", "Patch Burn"), values = c("chocolate", "cornflowerblue"))+
   xlab("Years Since Burn")+
-  ylab("")+
-  facet_wrap(~response, ncol= 1, scale="free")
+  ylab("Plant Sp. Richness")
   
+
+dp_patch<-
+  ggplot(data=dp_ave_patch, aes(x = ysb2, y = ave, fill = treatment))+
+  geom_bar(stat = "identity")+
+  geom_errorbar(aes(ymin = ave - se, ymax = ave + se), width = 0.3, size = 1)+
+  scale_fill_manual(name = "Treatment", label=c("Annual Burn", "Patch Burn"), values = c("chocolate", "cornflowerblue"))+
+  xlab("Years Since Burn")+
+  ylab("Plant Biomass")
+
+gh_patch<-
+  ggplot(data=gh_ave_patch, aes(x = ysb2, y = ave, fill = treatment))+
+  geom_bar(stat = "identity")+
+  geom_errorbar(aes(ymin = ave - se, ymax = ave + se), width = 0.3, size = 1)+
+  scale_fill_manual(name = "Treatment", label=c("Annual Burn", "Patch Burn"), values = c("chocolate", "cornflowerblue"))+
+  xlab("Years Since Burn")+
+  ylab("Grasshopper Count")
+
+bird_patch<-
+  ggplot(data=dp_ave_patch, aes(x = ysb2, y = ave, fill = treatment))+
+  geom_bar(stat = "identity")+
+  geom_errorbar(aes(ymin = ave - se, ymax = ave + se), width = 0.3, size = 1)+
+  scale_fill_manual(name = "Treatment", label=c("Annual Burn", "Patch Burn"), values = c("chocolate", "cornflowerblue"))+
+  xlab("Years Since Burn")+
+  ylab("Birds Count")
+
+grid.arrange(birdz, bird_patch, grasshops, gh_patch, plants, plants_patch, diskpasture, dp_patch, ncol = 2)
