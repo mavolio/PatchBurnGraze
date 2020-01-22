@@ -2,6 +2,8 @@ library(tidyverse)
 library(codyn)
 library(vegan)
 library(gridExtra)
+library(gtable)
+library(grid)
 
 theme_set(theme_bw(12))
 #work
@@ -294,44 +296,6 @@ birds_ave_patch<-birds2%>%
   mutate(ysb2 = paste(treatment, ysb, sep = ""))
 
 ##graphing all of this
-plants<-
-ggplot(data = mean_rich, aes(x = as.factor(RecYear), y = mrich, color = treatment))+
-  geom_point(position=position_dodge(width = 0.3), size = 4)+
-  geom_errorbar(position = position_dodge(width = 0.3), aes(ymin=mrich - se, ymax = mrich +se), size = 1)+
-  scale_color_manual(name = "Treatment", labels = c("Annual Burn", "Patch Burn"), values = c("chocolate","cornflowerblue"))+
-  geom_line(aes(group = treatment),position=position_dodge(width = 0.3), size = 1)+
-  ylab("Plant Sp. Richness")+
-  xlab("Year")+
-  theme(legend.position = "none")
-
-diskpasture<-
-  ggplot(data = dp_ave, aes(x = as.factor(Recyear), y = ave, color = treatment))+
-  geom_point(position=position_dodge(width = 0.3), size = 4)+
-  geom_errorbar(position = position_dodge(width = 0.3), aes(ymin=ave - se, ymax = ave +se), size = 1)+
-  scale_color_manual(name = "Treatment", labels = c("Annual Burn", "Patch Burn"), values = c("chocolate","cornflowerblue"))+
-  geom_line(aes(group = treatment),position=position_dodge(width = 0.3), size = 1)+
-  ylab("Plant Biomass")+
-  xlab("Year")+
-  theme(legend.position = "none")
-
-grasshops<-
-  ggplot(data = gh_ave, aes(x = as.factor(Recyear), y = ave, color = treatment))+
-  geom_point(position=position_dodge(width = 0.3), size = 4)+
-  geom_errorbar(position = position_dodge(width = 0.3), aes(ymin=ave - se, ymax = ave +se), size = 1)+
-  scale_color_manual(name = "Treatment", labels = c("Annual Burn", "Patch Burn"), values = c("chocolate","cornflowerblue"))+
-  geom_line(aes(group = treatment),position=position_dodge(width = 0.3), size = 1)+
-  ylab("Grasshopper Count")+
-  xlab("Year")+
-  theme(legend.position = "none")
-
-birdz<-
-  ggplot(data = birds_ave, aes(x = as.factor(Recyear), y = ave, color = treatment))+
-  geom_point(position=position_dodge(width = 0.3), size = 4)+
-  scale_color_manual(name = "Treatment", labels = c("Annual Burn", "Patch Burn"), values = c("chocolate","cornflowerblue"))+
-  geom_line(aes(group = treatment),position=position_dodge(width = 0.3), size = 1)+
-  ylab("Bird Count")+
-  xlab("Year")+
-  theme(legend.position = "none")
 
 plants_patch<-
 ggplot(data=ave_rich, aes(x = ysb2, y = ave, fill = treatment))+
@@ -367,3 +331,51 @@ bird_patch<-
   ylab("Birds Count")
 
 grid.arrange(birdz, bird_patch, grasshops, gh_patch, plants, plants_patch, diskpasture, dp_patch, ncol = 2)
+
+###figure for KNZ LTER proposal
+
+plants<-
+  ggplot(data = mean_rich, aes(x = as.factor(RecYear), y = mrich, color = treatment))+
+  geom_point(position=position_dodge(width = 0.3), size = 4)+
+  geom_errorbar(position = position_dodge(width = 0.3), aes(ymin=mrich - se, ymax = mrich +se), size = 1)+
+  scale_color_manual(name = "Treatment", labels = c("Annual Burn", "Patch Burn"), values = c("chocolate","cornflowerblue"))+
+  geom_line(aes(group = treatment),position=position_dodge(width = 0.3), size = 1)+
+  ylab("Rarefied Plant Sp. Richness")+
+  xlab("Year")
+diskpasture<-
+  ggplot(data = dp_ave, aes(x = as.factor(Recyear), y = ave, color = treatment))+
+  geom_point(position=position_dodge(width = 0.3), size = 4)+
+  geom_errorbar(position = position_dodge(width = 0.3), aes(ymin=ave - se, ymax = ave +se), size = 1)+
+  scale_color_manual(name = "Treatment", labels = c("Annual Burn", "Patch Burn"), values = c("chocolate","cornflowerblue"))+
+  geom_line(aes(group = treatment),position=position_dodge(width = 0.3), size = 1)+
+  ylab(expression(paste("Plant Biomass (g ", "m"^"-2",")")))+
+  xlab("Year")
+
+grasshops<-
+  ggplot(data = gh_ave, aes(x = as.factor(Recyear), y = ave, color = treatment))+
+  geom_point(position=position_dodge(width = 0.3), size = 4)+
+  geom_errorbar(position = position_dodge(width = 0.3), aes(ymin=ave - se, ymax = ave +se), size = 1)+
+  scale_color_manual(name = "Treatment", labels = c("Annual Burn", "Patch Burn"), values = c("chocolate","cornflowerblue"))+
+  geom_line(aes(group = treatment),position=position_dodge(width = 0.3), size = 1)+
+  ylab(expression(paste("Grasshoppers (number 2 m"^"-2",")")))+
+  xlab("Year")
+birdz<-
+  ggplot(data = birds_ave, aes(x = as.factor(Recyear), y = ave, color = treatment))+
+  geom_point(position=position_dodge(width = 0.3), size = 4)+
+  scale_color_manual(name = "Treatment", labels = c("Annual Burn", "Patch Burn"), values = c("chocolate","cornflowerblue"))+
+  geom_line(aes(group = treatment),position=position_dodge(width = 0.3), size = 1)+
+  ylab(expression(paste("Birds (number 60000 m"^"-2",")")))+
+  xlab("Year")
+
+legend=gtable_filter(ggplot_gtable(ggplot_build(birdz)), "guide-box") 
+grid.draw(legend)
+
+fig<-grid.arrange(arrangeGrob(birdz+theme(legend.position="none"),
+                              grasshops+theme(legend.position="none"),
+                              plants+theme(legend.position="none"),
+                              diskpasture+theme(legend.position="none"),
+                              ncol=2),legend, 
+                  widths=unit.c(unit(1, "npc") - legend$width, legend$width),nrow=1)
+
+#fig<-grid.arrange(birdz,grasshops,plants, diskpasture, ncol = 2)
+ggsave("C:\\Users\\megha\\Dropbox\\Grants\\KNZ\\PBG.jpeg", plot = fig, dpi = 300, units = "in", width= 6.5, height= 6)
