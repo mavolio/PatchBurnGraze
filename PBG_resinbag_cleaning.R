@@ -39,3 +39,11 @@ hist(NH4$concentration)
 hist(NO3$concentration)
 hist(p$concentration)
 
+plots <- rbind(NH4,NO3,p) %>% 
+  select(Sample) %>% 
+  unique() %>% 
+  separate(Sample, into=c('watershed', 'transect', 'plot', 'nutrient'), sep='-') %>% 
+  select(-nutrient) %>% 
+  unique()
+
+write.csv(plots, 'PBG_trts.csv', row.names=F)
