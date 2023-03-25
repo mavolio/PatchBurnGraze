@@ -23,6 +23,8 @@ Abundance_ID_Belowground <- Abundance_ID_Belowground[, c("WS","Trans", "Dist.", 
 
 Abundance_ID_Belowground$Treatment <- ifelse(grepl("1", Abundance_ID_Belowground$WS), "ABG", "PBG")
 
+
+
 #Stores the PBG and ABG in separate variables
 
 pbg_data <- subset(Abundance_ID_Belowground, Treatment == "PBG")
@@ -161,6 +163,8 @@ Abundance_ID_Belowground$Morphospp <- gsub("Small Light Colored Back End", "Smal
 Abundance_ID_Belowground$WS <- gsub("C35A","C3SA", Abundance_ID_Belowground$WS) 
 Abundance_ID_Belowground$WS <- gsub("C35B","C3SB", Abundance_ID_Belowground$WS)
 Abundance_ID_Belowground$WS <- gsub("C3CB", "C3C", Abundance_ID_Belowground$WS)
+Abundance_ID_Belowground$WS <- gsub("C3D", "C3B", Abundance_ID_Belowground$WS)
+Abundance_ID_Belowground$WS <- gsub("CSC", "C3C", Abundance_ID_Belowground$WS)
 
 View(Abundance_ID_Belowground)
 
@@ -174,6 +178,9 @@ Abundance_ID_Belowground <- Abundance_ID_Belowground %>%
 Abundance_Stats <- group_by(Abundance_ID_Belowground, Morphospp, Sample) %>% 
   summarize(Count = sum(Count, na.rm = TRUE))
 
+Abundance_ID_Belowground$Count <- ifelse(is.na(Abundance_ID_Belowground$Count), 1, Abundance_ID_Belowground$Count)
+
+
 
 #### Stats ####
 
@@ -185,7 +192,7 @@ View(commMetrics)
 
 # Tagging PBG and ABG again
 
-commMetrics$Treatment <- ifelse(grepl("1", commMetrics$Sample), "ABG", "PBG") 
+commMetrics$Treatment <- ifelse(grepl("C1", commMetrics$Sample), "ABG", "PBG") 
 
 #Adding North and South block
 
@@ -197,6 +204,17 @@ BurnInfo <- read_excel("YearsSenseBurned.xlsx")
 
 
 Joined <- full_join(BurnInfo, commMetrics2) %>% unite("TreatmentSB",c("Treatment","SB"), sep="_")
+
+Joined$Trea <- ifelse(grepl("A", Joined$TreatmentSB), "ABG", "PBG") 
+
+#Count with Burn data frame ####
+
+CountGraph <- full_join(Abundance_ID_Belowground, BurnInfo) %>% 
+  unite("TreatmentSB",c("Treatment","SB"), sep="_")
+
+CountGraph$Treatment <- ifelse(grepl("C1", CountGraph$Sample), "ABG", "PBG") 
+
+
 
 
 ##### mixed model code #####
@@ -231,27 +249,180 @@ emmeans(countModel, pairwise~Treatment, adjust="tukey") #this gives you contrast
 
 
 #### Graphs ####
-#Graphs ####
 
+#Total Count
 
-ggplot(Graphs_Stats, aes(x = Treatment, y = TotalCount, fill= Treatment)) +
+ggplot(CountGraph, aes(x = TreatmentSB, y = Count, fill= Treatment)) +
   geom_boxplot() +
-  labs(title = "Weight by Treatment",
-       x = "Treatment",
-       y = "Total Count") +
+  labs(
+    x = "Treatment",
+    y = "Total Count") +
   scale_fill_manual(values = c("blue", "red")) +
   theme_bw() +
-  theme(
-    plot.title = element_text(size = 22, face = "bold"),
-    axis.title = element_text(size = 18),
-    axis.text = element_text(size = 16),
-    legend.title = element_text(size = 16),
-    legend.text = element_text(size = 14),
-    panel.background = element_rect(fill = "white"),
-    panel.grid.major = element_blank(), 
-    panel.grid.minor = element_blank()
-  ) +
+  theme(panel.background = element_rect(fill = "white"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 20),
+        axis.title = element_text(size = 40),
+        axis.text.y = element_text(size = 20),
+        axis.title.y = element_text(size = 40),
+        axis.ticks.y = element_line(size = 1)) +
   guides(fill = FALSE)
 
+ggsave("TotalCount.png", width = 8, height = 8, dpi = 300)
 
+#richness graph
+
+ggplot(Joined, aes(x = TreatmentSB, y = richness, fill= Trea)) +
+  geom_boxplot() +
+  labs(
+    x = "Treatment",
+    y = "Richness") +
+  scale_fill_manual(values = c("blue", "red")) +
+  theme_bw() +
+  theme(panel.background = element_rect(fill = "white"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 20),
+        axis.title = element_text(size = 40),
+        axis.text.y = element_text(size = 20),
+        axis.title.y = element_text(size = 40),
+        axis.ticks.y = element_line(size = 1)) +
+  guides(fill = FALSE)
+
+ggsave("Richness.png", width = 8, height = 8, dpi = 300)
+
+#Evenness
+
+ggplot(Joined, aes(x = TreatmentSB, y = Evar, fill= Trea)) +
+  geom_boxplot() +
+  labs(
+    x = "Treatment",
+    y = "Evenness") +
+  scale_fill_manual(values = c("blue", "red")) +
+  theme_bw() +
+  theme(panel.background = element_rect(fill = "white"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 20),
+        axis.title = element_text(size = 40),
+        axis.text.y = element_text(size = 20),
+        axis.title.y = element_text(size = 40),
+        axis.ticks.y = element_line(size = 1)) +
+  guides(fill = FALSE)
+
+ggsave("Evenness.png", width = 8, height = 8, dpi = 300)
+
+
+#Caculating CV Count####
+
+ABG_CV <- Abundance_ID_Belowground %>%
+  filter(WS %in% c("C1A", "C1SB")) %>%
+  group_by(WS) %>%
+  summarize(cv_count = sd(`Count`) / mean(`Count`) * 100)
+
+# Calculate the CV of weights for each combined PBG cluster
+PBG_CV <- Abundance_ID_Belowground%>%
+  filter(WS %in% c("C3A", "C3B", "C3C", "C3SA", "C3SB")) %>%
+  group_by(WS) %>%
+  summarize(cv_count = sd(`Count`) / mean(`Count`) * 100)
+
+# Add the average values to the dataframes
+ABG_CV2 <- ABG_CV %>% 
+  mutate(`Treatment` = "ABG") %>% 
+  select(-WS)
+
+PBG_CV2 <- PBG_CV %>% 
+  mutate(`Treatment` = "PBG")
+
+
+
+
+ABG_CV_Average <- ABG_CV2 %>%
+  group_by(Treatment) %>%
+  summarize(Average_CV = mean(cv_count))
+
+# Calculate the average weight CV for PBG
+PBG_CV_Average <- PBG_CV2 %>%
+  group_by(Treatment) %>%
+  summarize(Average_CV = mean(cv_count))
+
+
+
+combined_cv_count <- rbind(ABG_CV_Average, PBG_CV_Average)
+
+# Graphs for CV ###
+
+ggplot(combined_cv_count, aes(x = Treatment, y = `Average_CV`, fill = Treatment)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red")) +
+  guides(fill = FALSE) +
+  theme_bw() +
+  theme(panel.background = element_rect(fill = "white"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 20),
+        axis.title = element_text(size = 40),
+        axis.text.y = element_text(size = 20),
+        axis.title.y = element_text(size = 40),
+        axis.ticks.y = element_line(size = 1)) +
+  labs(y = "Count Average CV")
+
+ggsave("CV_Count.png", width = 8, height = 8, dpi = 300)
+
+#Calculating CV Richness####
+
+ABG_CV <- Joined %>%
+  filter(WS %in% c("C1A", "C1SB")) %>%
+  group_by(WS) %>%
+  summarize(cv_richness = sd(`richness`) / mean(`richness`) * 100)
+
+# Calculate the CV of weights for each combined PBG cluster
+PBG_CV <- Joined%>%
+  filter(WS %in% c("C3A", "C3B", "C3C", "C3SA", "C3SB")) %>%
+  group_by(WS) %>%
+  summarize(cv_richness = sd(`richness`) / mean(`richness`) * 100)
+
+# Add the average values to the dataframes
+ABG_CV2 <- ABG_CV %>% 
+  mutate(`Treatment` = "ABG") %>% 
+  select(-WS)
+
+PBG_CV2 <- PBG_CV %>% 
+  mutate(`Treatment` = "PBG")
+
+
+
+
+ABG_CV_Average <- ABG_CV2 %>%
+  group_by(Treatment) %>%
+  summarize(Average_CV = mean(cv_richness))
+
+# Calculate the average weight CV for PBG
+PBG_CV_Average <- PBG_CV2 %>%
+  group_by(Treatment) %>%
+  summarize(Average_CV = mean(cv_richness))
+
+
+
+combined_cv_richness <- rbind(ABG_CV_Average, PBG_CV_Average)
+
+# Graphs for CV ###
+
+ggplot(combined_cv_richness, aes(x = Treatment, y = `Average_CV`, fill = Treatment)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red")) +
+  guides(fill = FALSE) +
+  theme_bw() +
+  theme(panel.background = element_rect(fill = "white"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 20),
+        axis.title = element_text(size = 40),
+        axis.text.y = element_text(size = 20),
+        axis.title.y = element_text(size = 40),
+        axis.ticks.y = element_line(size = 1)) +
+  labs(y = "Richness Average CV")
+
+ggsave("Richness_CV.png", width = 8, height = 8, dpi = 300)
 

@@ -30,6 +30,8 @@ PBG_2021_Weight_Below$Treatment <- ifelse(grepl("1", PBG_2021_Weight_Below$WS), 
 PBG_2021_Weight_Below$WS <- gsub("C35A","C3SA", PBG_2021_Weight_Below$WS) 
 PBG_2021_Weight_Below$WS <- gsub("C35B","C3SB", PBG_2021_Weight_Below$WS)
 PBG_2021_Weight_Below$WS <- gsub("C3CB", "C3C", PBG_2021_Weight_Below$WS)
+PBG_2021_Weight_Below$WS <- gsub("C3D", "C3B", PBG_2021_Weight_Below$WS)
+PBG_2021_Weight_Below$WS <- gsub("CSC", "C3C", PBG_2021_Weight_Below$WS)
 
 
 
