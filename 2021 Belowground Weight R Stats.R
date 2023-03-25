@@ -1,5 +1,5 @@
 ####Libraries ####
-
+library(tidyverse)
 
 library(ggplot2)
 
@@ -101,8 +101,19 @@ ggplot(PBG_2021_Weight_Below, aes(x = Treatment, y = `Weight (mg)`, fill = Treat
   geom_boxplot() +
   scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red")) +
   guides(fill = FALSE) +
-  theme(panel.background = element_blank()) +
-  theme_bw()
+  theme_bw() +
+  theme( panel.background = element_rect(fill = "white"),
+         panel.grid.major = element_blank(), 
+         panel.grid.minor = element_blank()) +
+  labs(y = "Biomass (mg)") +
+  theme(axis.text = element_text(size = 20),
+        axis.title = element_text(size = 40),
+        axis.text.y = element_text(size = 20),
+        axis.title.y = element_text(size = 40),
+        axis.ticks.y = element_line(size = 1))
+
+
+ggsave("Biomass.png", width = 8, height = 8, dpi = 300)
 
 
 #Stats ####
@@ -141,3 +152,50 @@ PBG_CV <- PBG_2021_Weight_Below %>%
   filter(WS %in% c("C3A", "C3B", "C3C", "C3SA", "C3SB")) %>%
   group_by(Block) %>%
   summarize(cv_weight = sd(`Weight (mg)`) / mean(`Weight (mg)`) * 100)
+
+# Making averages of CV for graphs####
+
+# Calculate the average weight CV
+# Calculate the average weight CV for ABG
+
+# Add the average values to the dataframes
+ABG_CV <- ABG_CV %>% 
+  mutate(`Treatment` = "ABG") %>% 
+  select(-WS)
+
+PBG_CV <- PBG_CV %>% 
+  mutate(`Treatment` = "PBG") %>% 
+  select(-Block)
+
+
+ABG_CV_Average <- ABG_CV %>%
+  group_by(Treatment) %>%
+  summarize(Average_CV = mean(cv_weight))
+
+# Calculate the average weight CV for PBG
+PBG_CV_Average <- PBG_CV %>%
+  group_by(Treatment) %>%
+  summarize(Average_CV = mean(cv_weight))
+ 
+
+
+combined_cv <- rbind(ABG_CV_Average, PBG_CV_Average)
+
+#CV Graph ####
+
+ggplot(combined_cv, aes(x = Treatment, y = `Average_CV`, fill = Treatment)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red")) +
+  guides(fill = FALSE) +
+  theme_bw() +
+  theme(panel.background = element_rect(fill = "white"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 20),
+        axis.title = element_text(size = 40),
+        axis.text.y = element_text(size = 20),
+        axis.title.y = element_text(size = 40),
+        axis.ticks.y = element_line(size = 1)) +
+  labs(y = "Average CV")
+
+ggsave("CVBiomass.png", width = 8, height = 8, dpi = 300)
