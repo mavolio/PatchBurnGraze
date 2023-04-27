@@ -198,6 +198,7 @@ ggplot(combined_cv, aes(x = Treatment, y = `Average_CV`, fill = Treatment)) +
         axis.text.y = element_text(size = 20),
         axis.title.y = element_text(size = 40),
         axis.ticks.y = element_line(size = 1)) +
-  labs(y = "Average CV")
+  labs(y = "Biomass Average CV")
 
 ggsave("CVBiomass.png", width = 8, height = 8, dpi = 300)
+
