@@ -182,6 +182,12 @@ Abundance_Stats <- group_by(Abundance_ID_Belowground, Morphospp, Sample) %>%
 Abundance_ID_Belowground$Count <- ifelse(is.na(Abundance_ID_Belowground$Count), 1, Abundance_ID_Belowground$Count)
 
 
+###Total Count ####
+
+Abundance_Stats$treatment <- ifelse(grepl("ABG", Abundance_Stats$Sample), "ABG", 
+                                    ifelse(grepl("PBG", Abundance_Stats$Sample), "PBG", NA))
+
+# Explanation:
 
 #### Stats ####
 
@@ -588,3 +594,4 @@ names(GISData) <- c("WS", "AvgRichness")
 library(openxlsx)
 
 write.xlsx(GISData, file = "GISData.xlsx")
+
