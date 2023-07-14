@@ -400,7 +400,28 @@ ggplot(Joined, aes(x = TreatmentSB, y = Evar, fill= Trea)) +
         axis.text.y = element_text(size = 20),
         axis.title.y = element_text(size = 40),
         axis.ticks.y = element_line(size = 1)) +
-  guides(fill = FALSE)
+  guides(fill = FALSE) +
+  geom_text(
+    data = NULL,
+    aes(x = -Inf, y = Inf),
+    label = "P=0.6342",
+    size = 5,
+    hjust = 0,
+    vjust = 1,
+    color = "black",
+    show.legend = FALSE
+  ) +
+  geom_text(
+    data = NULL,
+    aes(x = -Inf, y = Inf),
+    label=expression(paste('F'['3,48'],' = 0.5750')),
+    size = 5,
+    hjust = 0,
+    vjust = 2,
+    color = "black",
+    show.legend = FALSE
+  )
+
 
 ggsave("Evenness.png", width = 8, height = 8, dpi = 300)
 
