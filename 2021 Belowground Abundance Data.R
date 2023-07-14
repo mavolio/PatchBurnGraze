@@ -215,6 +215,8 @@ error_df <- total_counts %>%
 #Count Graph
 
 
+library(ggplot2)
+
 ggplot(avg_counts, aes(x = treatment, y = Count, fill = treatment)) +
   geom_bar(stat = "identity", position = "dodge") +
   labs(x = "Treatment", y = "Average Count") +
@@ -223,15 +225,44 @@ ggplot(avg_counts, aes(x = treatment, y = Count, fill = treatment)) +
                 width = 0.2, position = position_dodge(0.9)) +
   scale_fill_manual(values = c("blue", "red")) +
   theme_bw() +
-  theme(panel.background = element_rect(fill = "white"),
-        panel.grid.major = element_blank(), 
-        panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 20),
-        axis.title = element_text(size = 40),
-        axis.text.y = element_text(size = 20),
-        axis.title.y = element_text(size = 40),
-        axis.ticks.y = element_line(size = 1)) +
-        guides(fill = FALSE)
+  theme(
+    panel.background = element_rect(fill = "white"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.text = element_text(size = 20),
+    axis.title = element_text(size = 40),
+    axis.text.y = element_text(size = 20),
+    axis.title.y = element_text(size = 40),
+    axis.ticks.y = element_line(size = 1),
+    legend.position = "none"
+  ) +
+  geom_text(
+    data = NULL,
+    aes(x = -Inf, y = Inf),
+    label = "P=0.951",
+    size = 5,
+    hjust = 0,
+    vjust = 1,
+    color = "black",
+    show.legend = FALSE
+  ) +
+  geom_text(
+    data = NULL,
+    aes(x = -Inf, y = Inf),
+    label=expression(paste('F'['1,53'],' = 0.00381')),
+    size = 5,
+    hjust = 0,
+    vjust = 2,
+    color = "black",
+    show.legend = FALSE
+  )
+
+
+
+
+
+
+
 
 ggsave("Total_Count.png", width = 8, height = 8, dpi = 300)
 
