@@ -231,7 +231,7 @@ ggplot(avg_counts, aes(x = treatment, y = Count, fill = treatment)) +
         axis.text.y = element_text(size = 20),
         axis.title.y = element_text(size = 40),
         axis.ticks.y = element_line(size = 1)) +
-  guides(fill = FALSE)
+        guides(fill = FALSE)
 
 ggsave("Total_Count.png", width = 8, height = 8, dpi = 300)
 
