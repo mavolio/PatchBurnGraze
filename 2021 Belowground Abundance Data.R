@@ -187,7 +187,11 @@ Abundance_ID_Belowground$Count <- ifelse(is.na(Abundance_ID_Belowground$Count), 
 Abundance_Stats$treatment <- ifelse(grepl("ABG", Abundance_Stats$Sample), "ABG", 
                                     ifelse(grepl("PBG", Abundance_Stats$Sample), "PBG", NA))
 # Calculate the average counts for each treatment
-avg_counts <- aggregate(Count ~ treatment, data = Abundance_Stats, FUN = mean)
+
+total_counts <- aggregate(Count ~ Sample + treatment, data = Abundance_Stats, FUN = sum)
+
+
+avg_counts <- aggregate(Count ~ Sample + treatment, data = total_counts, FUN = mean)
 
 #Count Graph
 
@@ -206,6 +210,9 @@ ggplot(avg_counts, aes(x = treatment, y = Count, fill = treatment)) +
         axis.title.y = element_text(size = 40),
         axis.ticks.y = element_line(size = 1)) +
   guides(fill = FALSE)
+
+ggsave("Total_Count.png", width = 8, height = 8, dpi = 300)
+
 
 
 #### Stats ####
