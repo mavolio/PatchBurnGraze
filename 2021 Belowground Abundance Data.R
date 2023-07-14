@@ -4,6 +4,9 @@ library(readxl)
 library(codyn)
 library(vegan)
 library(tidyverse)
+library(nlme)
+library(emmeans)
+
 
 #### NOTE: need to correct these values for depth of sample.
 
@@ -188,10 +191,26 @@ Abundance_Stats$treatment <- ifelse(grepl("ABG", Abundance_Stats$Sample), "ABG",
                                     ifelse(grepl("PBG", Abundance_Stats$Sample), "PBG", NA))
 # Calculate the average counts for each treatment
 
-total_counts <- aggregate(Count ~ Sample + treatment, data = Abundance_Stats, FUN = sum)
+total_counts <- aggregate(Count ~ Sample + treatment, data = Abundance_Stats, FUN = sum) %>% 
+  separate(Sample, into = c("WS", "Trans", "Dist"), sep = "_", extra = "drop") %>% mutate(block = ifelse(grepl("S", WS), "North", "South"))
+
+avg_counts <- aggregate(Count ~ treatment, data = total_counts, FUN = mean)
+
+TotalcountModel <- #stores the model output into a named list
+  lme(Count ~ treatment, #relates richness (or any other dependent variable) to treatment (e.g., ABG and PBG or ABG, PBG0, PBG1, PBG2 for years since burnign)
+      data = total_counts, #dataset you are analyzing, this must contain all the data (both treatments and all plots)
+      random = ~1|block) #this would be where you'd say north or south unit (which should be a variable in the dataframe)
+anova.lme(TotalcountModel, type='sequential') #this gives you the ANOVA output from the model, where "sequential" tells it to do a type III anova
+emmeans(TotalcountModel, pairwise~Treatment, adjust="tukey") #this gives you contrasts (means and confidence intervals) for each possible pairwise comparison of treatments to know whether they are different or not (overlapping confidence intervals means not different)
+
+#error bar
 
 
-avg_counts <- aggregate(Count ~ Sample + treatment, data = total_counts, FUN = mean)
+error_df <- total_counts %>%
+  group_by(treatment) %>%
+  summarize(mean_value = mean(Count),
+            se = sd(Count) / sqrt(n()))
+
 
 #Count Graph
 
@@ -199,6 +218,9 @@ avg_counts <- aggregate(Count ~ Sample + treatment, data = total_counts, FUN = m
 ggplot(avg_counts, aes(x = treatment, y = Count, fill = treatment)) +
   geom_bar(stat = "identity", position = "dodge") +
   labs(x = "Treatment", y = "Average Count") +
+  geom_errorbar(aes(ymin = Count - ifelse(treatment == "ABG", 1.726931, 1.418959),
+                    ymax = Count + ifelse(treatment == "ABG", 1.726931, 1.418959)),
+                width = 0.2, position = position_dodge(0.9)) +
   scale_fill_manual(values = c("blue", "red")) +
   theme_bw() +
   theme(panel.background = element_rect(fill = "white"),
