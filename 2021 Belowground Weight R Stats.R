@@ -99,7 +99,7 @@ ggplot(Joined, aes(x = Treatment, y = Weight, fill = Treatment)) +
   guides(fill = FALSE) +
   ylab("Weight (mg)")
 
-ggplot(PBG_2021_Weight_Below, aes(x = Treatment, y = `Weight (mg)`, fill = Treatment)) +
+biomass <- ggplot(PBG_2021_Weight_Below, aes(x = Treatment, y = `Weight (mg)`, fill = Treatment)) +
   geom_boxplot() +
   scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red")) +
   guides(fill = FALSE) +
@@ -112,7 +112,18 @@ ggplot(PBG_2021_Weight_Below, aes(x = Treatment, y = `Weight (mg)`, fill = Treat
         axis.title = element_text(size = 40),
         axis.text.y = element_text(size = 20),
         axis.title.y = element_text(size = 40),
-        axis.ticks.y = element_line(size = 1))
+        axis.ticks.y = element_line(size = 1)) +
+  geom_text(
+    data = NULL,
+    aes(x = -Inf, y = Inf),
+    label = "B",
+    size = 10,
+    hjust = 0,
+    vjust = 1,
+    color = "black",
+    show.legend = FALSE
+  )
+
 
 
 ggsave("Biomass.png", width = 8, height = 8, dpi = 300)
@@ -198,7 +209,7 @@ ggplot(combined_cv, aes(x = Treatment, y = `Average_CV`, fill = Treatment)) +
         axis.text.y = element_text(size = 20),
         axis.title.y = element_text(size = 40),
         axis.ticks.y = element_line(size = 1)) +
-  labs(y = "Biomass Average CV")
+  labs(y = "Biomass Average CV") 
 
 ggsave("CVBiomass.png", width = 8, height = 8, dpi = 300)
 

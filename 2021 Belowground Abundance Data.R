@@ -6,6 +6,7 @@ library(vegan)
 library(tidyverse)
 library(nlme)
 library(emmeans)
+library(gridExtra)
 
 
 #### NOTE: need to correct these values for depth of sample.
@@ -217,7 +218,7 @@ error_df <- total_counts %>%
 
 library(ggplot2)
 
-ggplot(avg_counts, aes(x = treatment, y = Count, fill = treatment)) +
+Avg_Count <- ggplot(avg_counts, aes(x = treatment, y = Count, fill = treatment)) +
   geom_bar(stat = "identity", position = "dodge") +
   labs(x = "Treatment", y = "Average Count") +
   geom_errorbar(aes(ymin = Count - ifelse(treatment == "ABG", 1.726931, 1.418959),
@@ -239,20 +240,10 @@ ggplot(avg_counts, aes(x = treatment, y = Count, fill = treatment)) +
   geom_text(
     data = NULL,
     aes(x = -Inf, y = Inf),
-    label = "P=0.951",
-    size = 5,
+    label = "A",
+    size = 10,
     hjust = 0,
     vjust = 1,
-    color = "black",
-    show.legend = FALSE
-  ) +
-  geom_text(
-    data = NULL,
-    aes(x = -Inf, y = Inf),
-    label=expression(paste('F'['1,53'],' = 0.00381')),
-    size = 5,
-    hjust = 0,
-    vjust = 2,
     color = "black",
     show.legend = FALSE
   )
@@ -379,27 +370,7 @@ ggplot(Joined, aes(x = TreatmentSB, y = richness, fill= Trea)) +
         axis.text.y = element_text(size = 20),
         axis.title.y = element_text(size = 40),
         axis.ticks.y = element_line(size = 1)) +
-  guides(fill = FALSE) +
-  geom_text(
-    data = NULL,
-    aes(x = -Inf, y = Inf),
-    label = "P=0.1937",
-    size = 5,
-    hjust = 0,
-    vjust = 1,
-    color = "black",
-    show.legend = FALSE
-  ) +
-  geom_text(
-    data = NULL,
-    aes(x = -Inf, y = Inf),
-    label=expression(paste('F'['3,51'],' = 1.6312')),
-    size = 5,
-    hjust = 0,
-    vjust = 2,
-    color = "black",
-    show.legend = FALSE
-  )
+  guides(fill = FALSE)
   
 
 ggsave("Richness.png", width = 8, height = 8, dpi = 300)
@@ -421,27 +392,7 @@ ggplot(Joined, aes(x = TreatmentSB, y = Evar, fill= Trea)) +
         axis.text.y = element_text(size = 20),
         axis.title.y = element_text(size = 40),
         axis.ticks.y = element_line(size = 1)) +
-  guides(fill = FALSE) +
-  geom_text(
-    data = NULL,
-    aes(x = -Inf, y = Inf),
-    label = "P=0.6342",
-    size = 5,
-    hjust = 0,
-    vjust = 1,
-    color = "black",
-    show.legend = FALSE
-  ) +
-  geom_text(
-    data = NULL,
-    aes(x = -Inf, y = Inf),
-    label=expression(paste('F'['3,48'],' = 0.5750')),
-    size = 5,
-    hjust = 0,
-    vjust = 2,
-    color = "black",
-    show.legend = FALSE
-  )
+  guides(fill = FALSE)
 
 
 ggsave("Evenness.png", width = 8, height = 8, dpi = 300)
@@ -716,3 +667,9 @@ library(openxlsx)
 
 write.xlsx(GISData, file = "GISData.xlsx")
 
+
+#### Combined Graphs ####
+
+#Note: "biomass" must come from the belowground weight file and be stored in your enviroment.
+
+combined_plot <- grid.arrange(Avg_Count, biomass, ncol = 2)
