@@ -517,15 +517,29 @@ ggsave("Richness_CV.png", width = 8, height = 8, dpi = 300)
 
 ### by Years since burn
 # PERMANOVA
-abundanceWide <- CountGraph  %>% 
+
+abundanceWide <- CountGraph %>% 
   mutate(block = ifelse(grepl("S", Sample), "North", "South")) %>%
   select(Sample, block, WS, Trans, Dist., Treatment, TreatmentSB, Morphospp, Count) %>%
   group_by(Sample, block, WS, Trans, Dist., Treatment, TreatmentSB, Morphospp) %>% 
-  summarise(Count=sum(Count)) %>% 
+  summarise(Count = sum(Count)) %>% 
   ungroup() %>% 
-  pivot_wider(names_from='Morphospp', values_from='Count', values_fill=list(Count=0)) %>% 
-  mutate(sum=rowSums(abundanceWide[,c(8:57)], na.rm=TRUE)) %>% 
-  filter(sum>0, Sample!='C1A_A_38_ABG') #PROBLEM: Check why two of the samples have nothing in them, is this real?
+  pivot_wider(names_from = 'Morphospp', values_from = 'Count', values_fill = list(Count = 0)) 
+
+abundanceWide <- abundanceWide %>% 
+  mutate(sum = rowSums(abundanceWide[, c(8:57)], na.rm = TRUE)) %>% 
+  filter(sum > 0, Sample != 'C1A_A_38_ABG') 
+
+###Defined in itself?
+#abundanceWide <- CountGraph  %>% 
+#  mutate(block = ifelse(grepl("S", Sample), "North", "South")) %>%
+#  select(Sample, block, WS, Trans, Dist., Treatment, TreatmentSB, Morphospp, Count) %>%
+#  group_by(Sample, block, WS, Trans, Dist., Treatment, TreatmentSB, Morphospp) %>% 
+#  summarise(Count=sum(Count)) %>% 
+#  ungroup() %>% 
+#  pivot_wider(names_from='Morphospp', values_from='Count', values_fill=list(Count=0)) %>% 
+#  mutate(sum=rowSums(abundanceWide[,c(8:57)], na.rm=TRUE)) %>% 
+#  filter(sum>0, Sample!='C1A_A_38_ABG') #PROBLEM: Check why two of the samples have nothing in them, is this real?
 ###IMPORTANT: removing sample from C1A_A_38_ABG, which is a big outlier because of high values of endogenic worms and brown shrimp-like beetles, which no other plots had
 
 print(permanova <- adonis2(formula = abundanceWide[,8:166]~TreatmentSB, data=abundanceWide, permutations=999, method="bray"))
