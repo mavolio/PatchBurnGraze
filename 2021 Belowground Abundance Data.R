@@ -527,8 +527,8 @@ abundanceWide <- CountGraph %>%
   pivot_wider(names_from = 'Morphospp', values_from = 'Count', values_fill = list(Count = 0)) 
 
 abundanceWide <- abundanceWide %>% 
-  mutate(sum = rowSums(abundanceWide[, c(8:57)], na.rm = TRUE)) %>% 
-  filter(sum > 0, Sample != 'C1A_A_38_ABG') 
+  mutate(sum = rowSums(abundanceWide[, c(8:177)], na.rm = TRUE)) %>% 
+  filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
 
 ###Defined in itself?
 #abundanceWide <- CountGraph  %>% 
@@ -594,8 +594,6 @@ ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = 
                      labels=c('ABG', 'PBG 0', 'PBG 1', 'PBG 2')) +
   xlab("NMDS1") + 
   ylab("NMDS2") + 
-  annotate('text', x=-0.03, y=0.02, label=expression(paste('F'['3,52'],' = 1.61')), size=8, hjust='left') +
-  annotate('text', x=-0.03, y=0.018, label='p = 0.016', size=8, hjust='left') +
   theme_bw() +
   theme(axis.text.x=element_text(size=24, color = "black"), 
         axis.text.y = element_text(size = 24, color = "black"), 
@@ -608,19 +606,20 @@ ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = 
 #export at 1500x1000
 patchBurn_belowgroundInvert_NMDS_yearsSinceBurn
 
+ggsave()
 
 ### by watershed
 # PERMANOVA
-print(permanova <- adonis2(formula = abundanceWide[,8:166]~Treatment, data=abundanceWide, permutations=999, method="bray"))
+print(permanova <- adonis2(formula = abundanceWide[,8:177]~Treatment, data=abundanceWide, permutations=999, method="bray"))
 #F=1.4498, df=1,52, p=0.119
 
 #betadisper
-veg <- vegdist(abundanceWide[,8:166], method = "bray")
+veg <- vegdist(abundanceWide[,8:177], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$Treatment)
 permutest(dispersion, pairwise=TRUE, permutations=999) 
 #F=9e-4, df=1,52, p=0.976
 
-BC_Data <- metaMDS(abundanceWide[,8:166])
+BC_Data <- metaMDS(abundanceWide[,8:177])
 sites <- 1:nrow(abundanceWide)
 BC_Meta_Data <- abundanceWide[,1:7]
 plot(BC_Data$points, col=as.factor(BC_Meta_Data$Treatment))
