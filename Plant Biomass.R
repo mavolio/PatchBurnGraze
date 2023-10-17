@@ -2,7 +2,7 @@
 ####Plant Biomass
 ###Author: Joshua Ajowele
 
-#packages for cleaning dataset
+#packages 
 library(tidyverse)
 library(ggthemes)
 library(readr)
@@ -78,9 +78,11 @@ Diskpast_data<- read_csv("C:/Users/joshu/OneDrive - UNCG/UNCG PHD/PhD Wyoming_On
   #creating a coloumn for unique combination of year and watershed
   mutate(year_watershed = paste(RecYear, Watershed, sep = "_"))
 
-#Create a watershed key column to merge with the raw data
-watershed_key <- tibble(Watershed=levels(factor(Diskpast_data$Watershed)),# create key to merge with raw data
-                        FireGrzTrt=c("ABG", "PBG", "PBG", "PBG", "ABG", "PBG", "PBG", "PBG"))
+#Create a watershed key for treatment and Unit column to merge with the raw data
+watershed_key <- tibble(Watershed=levels(factor(Diskpast_data$Watershed)),
+                        FireGrzTrt=c("ABG", "PBG", "PBG", "PBG", "ABG", "PBG", "PBG", "PBG"),
+                        Unit=c("south", "south", "south", "south", "north", "north",
+                               "north", "north"))
 
 #check to make sure there is no problem
 print(watershed_key)
@@ -89,5 +91,50 @@ print(watershed_key)
 biomass_data <- Diskpast_data %>%
   filter(!RecYear=="2010")%>%
   filter(!RecYear=="2011")%>%
-  full_join(watershed_key, by="Watershed")
+  left_join(watershed_key, by="Watershed")
+
+#averaging to plot level for plot scale comparison
+biomass_plot_scale<-biomass_data%>%
+  group_by(RecYear, Unit, Watershed, FireGrzTrt, Transect, Plotnum)%>%
+  summarise(biomass_plot= mean(biomass, na.rm=T))
+
+###personal use
+#meeting with Kevin 12/10/2023
+#at each scale get the raw values for all possible combination and 
+#this can be used to calculate plot level stability or average to calculate higher scale 
+#stability
+
+#filter for PBG to perform bootstrap
+biomass_PBG_plot_index<-biomass_plot_scale%>%
+  filter(FireGrzTrt=="PBG")%>%
+  group_by(RecYear)%>%
+  #number the plots to sample from
+  mutate(biomass_PBG_plot_index= 1:length(RecYear))
+
+biomass_rand_plot<-biomass_plot_scale%>%
+  filter(FireGrzTrt=="PBG")%>%
+  left_join(biomass_PBG_plot_index, by=c("RecYear","Unit","Watershed","Transect", "FireGrzTrt",
+                                         "Plotnum", "biomass_plot"))
+  
+num_bootstrap<-1000
+bootstrap_vector<-1:num_bootstrap
+biomass_plot_master<-{}
+for(BOOT in 1:length(bootstrap_vector)){
+  biomass_plot_rand_key<-biomass_rand_plot%>%
+    dplyr::select(RecYear, Unit, Watershed, FireGrzTrt, Transect, Plotnum, biomass_PBG_plot_index)%>%
+    unique(.)%>%
+    #filter(RecYear==2012)%>%
+    group_by(RecYear)%>%
+    sample_n(400, replace=T)%>%
+    dplyr::select(biomass_PBG_plot_index)%>%
+    ungroup()
+  biomass_plot_ready<-biomass_rand_plot%>%
+    right_join(biomass_plot_rand_key, by= c("RecYear", "biomass_PBG_plot_index"),
+              multiple="all")%>%
+    mutate(iteration=BOOT)
+  biomass_plot_master<-rbind(biomass_plot_master, biomass_plot_ready)
+}
+
+#write into csv
+write.csv(biomass_plot_master,"C:/Users/joshu/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/biomass_plot_master.csv" )
 
