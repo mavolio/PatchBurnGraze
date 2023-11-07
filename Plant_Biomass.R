@@ -144,16 +144,16 @@ biomass_plot_bootdata<-read_csv("C:/Users/joshu/OneDrive - UNCG/UNCG PHD/PhD Wyo
 #mean and SD of PBG biomass at plot scale per iteration
 PBG_biomass_plot<-biomass_plot_bootdata%>%
   group_by(RecYear, iteration)%>%
-  mutate(PBG_plot_mean=mean(biomass_plot, na.rm=T),
-         PBG_plot_SD=sd(biomass_plot))%>%
-  select(RecYear,PBG_plot_mean, PBG_plot_SD,iteration)%>%
-  unique()
-
-#distribution of biomass mean and SD 
-ggplot(PBG_biomass_plot,aes (PBG_plot_mean))+
-  geom_histogram()+
-  facet_grid("RecYear")
-#v_line for showing the result. 
+  mutate(PBG_plot_mean_dist=mean(biomass_plot, na.rm=T),
+         PBG_plot_SD_dist=sd(biomass_plot))%>%
+  select(RecYear,PBG_plot_mean_dist, PBG_plot_SD_dist,iteration)%>%
+  unique()%>%
+  #obtain the mean and SD of the mean and SD distributions
+  group_by(RecYear)%>%
+  mutate(PBG_plot_mean=mean(PBG_plot_mean_dist, na.rm=T),
+         PBG_plot_mean_sd=sd(PBG_plot_mean_dist),
+         PBG_plot_SD_mean= mean(PBG_plot_SD_dist),
+         PBG_plot_SD_SD=sd(PBG_plot_SD_dist))
 
 #calculate a z score from PBG distribution with the mean of ABG
 #filter ABG from the dataframe
@@ -161,15 +161,34 @@ ggplot(PBG_biomass_plot,aes (PBG_plot_mean))+
 ABG_biomass_plot<-biomass_plot_scale%>%
   filter(FireGrzTrt=="ABG")%>%
   group_by(RecYear)%>%
-  mutate(ABG_plot_mean=mean(biomass_plot, na.rm=T))
+  summarise(ABG_plot_mean=mean(biomass_plot, na.rm=T),
+         ABG_plot_SD=sd(biomass_plot))
 
+
+#combine ABG and PBG plot biomass 
 combo_plot_biomass<-ABG_biomass_plot%>%
-  select(RecYear,ABG_plot_mean)%>%
-  unique()%>%
-  left_join(PBG_biomass_plot, by ="RecYear")
+  left_join(PBG_biomass_plot, by ="RecYear")%>%
+  #calculate the z-scores
+  mutate(Z_score_mean=(ABG_plot_mean-PBG_plot_mean)/PBG_plot_mean_sd,
+         Z_score_SD=(ABG_plot_SD-PBG_plot_SD_mean)/PBG_plot_SD_SD)%>%
+  #calculate p values from z-scores
+  mutate(pvalue_mean=2*pnorm(-abs(Z_score_mean)),
+         pvalue_sd=2*pnorm(-abs(Z_score_SD)))
 
-#combine PBG and ABG
+#create a visual of the distribution
+ggplot(combo_plot_biomass,aes(PBG_plot_mean_dist))+
+  geom_density()+
+  facet_wrap(~RecYear)+
+  #facet_grid("RecYear")+
+  geom_vline(aes(xintercept=ABG_plot_mean, col="Red"))
 
+
+#visual for SD
+ggplot(combo_plot_biomass,aes(PBG_plot_SD_dist))+
+  geom_density()+
+  facet_wrap(~RecYear)+
+  #facet_grid("RecYear")+
+  geom_vline(aes(xintercept=ABG_plot_SD, col="Red"))
 
 
 
