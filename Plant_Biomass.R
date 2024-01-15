@@ -1,5 +1,5 @@
 ####PBG SYNTHESIS PROJECT
-####Plant Biomass
+####Plant Biomass from diskpasture meter
 ###Author: Joshua Ajowele
 
 #packages 
@@ -25,8 +25,7 @@ theme_update(axis.title.x=element_text(size=20, vjust=-0.35), axis.text.x=elemen
 
 
 #import dataset as tibble
-biomass_diskpasture<- read_csv("C:/Users/joshu/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/Plant_Biomass_11_17_PBG031.csv")
-
+biomass_diskpasture<- read_csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/Plant_Biomass_11_17_PBG031.csv")
 #modifying the data set by adding new columns
 biomass_reg <- biomass_diskpasture%>%
   #creating row number in order to visualise outliers in the graph
@@ -71,7 +70,7 @@ hist(sqrt(biomass_reg$total_biomass))
 
 ##import dataset as tibble
 #estimate biomass from regression equation
-Diskpast_data<- read_csv("C:/Users/joshu/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/Plant_Biomass_10_20_PBG032.csv")%>%
+Diskpast_data<- read_csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/Plant_Biomass_10_20_PBG032.csv")%>%
   mutate(biom= 9.99+(0.7965*(Diskht)))%>%
   mutate(biomass= biom*biom)%>%
   rename(RecYear= Recyear)%>%
@@ -138,7 +137,7 @@ for(BOOT in 1:length(bootstrap_vector)){
 #write into csv
 write.csv(biomass_plot_master,"C:/Users/joshu/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/biomass_plot_master.csv" )
 
-biomass_plot_bootdata<-read_csv("C:/Users/joshu/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/biomass_plot_master.csv")%>%
+biomass_plot_bootdata<-read_csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/biomass_plot_master.csv")%>%
   dplyr::select(-1)
 
 #mean and SD of PBG biomass at plot scale per iteration
@@ -191,4 +190,31 @@ ggplot(combo_plot_biomass,aes(PBG_plot_SD_dist))+
   geom_vline(aes(xintercept=ABG_plot_SD, col="Red"))
 
 
+####compare PBG mean and SD from actual observation to bootstrapped values
+#cal mean and sd from PBG actual value
+PBG_actual_biomass<-biomass_plot_scale%>%
+  filter(FireGrzTrt=="PBG")%>%
+  group_by(RecYear)%>%
+  summarise(a_biom_mean= mean(biomass_plot, na.rm=T),
+            a_biom_sd=sd(biomass_plot))
+#combine
+PBG_boot_biom<-combo_plot_biomass%>%
+  select(RecYear, PBG_plot_mean, PBG_plot_SD_mean)%>%
+  unique()%>%
+  left_join(PBG_actual_biomass, by="RecYear")
 
+#perform a linear regression
+mean_PBG_lm<-lm(PBG_plot_mean~a_biom_mean, data=PBG_boot_biom)
+summary(mean_PBG_lm)
+Sd_PBG_lm<-lm(PBG_plot_SD_mean~a_biom_sd, data=PBG_boot_biom)
+summary(Sd_PBG_lm)
+
+#visual
+ggplot(PBG_boot_biom, aes(PBG_plot_mean, a_biom_mean))+
+  geom_point()+
+  geom_smooth(method="lm")
+
+ggplot(PBG_boot_biom, aes(PBG_plot_SD_mean, a_biom_sd))+
+  geom_point()+
+  geom_smooth(method="lm")
+#conclusion: There is no point bootstrapping!!!
