@@ -8,6 +8,11 @@ library(ggthemes)
 library(readr)
 library(performance)
 library(car)
+library(lme4)
+library(nlme)
+library(see)
+library(patchwork)
+library(phia)
 ### Standard Error function
 SE_function<-function(x,na.rm=na.rm){
   SE=sd(x,na.rm=TRUE)/sqrt(length(x))
@@ -218,3 +223,35 @@ ggplot(PBG_boot_biom, aes(PBG_plot_SD_mean, a_biom_sd))+
   geom_point()+
   geom_smooth(method="lm")
 #conclusion: There is no point bootstrapping!!!
+
+###Linear mixed models###
+#convert all to factors
+biomass_plot_scale$RecYear<-as.factor(biomass_plot_scale$RecYear)
+biomass_plot_scale$Unit<-as.factor(biomass_plot_scale$Unit)
+biomass_plot_scale$Watershed<-as.factor(biomass_plot_scale$Watershed)
+biomass_plot_scale$Transect<-as.factor(biomass_plot_scale$Transect)
+biomass_plot_scale$Plotnum<-as.factor(biomass_plot_scale$Plotnum)
+biomass_plot_scale$FireGrzTrt<-as.factor(biomass_plot_scale$FireGrzTrt)
+#run a linear mixed model at the plot scale
+Biom_Plot_Model<-lmer(biomass_plot~FireGrzTrt*RecYear+(1|Unit/Watershed/Transect),
+                      data=biomass_plot_scale, REML = FALSE)
+summary(Biom_Plot_Model)
+check_model(Biom_Plot_Model)#looks good enough
+Anova(Biom_Plot_Model, type=3)#significant interaction
+
+#using phia for pairwise comparison
+interactionMeans(Biom_Plot_Model)
+
+testInteractions(Biom_Plot_Model, fixed="RecYear",
+                 across = "FireGrzTrt", adjustment="none")
+lmer
+#deal with this later
+Biom_Plot_Model2<-lmer(biomass_plot~FireGrzTrt+RecYear+(1|Unit/Watershed/Transect),
+                      data=biomass_plot_scale, REML = FALSE)
+Anova(Biom_Plot_Model2, type=3)
+check_model(Biom_Plot_Model2)
+
+install.packages("pbkrtest")
+library(pbkrtest)
+gggg<-KRmodcomp(Biom_Plot_Model,Biom_Plot_Model2)
+
