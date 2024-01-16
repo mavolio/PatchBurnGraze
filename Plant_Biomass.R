@@ -234,24 +234,16 @@ biomass_plot_scale$Plotnum<-as.factor(biomass_plot_scale$Plotnum)
 biomass_plot_scale$FireGrzTrt<-as.factor(biomass_plot_scale$FireGrzTrt)
 #run a linear mixed model at the plot scale
 Biom_Plot_Model<-lmer(biomass_plot~FireGrzTrt*RecYear+(1|Unit/Watershed/Transect),
-                      data=biomass_plot_scale, REML = FALSE)
+                      data=biomass_plot_scale)
 summary(Biom_Plot_Model)
 check_model(Biom_Plot_Model)#looks good enough
 Anova(Biom_Plot_Model, type=3)#significant interaction
 
 #using phia for pairwise comparison
+#gives mean for each treatment and year
 interactionMeans(Biom_Plot_Model)
-
+#pairwise comparison without padjustment
 testInteractions(Biom_Plot_Model, fixed="RecYear",
                  across = "FireGrzTrt", adjustment="none")
-lmer
-#deal with this later
-Biom_Plot_Model2<-lmer(biomass_plot~FireGrzTrt+RecYear+(1|Unit/Watershed/Transect),
-                      data=biomass_plot_scale, REML = FALSE)
-Anova(Biom_Plot_Model2, type=3)
-check_model(Biom_Plot_Model2)
 
-install.packages("pbkrtest")
-library(pbkrtest)
-gggg<-KRmodcomp(Biom_Plot_Model,Biom_Plot_Model2)
 
