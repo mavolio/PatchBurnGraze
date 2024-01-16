@@ -100,7 +100,11 @@ biomass_data <- Diskpast_data %>%
 #averaging to plot level for plot scale comparison
 biomass_plot_scale<-biomass_data%>%
   group_by(RecYear, Unit, Watershed, FireGrzTrt, Transect, Plotnum)%>%
-  summarise(biomass_plot= mean(biomass, na.rm=T))
+  summarise(biomass_plot= mean(biomass, na.rm=T),
+            biomass_sd_plot=sd(biomass),
+            biomass_stab_plot=mean(biomass,na.rm=T)/sd(biomass))%>%
+  #convert Inf to NA 
+  mutate(biomass_stab_plot=ifelse(biomass_stab_plot>10000,NA,biomass_stab_plot))
 
 ###personal use
 #meeting with Kevin 12/10/2023
@@ -245,5 +249,27 @@ interactionMeans(Biom_Plot_Model)
 #pairwise comparison without padjustment
 testInteractions(Biom_Plot_Model, fixed="RecYear",
                  across = "FireGrzTrt", adjustment="none")
+
+#model for sd
+Biom_Plot_Sd_Model<-lmer(biomass_sd_plot~FireGrzTrt*RecYear+(1|Unit/Watershed/Transect),
+                      data=biomass_plot_scale)
+check_model(Biom_Plot_Sd_Model)#normality looks sketchy
+Anova(Biom_Plot_Sd_Model, type=3)
+#pairwise comparison without padjustment
+testInteractions(Biom_Plot_Sd_Model, fixed="RecYear",
+                 across = "FireGrzTrt", adjustment="none")
+
+#model for stability
+Biom_Plot_Stab_Model<-lmer(biomass_stab_plot~FireGrzTrt*RecYear+(1|Unit/Watershed/Transect),
+                         data=biomass_plot_scale)
+check_model(Biom_Plot_Stab_Model)#normality looks sketchy
+Anova(Biom_Plot_Stab_Model, type=3)
+testInteractions(Biom_Plot_Stab_Model, fixed="RecYear",
+                 across = "FireGrzTrt", adjustment="none")
+
+#
+
+
+#next step use lme to confirm results and show lme4 and nlme are similar
 
 
