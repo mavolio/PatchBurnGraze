@@ -336,3 +336,11 @@ Biom_Stab_Transect_model<-lmer(log(biom_transect_stab)~FireGrzTrt+(1|Unit/Waters
 check_model(Biom_Stab_Transect_model)#iffy normality
 Anova(Biom_Stab_Transect_model, type=3)#no difference
 
+#mixed model for watershed scale
+Biom_Watershed_Model<-lmer(biomass_watershed~FireGrzTrt*RecYear+(1|Unit/Watershed),
+                          data=biomass_master)
+check_model(Biom_Watershed_Model)#lnormality not the best
+Anova(Biom_Watershed_Model, type=3)#significant interaction
+
+
+
