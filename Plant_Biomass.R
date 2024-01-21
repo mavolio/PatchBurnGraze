@@ -337,10 +337,56 @@ check_model(Biom_Stab_Transect_model)#iffy normality
 Anova(Biom_Stab_Transect_model, type=3)#no difference
 
 #mixed model for watershed scale
-Biom_Watershed_Model<-lmer(biomass_watershed~FireGrzTrt*RecYear+(1|Unit/Watershed),
+#biomass mean
+Biom_Watershed_Model<-lmer(biomass_watershed~FireGrzTrt*RecYear+(1|Unit),
                           data=biomass_master)
-check_model(Biom_Watershed_Model)#lnormality not the best
+check_model(Biom_Watershed_Model)#normality not the best
 Anova(Biom_Watershed_Model, type=3)#significant interaction
 
+#pairwise comparison without padjustment
+testInteractions(Biom_Watershed_Model, fixed="RecYear",
+                 across = "FireGrzTrt", adjustment="holms")
+
+
+#biomass sd watershed model
+Biom_Sd_Watershed_Model<-lmer(biomass_sd_watershed~FireGrzTrt*RecYear+(1|Unit),
+                           data=biomass_master)#issingular goes away without watershed in the random effect
+check_model(Biom_Sd_Watershed_Model)#normality not the best
+Anova(Biom_Sd_Watershed_Model, type=3)#significant interaction
+
+#pairwise comparison without padjustment
+testInteractions(Biom_Sd_Watershed_Model, fixed="RecYear",
+                 across = "FireGrzTrt", adjustment="holm")
+#2018 significant even with adjustment
+
+#spatial CV watershed
+Biom_Cv_Watershed_Model<-lmer(biomass_cv_watershed~FireGrzTrt*RecYear+(1|Unit),
+                              data=biomass_master)#issingular
+check_model(Biom_Cv_Watershed_Model)#normality not the best
+Anova(Biom_Cv_Watershed_Model, type=3)#significant interaction
+
+#pairwise comparison without padjustment
+testInteractions(Biom_Cv_Watershed_Model, fixed="RecYear",
+                 across = "FireGrzTrt", adjustment="holm")
+
+
+
+#Watershed Biom stab
+Biom_Stab_Watershed_model<-lmer(biom_watershed_stab~FireGrzTrt+(1|Unit),
+                               data=biomass_master)
+check_model(Biom_Stab_Watershed_model)#iffy normality
+Anova(Biom_Stab_Watershed_model, type=3)#sig difference
+check_normality(Biom_Stab_Watershed_model)
+
+###wrangle data for visualization
+biomass_master_viz<-biomass_master%>%
+  group_by(RecYear,FireGrzTrt)%>%
+  mutate(biomass_plot_mean=mean(biomass_plot, na.rm=T),
+         biomass_plot_mean_se=SE_function(biomass_plot))
+
+##visuals
+ggplot(biomass_master_viz,aes(RecYear, biomass_plot_mean, col=FireGrzTrt))+
+  geom_point()+
+  geom_path(aes(as.numeric(RecYear)))
 
 
