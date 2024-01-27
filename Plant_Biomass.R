@@ -2,7 +2,7 @@
 ####Plant Biomass from diskpasture meter
 ###Author: Joshua Ajowele
 ###collaborators: PBG synthesis group
-###date modified:1/20/2024
+###last update:1/27/2024
 
 #packages 
 library(tidyverse)
@@ -99,31 +99,13 @@ biomass_data <- Diskpast_data %>%
   filter(!RecYear=="2011")%>%
   left_join(watershed_key, by="Watershed")
 
-#averaging at most scale
-biomass_master<-biomass_data%>%
+#averaging at plot scale
+biomass_plot_scale<-biomass_data%>%
   group_by(RecYear, Unit, Watershed, FireGrzTrt, Transect, Plotnum)%>%
   summarise(biomass_plot= mean(biomass, na.rm=T),
-            biomass_sd_plot=sd(biomass),
-            biomass_cv_plot=sd(biomass)/mean(biomass,na.rm=T))%>%
-  group_by(Unit, Watershed, FireGrzTrt, Transect, Plotnum)%>%
-  mutate(biom_plot_stab= mean(biomass_plot, na.rm=T)/sd(biomass_plot))%>%
-  #convert Inf to NA (no longer useful but keeping for record sake)
-  #mutate(biomass_stab_plot=ifelse(biomass_stab_plot>10000,NA,biomass_stab_plot))
-  #biomass at transect scale
-  group_by(RecYear, Unit, Watershed, FireGrzTrt, Transect)%>%
-  mutate(biomass_transect=mean(biomass_plot, na.rm=T),
-            biomass_sd_transect=sd(biomass_sd_plot),
-            biomass_cv_transect=sd(biomass_plot)/mean(biomass_plot,na.rm=T))%>%
-  group_by(Unit, Watershed, FireGrzTrt, Transect)%>%
-  mutate(biom_transect_stab=mean(biomass_transect, na.rm=T)/sd(biomass_transect))%>%
-  #biomass at watershed scale
-  group_by(RecYear, Unit, Watershed, FireGrzTrt)%>%
-  mutate(biomass_watershed=mean(biomass_transect, na.rm=T),
-         biomass_sd_watershed=sd(biomass_transect),
-         biomass_cv_watershed=sd(biomass_transect)/mean(biomass_transect,na.rm=T))%>%
-  group_by(Unit, Watershed, FireGrzTrt)%>%
-  mutate(biom_watershed_stab=mean(biomass_watershed, na.rm=T)/sd(biomass_watershed))
-
+            biomass_sd=sd(biomass))%>%
+  ungroup()
+  
 
 #filter for PBG to perform bootstrap
 biomass_PBG_plot_index<-biomass_plot_scale%>%
@@ -241,152 +223,271 @@ ggplot(PBG_boot_biom, aes(PBG_plot_SD_mean, a_biom_sd))+
   geom_smooth(method="lm")
 #conclusion: There is no point bootstrapping!!!
 
+#####creating dataframe for all scale
+#sd and cv among plots
+biomass_sd_cv_plot<-biomass_plot_scale%>%
+  group_by(RecYear, Unit, Watershed, FireGrzTrt, Transect)%>%
+  summarise(biomass_sd_plot=sd(biomass_plot),
+            biomass_cv_plot=sd(biomass_plot)/mean(biomass_plot, na.rm=T))%>%
+  ungroup()
+#biomass plot temporal stability
+biomass_temp_stab_plot<-biomass_plot_scale%>%
+  group_by(Unit, Watershed, FireGrzTrt, Transect, Plotnum)%>%
+  summarise(biomass_stab_plot=mean(biomass_plot, na.rm=T)/sd(biomass_plot))%>%
+  ungroup()
+
+##transect scale
+#biomass at transect scale
+biomass_mean_transect_scale<-biomass_plot_scale%>%
+  group_by(RecYear, Unit, Watershed, FireGrzTrt, Transect)%>%
+  summarise(biomass_transect=mean(biomass_plot, na.rm=T))%>%
+  ungroup()
+#sd and cv among transect
+biomass_sd_cv_transect<-biomass_mean_transect_scale%>%
+  group_by(RecYear, Unit, Watershed, FireGrzTrt)%>%
+  summarise(biomass_sd_transect=sd(biomass_transect),
+            biomass_cv_transect=sd(biomass_transect)/mean(biomass_transect, na.rm=T))%>%
+  ungroup()
+#biomass transect temporal stability
+biomass_temp_stab_transect<-biomass_mean_transect_scale%>%
+  group_by(Unit, Watershed, FireGrzTrt, Transect)%>%
+  summarise(biomass_stab_transect=mean(biomass_transect, na.rm=T)/sd(biomass_transect))%>%
+  ungroup()
+
+###watershed scale-probably irrelevant to the questions
+#biomass mean at watershed scale
+biomass_watershed_scale<-biomass_mean_transect_scale%>%
+  group_by(RecYear, Unit, Watershed, FireGrzTrt)%>%
+  summarise(biomass_watershed=mean(biomass_transect, na.rm=T))%>%
+  ungroup()
+#sd and cv among watershed
+biomass_sd_cv_watershed<-biomass_watershed_scale%>%
+  group_by(RecYear, Unit, FireGrzTrt)%>%
+  summarise(biomass_sd_watershed=sd(biomass_watershed),
+            biomass_cv_watershed=sd(biomass_watershed)/mean(biomass_watershed, na.rm=T))%>%
+  ungroup()#NA for ABG since it has only one watershed per unit
+#biomass watershed temporal stability
+biomass_temp_stab_watershed<-biomass_watershed_scale%>%
+  group_by(Unit, Watershed, FireGrzTrt)%>%
+  summarise(biomass_stab_watershed=mean(biomass_watershed, na.rm=T)/sd(biomass_watershed))%>%
+  ungroup()
+
+         
 ###Linear mixed models###
 #convert all to factors
-biomass_master$RecYear<-as.factor(biomass_master$RecYear)
-biomass_master$Unit<-as.factor(biomass_master$Unit)
-biomass_master$Watershed<-as.factor(biomass_master$Watershed)
-biomass_master$Transect<-as.factor(biomass_master$Transect)
-biomass_master$Plotnum<-as.factor(biomass_master$Plotnum)
-biomass_master$FireGrzTrt<-as.factor(biomass_master$FireGrzTrt)
+biomass_plot_scale$RecYear<-as.factor(biomass_plot_scale$RecYear)
+biomass_plot_scale$Unit<-as.factor(biomass_plot_scale$Unit)
+biomass_plot_scale$Watershed<-as.factor(biomass_plot_scale$Watershed)
+biomass_plot_scale$Transect<-as.factor(biomass_plot_scale$Transect)
+biomass_plot_scale$Plotnum<-as.factor(biomass_plot_scale$Plotnum)
+biomass_plot_scale$FireGrzTrt<-as.factor(biomass_plot_scale$FireGrzTrt)
 
 #run a linear mixed model at the plot scale
-Biom_Plot_Model<-lmer(biomass_plot~FireGrzTrt*RecYear+(1|Unit/Watershed/Transect),
-                      data=biomass_master)
+Biom_Plot_Model<-lmer(log(biomass_plot)~FireGrzTrt*RecYear+(1|Unit/Watershed/Transect),
+                      data=biomass_plot_scale)
 summary(Biom_Plot_Model)
-check_model(Biom_Plot_Model)#looks good enough
+check_model(Biom_Plot_Model)#not the best
 Anova(Biom_Plot_Model, type=3)#significant interaction
+#confirm normality plot is similar
+qqnorm(residuals(Biom_Plot_Model))
 
 #using phia for pairwise comparison
 #gives mean for each treatment and year
 interactionMeans(Biom_Plot_Model)
-#pairwise comparison without padjustment
+#pairwise comparison with Benjamin Hochberg adjustment
 testInteractions(Biom_Plot_Model, fixed="RecYear",
-                 across = "FireGrzTrt", adjustment="none")
+                 across = "FireGrzTrt", adjustment="BH")#2018 significant
 ##cross check model with nlme
 Biom_Plot_Model_lme<- lme(biomass_plot~FireGrzTrt*RecYear,random= ~1|Unit/Watershed/Transect,
-                      data =biomass_master, 
+                      data =biomass_plot_scale, 
                       correlation=corCompSymm(form = ~1|Unit/Watershed/Transect)
                       , control=lmeControl(returnObject=TRUE)
                       , na.action = na.omit)
 Anova(Biom_Plot_Model_lme, type=3)#the same output as lmer
 check_model(Biom_Plot_Model_lme)
-#pairwise comparison without padjustment
+#pairwise comparison
 testInteractions(Biom_Plot_Model_lme, fixed="RecYear",
-                 across = "FireGrzTrt", adjustment="none")#same output as lmer
+                 across = "FireGrzTrt", adjustment="BH")#same output as lmer
+
 #model for sd
-Biom_Plot_Sd_Model<-lmer(biomass_sd_plot~FireGrzTrt*RecYear+(1|Unit/Watershed/Transect),
-                      data=biomass_master)
-check_model(Biom_Plot_Sd_Model)#normality looks sketchy
+#convert all to factors
+biomass_sd_cv_plot$RecYear<-as.factor(biomass_sd_cv_plot$RecYear)
+biomass_sd_cv_plot$Unit<-as.factor(biomass_sd_cv_plot$Unit)
+biomass_sd_cv_plot$Watershed<-as.factor(biomass_sd_cv_plot$Watershed)
+biomass_sd_cv_plot$Transect<-as.factor(biomass_sd_cv_plot$Transect)
+biomass_sd_cv_plot$FireGrzTrt<-as.factor(biomass_sd_cv_plot$FireGrzTrt)
+
+Biom_Plot_Sd_Model<-lmer(log(biomass_sd_plot)~FireGrzTrt*RecYear+(1|Unit/Watershed),
+                      data=biomass_sd_cv_plot)
+check_model(Biom_Plot_Sd_Model)
 Anova(Biom_Plot_Sd_Model, type=3)
-#pairwise comparison without padjustment
+qqnorm(residuals(Biom_Plot_Sd_Model))
+#pairwise comparison
 testInteractions(Biom_Plot_Sd_Model, fixed="RecYear",
-                 across = "FireGrzTrt", adjustment="none")
+                 across = "FireGrzTrt", adjustment="BH")
 
 #model for spatial cv
-Biom_Plot_Cv_Model<-lmer(biomass_cv_plot~FireGrzTrt*RecYear+(1|Unit/Watershed/Transect),
-                         data=biomass_master)
-check_model(Biom_Plot_Cv_Model)#normality looks sketchy
+Biom_Plot_Cv_Model<-lmer(log(biomass_cv_plot)~FireGrzTrt*RecYear+(1|Unit/Watershed),
+                         data=biomass_sd_cv_plot)
+check_model(Biom_Plot_Cv_Model)
 Anova(Biom_Plot_Cv_Model, type=3)
+qqnorm(residuals(Biom_Plot_Cv_Model))
 testInteractions(Biom_Plot_Cv_Model, fixed="RecYear",
-                 across = "FireGrzTrt", adjustment="none")
+                 across = "FireGrzTrt", adjustment="BH")
 
 #model for temp stability 
-Biom_Stab_Plot_Model<-lmer(biom_plot_stab~FireGrzTrt+(1|Unit/Watershed/Transect),
-                                data=biomass_master)
-check_model(Biom_Temp_Stab_Plot_Model)#iffy normality
-Anova(Biom_Temp_Stab_Plot_Model, type=3)#no difference
+#convert all to factors
+biomass_temp_stab_plot$Unit<-as.factor(biomass_temp_stab_plot$Unit)
+biomass_temp_stab_plot$Watershed<-as.factor(biomass_temp_stab_plot$Watershed)
+biomass_temp_stab_plot$Transect<-as.factor(biomass_temp_stab_plot$Transect)
+biomass_temp_stab_plot$Plotnum<-as.factor(biomass_temp_stab_plot$Plotnum)
+biomass_temp_stab_plot$FireGrzTrt<-as.factor(biomass_temp_stab_plot$FireGrzTrt)
 
+Biom_Stab_Plot_Model<-lmer(sqrt(biomass_stab_plot)~FireGrzTrt+(1|Unit/Watershed/Transect),
+                                data=biomass_temp_stab_plot)
+check_model(Biom_Stab_Plot_Model)
+Anova(Biom_Stab_Plot_Model, type=3)#no difference
+qqnorm(residuals(Biom_Stab_Plot_Model))
 
 #run a linear mixed model at the transect scale
+#convert all to factors
+biomass_mean_transect_scale$Unit<-as.factor(biomass_mean_transect_scale$Unit)
+biomass_mean_transect_scale$Watershed<-as.factor(biomass_mean_transect_scale$Watershed)
+biomass_mean_transect_scale$Transect<-as.factor(biomass_mean_transect_scale$Transect)
+biomass_mean_transect_scale$RecYear<-as.factor(biomass_mean_transect_scale$RecYear)
+biomass_mean_transect_scale$FireGrzTrt<-as.factor(biomass_mean_transect_scale$FireGrzTrt)
+
 Biom_Transect_Model<-lmer(log(biomass_transect)~FireGrzTrt*RecYear+(1|Unit/Watershed),
-                      data=biomass_master)
-check_model(Biom_Transect_Model)#lnormality not the best
-Anova(Biom_Transect_Model, type=3)#significant interaction
+                      data=biomass_mean_transect_scale)
+check_model(Biom_Transect_Model)
+Anova(Biom_Transect_Model, type=3)#no significant interaction
+qqnorm(residuals(Biom_Transect_Model))
 
-#pairwise comparison without padjustment
-testInteractions(Biom_Transect_Model, fixed="RecYear",
-                 across = "FireGrzTrt", adjustment="none")
-#2018 significant even with adjustment
+
 #sd transect
-Biom_Sd_Transect_Model<-lmer(log(biomass_sd_transect)~FireGrzTrt*RecYear+(1|Unit/Watershed),
-                          data=biomass_master)
-check_model(Biom_Sd_Transect_Model)#lnormality not the best
-Anova(Biom_Sd_Transect_Model, type=3)#significant interaction
+#convert all to factors
+biomass_sd_cv_transect$Unit<-as.factor(biomass_sd_cv_transect$Unit)
+biomass_sd_cv_transect$Watershed<-as.factor(biomass_sd_cv_transect$Watershed)
+biomass_sd_cv_transect$RecYear<-as.factor(biomass_sd_cv_transect$RecYear)
+biomass_sd_cv_transect$FireGrzTrt<-as.factor(biomass_sd_cv_transect$FireGrzTrt)
 
-#pairwise comparison without padjustment
-testInteractions(Biom_Sd_Transect_Model, fixed="RecYear",
-                 across = "FireGrzTrt", adjustment="none")
-#2018,2020,2021 significant even after adjustment 2016 only be adkustment
+Biom_Sd_Transect_Model<-lmer(log(biomass_sd_transect)~FireGrzTrt*RecYear+(1|Unit),
+                          data=biomass_sd_cv_transect)
+check_model(Biom_Sd_Transect_Model)
+Anova(Biom_Sd_Transect_Model, type=3)#no significant interaction
+qqnorm(residuals(Biom_Sd_Transect_Model))#residual normality not the best
 
 #spatial CV
-Biom_Cv_Transect_Model<-lmer(log(biomass_cv_transect)~FireGrzTrt*RecYear+(1|Unit/Watershed),
-                             data=biomass_master)#isSingular warning
+Biom_Cv_Transect_Model<-lmer(log(biomass_cv_transect)~FireGrzTrt*RecYear+(1|Unit),
+                             data=biomass_sd_cv_transect)#isSingular warning
 check_model(Biom_Cv_Transect_Model)#normality not the best
-Anova(Biom_Cv_Transect_Model, type=3)#significant interaction
+Anova(Biom_Cv_Transect_Model, type=3)#no significant interaction
 
-#pairwise comparison without padjustment
-testInteractions(Biom_Cv_Transect_Model, fixed="RecYear",
-                 across = "FireGrzTrt", adjustment="none")
-#2018,2020,2021 significant even after adjustment
+
 
 #Transect Biom stab
-Biom_Stab_Transect_model<-lmer(log(biom_transect_stab)~FireGrzTrt+(1|Unit/Watershed),
-                               data=biomass_master)
+#convert all to factors
+biomass_temp_stab_transect$Unit<-as.factor(biomass_temp_stab_transect$Unit)
+biomass_temp_stab_transect$Watershed<-as.factor(biomass_temp_stab_transect$Watershed)
+biomass_temp_stab_transect$FireGrzTrt<-as.factor(biomass_temp_stab_transect$FireGrzTrt)
+
+Biom_Stab_Transect_model<-lmer(log(biomass_stab_transect)~FireGrzTrt+(1|Unit/Watershed),
+                               data=biomass_temp_stab_transect)
 check_model(Biom_Stab_Transect_model)#iffy normality
 Anova(Biom_Stab_Transect_model, type=3)#no difference
-
-#mixed model for watershed scale
-#biomass mean
-Biom_Watershed_Model<-lmer(biomass_watershed~FireGrzTrt*RecYear+(1|Unit),
-                          data=biomass_master)
-check_model(Biom_Watershed_Model)#normality not the best
-Anova(Biom_Watershed_Model, type=3)#significant interaction
-
-#pairwise comparison without padjustment
-testInteractions(Biom_Watershed_Model, fixed="RecYear",
-                 across = "FireGrzTrt", adjustment="holms")
+qqnorm(residuals(Biom_Stab_Transect_model))
 
 
-#biomass sd watershed model
-Biom_Sd_Watershed_Model<-lmer(biomass_sd_watershed~FireGrzTrt*RecYear+(1|Unit),
-                           data=biomass_master)#issingular goes away without watershed in the random effect
-check_model(Biom_Sd_Watershed_Model)#normality not the best
-Anova(Biom_Sd_Watershed_Model, type=3)#significant interaction
-
-#pairwise comparison without padjustment
-testInteractions(Biom_Sd_Watershed_Model, fixed="RecYear",
-                 across = "FireGrzTrt", adjustment="holm")
-#2018 significant even with adjustment
-
-#spatial CV watershed
-Biom_Cv_Watershed_Model<-lmer(biomass_cv_watershed~FireGrzTrt*RecYear+(1|Unit),
-                              data=biomass_master)#issingular
-check_model(Biom_Cv_Watershed_Model)#normality not the best
-Anova(Biom_Cv_Watershed_Model, type=3)#significant interaction
-
-#pairwise comparison without padjustment
-testInteractions(Biom_Cv_Watershed_Model, fixed="RecYear",
-                 across = "FireGrzTrt", adjustment="holm")
-
-
-
-#Watershed Biom stab
-Biom_Stab_Watershed_model<-lmer(biom_watershed_stab~FireGrzTrt+(1|Unit),
-                               data=biomass_master)
-check_model(Biom_Stab_Watershed_model)#iffy normality
-Anova(Biom_Stab_Watershed_model, type=3)#sig difference
-check_normality(Biom_Stab_Watershed_model)
 
 ###wrangle data for visualization
-biomass_master_viz<-biomass_master%>%
-  group_by(RecYear,FireGrzTrt)%>%
-  mutate(biomass_plot_mean=mean(biomass_plot, na.rm=T),
-         biomass_plot_mean_se=SE_function(biomass_plot))
+
 
 ##visuals
-ggplot(biomass_master_viz,aes(RecYear, biomass_plot_mean, col=FireGrzTrt))+
-  geom_point()+
-  geom_path(aes(as.numeric(RecYear)))
+#biomass plot
+ggplot(biomass_master_viz,aes(RecYear, biomass_plot_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
+  geom_point(size=3)+
+  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
+  geom_errorbar(aes(ymin=biomass_plot_mean-biomass_plot_se,
+                    ymax=biomass_plot_mean+biomass_plot_se),width=0.2,linetype=1)+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))
+#saved width 800, height=400
+#plot sd
+ggplot(biomass_master_viz,aes(RecYear, biomass_plot_sd_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
+  geom_point(size=3)+
+  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
+  geom_errorbar(aes(ymin=biomass_plot_sd_mean-biomass_plot_sd_se,
+                    ymax=biomass_plot_sd_mean+biomass_plot_sd_se),width=0.2,linetype=1)+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))
+#plot spatial cv
+ggplot(biomass_master_viz,aes(RecYear, biomass_plot_cv_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
+  geom_point(size=3)+
+  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
+  geom_errorbar(aes(ymin=biomass_plot_cv_mean-biomass_plot_cv_se,
+                    ymax=biomass_plot_cv_mean+biomass_plot_cv_se),width=0.2,linetype=1)+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))
 
 
+#biomass transect
+ggplot(biomass_master_viz,aes(RecYear, biomass_transect_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
+  geom_point(size=3)+
+  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
+  geom_errorbar(aes(ymin=biomass_transect_mean-biomass_transect_se,
+                    ymax=biomass_transect_mean+biomass_transect_se),width=0.2,linetype=1)+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))
+#saved width 800, height=400
+#transect sd
+ggplot(biomass_master_viz,aes(RecYear, biomass_transect_sd_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
+  geom_point(size=3)+
+  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
+  geom_errorbar(aes(ymin=biomass_transect_sd_mean-biomass_transect_sd_se,
+                    ymax=biomass_transect_sd_mean+biomass_transect_sd_se),width=0.2,linetype=1)+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))
+#transect spatial cv
+ggplot(biomass_master_viz,aes(RecYear, biomass_transect_cv_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
+  geom_point(size=3)+
+  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
+  geom_errorbar(aes(ymin=biomass_transect_cv_mean-biomass_transect_cv_se,
+                    ymax=biomass_transect_cv_mean+biomass_transect_cv_se),width=0.2,linetype=1)+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))
+
+#biomass watershed
+ggplot(biomass_master_viz,aes(RecYear, biomass_watershed_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
+  geom_point(size=3)+
+  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
+  geom_errorbar(aes(ymin=biomass_watershed_mean-biomass_watershed_se,
+                    ymax=biomass_watershed_mean+biomass_watershed_se),width=0.2,linetype=1)+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))
+#saved width 800, height=400
+#watershed sd
+ggplot(biomass_master_viz,aes(RecYear, biomass_watershed_sd_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
+  geom_point(size=3)+
+  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
+  geom_errorbar(aes(ymin=biomass_watershed_sd_mean-biomass_watershed_sd_se,
+                    ymax=biomass_watershed_sd_mean+biomass_watershed_sd_se),width=0.2,linetype=1)+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))
+#transect spatial cv
+ggplot(biomass_master_viz,aes(RecYear, biomass_watershed_cv_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
+  geom_point(size=3)+
+  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
+  geom_errorbar(aes(ymin=biomass_watershed_cv_mean-biomass_watershed_cv_se,
+                    ymax=biomass_watershed_cv_mean+biomass_watershed_cv_se),width=0.2,linetype=1)+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))
+
+###create a separate dataframe for stability across all scale
+biomass_stab_master<-biomass_master%>%
+  select(1:6,biom_plot_stab, biom_transect_stab, biom_watershed_stab)%>%
+  pivot_longer(7:9, names_to = "Scale", values_to = "biomass_stability")%>%
+  group_by(FireGrzTrt, Scale)%>%
+  summarise(Biomass_stability=mean(biomass_stability, na.rm=T),
+            biom_stab_se=SE_function(biomass_stability))
+  
+scale_key<-tibble(Scale=levels(factor(biomass_stab_master$Scale)),
+                 Key=c("plot","transect","watershed"))%>%
+  left_join(biomass_stab_master, by="Scale")
+
+ggplot(scale_key,aes(Key, Biomass_stability, col=FireGrzTrt, linetype=FireGrzTrt))+
+  geom_point(size=3)+
+  geom_path(aes(as.numeric(Key)),linewidth=1)+
+  geom_errorbar(aes(ymin=Biomass_stability-biom_stab_se,
+                    ymax=Biomass_stability+biom_stab_se),width=0.2,linetype=1)+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))
