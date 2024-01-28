@@ -400,78 +400,122 @@ qqnorm(residuals(Biom_Stab_Transect_model))
 
 
 ###wrangle data for visualization
-
+biomass_plot_scale_viz<-biomass_plot_scale%>%
+  group_by(RecYear,FireGrzTrt)%>%
+  summarise(biomass_plot_mean=mean(biomass_plot, na.rm=T),
+            biomass_plot_se=SE_function(biomass_plot),
+            cnt=n() )%>%
+  ungroup()
+#using mean estimate from post-hoc to create figure as a comparison to raw data
+model_estimates_plot<-interactionMeans(Biom_Plot_Model)
+#replacing spaces in column names with underscore 
+names(model_estimates_plot)<-str_replace_all(names(model_estimates_plot), " ","_")
+#df for visuals from model estimates
+model_estimates_plot_viz<-model_estimates_plot%>%
+  mutate(biomass_plot_bt_mean=exp(adjusted_mean),
+         biomass_plot_upper=exp(adjusted_mean+SE_of_link),
+         biomass_plot_lower=exp(adjusted_mean-SE_of_link))
+#model estimates provided a better representation of the results than the 
+#raw values
 
 ##visuals
 #biomass plot
-ggplot(biomass_master_viz,aes(RecYear, biomass_plot_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
+ggplot(biomass_plot_scale_viz,aes(RecYear, biomass_plot_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
   geom_point(size=3)+
   geom_path(aes(as.numeric(RecYear)),linewidth=1)+
   geom_errorbar(aes(ymin=biomass_plot_mean-biomass_plot_se,
                     ymax=biomass_plot_mean+biomass_plot_se),width=0.2,linetype=1)+
   scale_colour_manual(values=c( "#F0E442", "#009E73"))
 #saved width 800, height=400
-#plot sd
-ggplot(biomass_master_viz,aes(RecYear, biomass_plot_sd_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
+#biomass plot from model estimates
+
+ggplot(model_estimates_plot_viz,aes(RecYear, biomass_plot_bt_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
   geom_point(size=3)+
   geom_path(aes(as.numeric(RecYear)),linewidth=1)+
-  geom_errorbar(aes(ymin=biomass_plot_sd_mean-biomass_plot_sd_se,
-                    ymax=biomass_plot_sd_mean+biomass_plot_sd_se),width=0.2,linetype=1)+
+  geom_errorbar(aes(ymin=biomass_plot_lower,
+                    ymax=biomass_plot_upper),width=0.2,linetype=1)+
   scale_colour_manual(values=c( "#F0E442", "#009E73"))
-#plot spatial cv
-ggplot(biomass_master_viz,aes(RecYear, biomass_plot_cv_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
+#saved width 800, height=400 pixels for png and 8.3, 4.17 icnhes for Pdf
+
+#plot sd
+model_estimate_plot_sd<-interactionMeans(Biom_Plot_Sd_Model)
+names(model_estimate_plot_sd)<-str_replace_all(names(model_estimate_plot_sd), " ","_")
+#df for visuals from model estimates
+model_estimate_plot_sd_viz<-model_estimate_plot_sd%>%
+  mutate(biomass_plot_sd_mean=exp(adjusted_mean),
+         biomass_plot_upper=exp(adjusted_mean+SE_of_link),
+         biomass_plot_lower=exp(adjusted_mean-SE_of_link))
+ggplot(model_estimate_plot_sd_viz,aes(RecYear, biomass_plot_sd_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
   geom_point(size=3)+
   geom_path(aes(as.numeric(RecYear)),linewidth=1)+
-  geom_errorbar(aes(ymin=biomass_plot_cv_mean-biomass_plot_cv_se,
-                    ymax=biomass_plot_cv_mean+biomass_plot_cv_se),width=0.2,linetype=1)+
+  geom_errorbar(aes(ymin=biomass_plot_lower,
+                    ymax=biomass_plot_upper),width=0.2,linetype=1)+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))
+
+#plot spatial cv
+model_estimate_plot_cv<-interactionMeans(Biom_Plot_Cv_Model)
+names(model_estimate_plot_cv)<-str_replace_all(names(model_estimate_plot_cv), " ","_")
+#df for visuals from model estimates
+model_estimate_plot_cv_viz<-model_estimate_plot_cv%>%
+  mutate(biomass_plot_cv_mean=exp(adjusted_mean),
+         biomass_plot_upper=exp(adjusted_mean+SE_of_link),
+         biomass_plot_lower=exp(adjusted_mean-SE_of_link))
+ggplot(model_estimate_plot_cv_viz,aes(RecYear, biomass_plot_cv_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
+  geom_point(size=3)+
+  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
+  geom_errorbar(aes(ymin=biomass_plot_lower,
+                    ymax=biomass_plot_upper),width=0.2,linetype=1)+
   scale_colour_manual(values=c( "#F0E442", "#009E73"))
 
 
 #biomass transect
-ggplot(biomass_master_viz,aes(RecYear, biomass_transect_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
+model_estimates_transect<-interactionMeans(Biom_Transect_Model)
+#replacing spaces in column names with underscore 
+names(model_estimates_transect)<-str_replace_all(names(model_estimates_transect), " ","_")
+#df for visuals from model estimates
+model_estimates_transect_viz<-model_estimates_transect%>%
+  mutate(biomass_transect_mean=exp(adjusted_mean),
+         biomass_transect_upper=exp(adjusted_mean+SE_of_link),
+         biomass_transect_lower=exp(adjusted_mean-SE_of_link))
+ggplot(model_estimates_transect_viz,aes(RecYear, biomass_transect_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
   geom_point(size=3)+
   geom_path(aes(as.numeric(RecYear)),linewidth=1)+
-  geom_errorbar(aes(ymin=biomass_transect_mean-biomass_transect_se,
-                    ymax=biomass_transect_mean+biomass_transect_se),width=0.2,linetype=1)+
+  geom_errorbar(aes(ymin=biomass_transect_lower,
+                    ymax=biomass_transect_upper),width=0.2,linetype=1)+
   scale_colour_manual(values=c( "#F0E442", "#009E73"))
 #saved width 800, height=400
 #transect sd
-ggplot(biomass_master_viz,aes(RecYear, biomass_transect_sd_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
+model_estimates_transect_sd<-interactionMeans(Biom_Sd_Transect_Model)
+#replacing spaces in column names with underscore 
+names(model_estimates_transect_sd)<-str_replace_all(names(model_estimates_transect_sd), " ","_")
+#df for visuals from model estimates
+model_estimates_transect_sd_viz<-model_estimates_transect_sd%>%
+  mutate(biomass_transect_sd_mean=exp(adjusted_mean),
+         biomass_transect_upper=exp(adjusted_mean+SE_of_link),
+         biomass_transect_lower=exp(adjusted_mean-SE_of_link))
+ggplot(model_estimates_transect_sd_viz,aes(RecYear, biomass_transect_sd_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
   geom_point(size=3)+
   geom_path(aes(as.numeric(RecYear)),linewidth=1)+
-  geom_errorbar(aes(ymin=biomass_transect_sd_mean-biomass_transect_sd_se,
-                    ymax=biomass_transect_sd_mean+biomass_transect_sd_se),width=0.2,linetype=1)+
+  geom_errorbar(aes(ymin=biomass_transect_lower,
+                    ymax=biomass_transect_upper),width=0.2,linetype=1)+
   scale_colour_manual(values=c( "#F0E442", "#009E73"))
 #transect spatial cv
-ggplot(biomass_master_viz,aes(RecYear, biomass_transect_cv_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
+model_estimates_transect_cv<-interactionMeans(Biom_Cv_Transect_Model)
+#replacing spaces in column names with underscore 
+names(model_estimates_transect_cv)<-str_replace_all(names(model_estimates_transect_cv), " ","_")
+#df for visuals from model estimates
+model_estimates_transect_cv_viz<-model_estimates_transect_cv%>%
+  mutate(biomass_transect_cv_mean=exp(adjusted_mean),
+         biomass_transect_upper=exp(adjusted_mean+SE_of_link),
+         biomass_transect_lower=exp(adjusted_mean-SE_of_link))
+ggplot(model_estimates_transect_cv_viz,aes(RecYear, biomass_transect_cv_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
   geom_point(size=3)+
   geom_path(aes(as.numeric(RecYear)),linewidth=1)+
-  geom_errorbar(aes(ymin=biomass_transect_cv_mean-biomass_transect_cv_se,
-                    ymax=biomass_transect_cv_mean+biomass_transect_cv_se),width=0.2,linetype=1)+
+  geom_errorbar(aes(ymin=biomass_transect_lower,
+                    ymax=biomass_transect_upper),width=0.2,linetype=1)+
   scale_colour_manual(values=c( "#F0E442", "#009E73"))
 
-#biomass watershed
-ggplot(biomass_master_viz,aes(RecYear, biomass_watershed_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
-  geom_point(size=3)+
-  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
-  geom_errorbar(aes(ymin=biomass_watershed_mean-biomass_watershed_se,
-                    ymax=biomass_watershed_mean+biomass_watershed_se),width=0.2,linetype=1)+
-  scale_colour_manual(values=c( "#F0E442", "#009E73"))
-#saved width 800, height=400
-#watershed sd
-ggplot(biomass_master_viz,aes(RecYear, biomass_watershed_sd_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
-  geom_point(size=3)+
-  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
-  geom_errorbar(aes(ymin=biomass_watershed_sd_mean-biomass_watershed_sd_se,
-                    ymax=biomass_watershed_sd_mean+biomass_watershed_sd_se),width=0.2,linetype=1)+
-  scale_colour_manual(values=c( "#F0E442", "#009E73"))
-#transect spatial cv
-ggplot(biomass_master_viz,aes(RecYear, biomass_watershed_cv_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
-  geom_point(size=3)+
-  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
-  geom_errorbar(aes(ymin=biomass_watershed_cv_mean-biomass_watershed_cv_se,
-                    ymax=biomass_watershed_cv_mean+biomass_watershed_cv_se),width=0.2,linetype=1)+
-  scale_colour_manual(values=c( "#F0E442", "#009E73"))
+
 
 ###create a separate dataframe for stability across all scale
 biomass_stab_master<-biomass_master%>%
