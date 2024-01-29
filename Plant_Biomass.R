@@ -2,7 +2,7 @@
 ####Plant Biomass from diskpasture meter
 ###Author: Joshua Ajowele
 ###collaborators: PBG synthesis group
-###last update:1/27/2024
+###last update:1/28/2024
 
 #packages 
 library(tidyverse)
