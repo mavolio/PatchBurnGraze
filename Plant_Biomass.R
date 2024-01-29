@@ -397,8 +397,6 @@ check_model(Biom_Stab_Transect_model)#iffy normality
 Anova(Biom_Stab_Transect_model, type=3)#no difference
 qqnorm(residuals(Biom_Stab_Transect_model))
 
-
-
 ###wrangle data for visualization
 biomass_plot_scale_viz<-biomass_plot_scale%>%
   group_by(RecYear,FireGrzTrt)%>%
@@ -518,6 +516,8 @@ ggplot(model_estimates_transect_cv_viz,aes(RecYear, biomass_transect_cv_mean, co
 
 
 ###create a separate dataframe for stability across all scale
+interactionMeans(Biom_Stab_Transect_model)
+interactionMeans(Biom_Stab_Plot_Model)
 biomass_stab_master<-biomass_master%>%
   select(1:6,biom_plot_stab, biom_transect_stab, biom_watershed_stab)%>%
   pivot_longer(7:9, names_to = "Scale", values_to = "biomass_stability")%>%
@@ -535,3 +535,123 @@ ggplot(scale_key,aes(Key, Biomass_stability, col=FireGrzTrt, linetype=FireGrzTrt
   geom_errorbar(aes(ymin=Biomass_stability-biom_stab_se,
                     ymax=Biomass_stability+biom_stab_se),width=0.2,linetype=1)+
   scale_colour_manual(values=c( "#F0E442", "#009E73"))
+
+###Unit Scale
+####bootstrap
+#extract PBG and separate into Unit
+PBG_south_biomass<-biomass_data%>%
+  filter(FireGrzTrt=="PBG" & Unit=="south")%>%
+  group_by(RecYear, Unit, Watershed, Transect, Plotnum, FireGrzTrt)%>%
+  summarise(biomass=mean(biomass, na.rm=T))%>%
+  ungroup()
+PBG_north_biomass<-biomass_data%>%
+  filter(FireGrzTrt=="PBG" & Unit=="north")%>%
+  group_by(RecYear, Unit, Watershed, Transect, Plotnum, FireGrzTrt)%>%
+  summarise(biomass=mean(biomass, na.rm=T))%>%
+  ungroup()
+
+#create an index for the plots
+biomass_south_index<-PBG_south_biomass%>%
+  group_by(RecYear)%>%
+  mutate(plot_index=1:length(RecYear))
+  
+num_bootstrap<-1000
+bootstrap_vector<-1:num_bootstrap
+PBG_south_biomass_master<-{}
+for(BOOT in 1:length(bootstrap_vector)){
+  south_rand_key<-biomass_south_index%>%
+    dplyr::select(RecYear, Unit, Watershed, FireGrzTrt, Transect, Plotnum, plot_index)%>%
+    unique(.)%>%
+    #filter(RecYear==2012)%>%
+    group_by(RecYear)%>%
+    sample_n(200, replace=T)%>%
+    dplyr::select(plot_index)%>%
+    ungroup()
+  biomass_south_ready<-biomass_south_index%>%
+    right_join(south_rand_key, by= c("RecYear", "plot_index"),
+               multiple="all")%>%
+    mutate(iteration=BOOT)
+  PBG_south_biomass_master<-rbind(PBG_south_biomass_master, biomass_south_ready)
+}
+write.csv(PBG_south_biomass_master, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/PBG_south_biomass.csv")
+
+
+#create an index for the north plots
+biomass_north_index<-PBG_north_biomass%>%
+  group_by(RecYear)%>%
+  mutate(plot_index=1:length(RecYear))
+
+num_bootstrap<-1000
+bootstrap_vector<-1:num_bootstrap
+PBG_north_biomass_master<-{}
+for(BOOT in 1:length(bootstrap_vector)){
+  north_rand_key<-biomass_north_index%>%
+    dplyr::select(RecYear, Unit, Watershed, FireGrzTrt, Transect, Plotnum, plot_index)%>%
+    unique(.)%>%
+    group_by(RecYear)%>%
+    sample_n(200, replace=T)%>%
+    dplyr::select(plot_index,RecYear)%>%
+    ungroup()
+  biomass_north_ready<-biomass_north_index%>%
+    right_join(north_rand_key, by= c("RecYear", "plot_index"),
+               multiple="all")%>%
+    mutate(iteration=BOOT)
+  PBG_north_biomass_master<-rbind(PBG_north_biomass_master, biomass_north_ready)
+}
+write.csv(PBG_north_biomass_master, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/PBG_north_biomass.csv")
+
+#extract ABG
+#extract ABG and separate into Unit
+ABG_south_biomass<-biomass_data%>%
+  filter(FireGrzTrt=="ABG" & Unit=="south")%>%
+  group_by(RecYear, Unit, Watershed, Transect, Plotnum, FireGrzTrt)%>%
+  summarise(biomass=mean(biomass, na.rm=T))%>%
+  ungroup()%>%
+  group_by(RecYear)%>%#calculate mean at the unit level
+  summarise(biomass_ABG_south=mean(biomass, na.rm=T))
+ABG_north_biomass<-biomass_data%>%
+  filter(FireGrzTrt=="ABG" & Unit=="north")%>%
+  group_by(RecYear, Unit, Watershed, Transect, Plotnum, FireGrzTrt)%>%
+  summarise(biomass=mean(biomass, na.rm=T))%>%
+  ungroup()%>%
+  group_by(RecYear)%>%#calculate mean at the unit level
+  summarise(biomass_ABG_north=mean(biomass, na.rm=T))
+
+#calculate mean for PBG bootstrap
+PBG_north_mean<-PBG_north_biomass_master%>%
+  group_by(RecYear,iteration)%>%
+  summarise(biomass_PBG_north=mean(biomass,na.rm=T))
+
+PBG_south_mean<-PBG_south_biomass_master%>%
+  group_by(RecYear,iteration)%>%
+  summarise(biomass_PBG_south=mean(biomass,na.rm=T))
+
+#combine with PBG and ABG
+Combo_north_biomass<-PBG_north_mean%>%
+  left_join(ABG_north_biomass, by="RecYear")%>%
+  group_by(RecYear)%>%
+  mutate(biomass_PBG_north_mean_mean=mean(biomass_PBG_north, na.rm=T),
+         biomass_PBG_north_sd=sd(biomass_PBG_north),
+         z_score_north=((biomass_ABG_north-biomass_PBG_north_mean_mean)/biomass_PBG_north_sd),
+         p_value=2*pnorm(-abs(z_score_north)))
+ 
+Combo_south_biomass<-PBG_south_mean%>%
+  left_join(ABG_south_biomass, by="RecYear")%>%
+  group_by(RecYear)%>%
+  mutate(biomass_PBG_south_mean_mean=mean(biomass_PBG_south, na.rm=T),
+         biomass_PBG_south_sd=sd(biomass_PBG_south),
+         z_score_south=((biomass_ABG_south-biomass_PBG_south_mean_mean)/biomass_PBG_south_sd),
+         p_value=2*pnorm(-abs(z_score_south)))
+
+#create a visual of the distribution
+ggplot(Combo_north_biomass,aes(biomass_PBG_north))+
+  geom_density(size=.5)+
+  facet_wrap(~RecYear, scales = "free")+
+  #facet_grid("RecYear")+
+  geom_vline(aes(xintercept=biomass_ABG_north), linetype=2,size=.5)
+ggplot(Combo_south_biomass,aes(biomass_PBG_south))+
+  geom_density(size=.5)+
+  facet_wrap(~RecYear, scales = "free")+
+  #facet_grid("RecYear")+
+  geom_vline(aes(xintercept=biomass_ABG_south), linetype=2,size=.5)
+
