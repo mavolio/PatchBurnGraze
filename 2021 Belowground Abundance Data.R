@@ -78,7 +78,7 @@ new_pbg <- group_by(new_pbg, Morphospp) %>%
 
 
 
-View(new_pbg)
+
 
 #ABG: Selects columns, removes whitespace
 
@@ -127,7 +127,7 @@ new_abg$Morphospp <- gsub("Small Light Colored Back End", "Small Light Colored B
 new_abg <- group_by(new_abg, Morphospp) %>% 
   summarize(Count = sum(Count))
 
-View(new_abg)
+
 
 #Cleanup for stats
 
@@ -171,7 +171,7 @@ Abundance_ID_Belowground$WS <- gsub("C3CB", "C3C", Abundance_ID_Belowground$WS)
 Abundance_ID_Belowground$WS <- gsub("C3D", "C3B", Abundance_ID_Belowground$WS)
 Abundance_ID_Belowground$WS <- gsub("CSC", "C3C", Abundance_ID_Belowground$WS)
 
-View(Abundance_ID_Belowground)
+
 
 Abundance_ID_Belowground <- Abundance_ID_Belowground %>% 
   mutate(Morphospp = paste(Phylum, Class, Order, Morphospp, sep = "_"))
@@ -265,7 +265,6 @@ ggsave("Total_Count.png", width = 8, height = 8, dpi = 300)
 
 commMetrics <- community_structure(Abundance_Stats, abundance.var='Count', replicate.var='Sample')
 
-View(commMetrics)
 
 # Tagging PBG and ABG again
 
