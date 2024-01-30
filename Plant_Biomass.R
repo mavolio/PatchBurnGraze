@@ -2,7 +2,7 @@
 ####Plant Biomass from diskpasture meter
 ###Author: Joshua Ajowele
 ###collaborators: PBG synthesis group
-###last update:1/28/2024
+###last update:1/30/2024
 
 #packages 
 library(tidyverse)
@@ -348,7 +348,7 @@ Biom_Stab_Plot_Model<-lmer(sqrt(biomass_stab_plot)~FireGrzTrt+(1|Unit/Watershed/
 check_model(Biom_Stab_Plot_Model)
 Anova(Biom_Stab_Plot_Model, type=3)#no difference
 qqnorm(residuals(Biom_Stab_Plot_Model))
-
+interactionMeans(Biom_Stab_Plot_Model)
 #run a linear mixed model at the transect scale
 #convert all to factors
 biomass_mean_transect_scale$Unit<-as.factor(biomass_mean_transect_scale$Unit)
@@ -515,25 +515,32 @@ ggplot(model_estimates_transect_cv_viz,aes(RecYear, biomass_transect_cv_mean, co
 
 
 
-###create a separate dataframe for stability across all scale
-interactionMeans(Biom_Stab_Transect_model)
-interactionMeans(Biom_Stab_Plot_Model)
-biomass_stab_master<-biomass_master%>%
-  select(1:6,biom_plot_stab, biom_transect_stab, biom_watershed_stab)%>%
-  pivot_longer(7:9, names_to = "Scale", values_to = "biomass_stability")%>%
-  group_by(FireGrzTrt, Scale)%>%
-  summarise(Biomass_stability=mean(biomass_stability, na.rm=T),
-            biom_stab_se=SE_function(biomass_stability))
-  
-scale_key<-tibble(Scale=levels(factor(biomass_stab_master$Scale)),
-                 Key=c("plot","transect","watershed"))%>%
-  left_join(biomass_stab_master, by="Scale")
-
-ggplot(scale_key,aes(Key, Biomass_stability, col=FireGrzTrt, linetype=FireGrzTrt))+
+###create a separate dataframe for plot and transect stability 
+model_estimates_plot_stab<-interactionMeans(Biom_Stab_Plot_Model)%>%
+  mutate(Scale="Plot")
+model_estimates_transect_stab<-interactionMeans(Biom_Stab_Transect_model)%>%
+  mutate(Scale="Transect")
+#replacing spaces in column names with underscore 
+names(model_estimates_plot_stab)<-str_replace_all(names(model_estimates_plot_stab), " ","_")
+names(model_estimates_transect_stab)<-str_replace_all(names(model_estimates_transect_stab), " ","_")
+model_estimates_transect_stab_update<-model_estimates_transect_stab%>%
+  mutate(biomass_stability=exp(adjusted_mean),
+         biomass_stab_upper=exp(adjusted_mean+SE_of_link),
+         biomass_stab_lower=exp(adjusted_mean-SE_of_link))
+#df for visuals from model estimates
+model_estimates_stab<-model_estimates_plot_stab%>%
+  mutate(biomass_stability=(adjusted_mean)^2,
+         biomass_stab_upper=(adjusted_mean+SE_of_link)^2,
+         biomass_stab_lower=(adjusted_mean-SE_of_link)^2)%>%
+  full_join(model_estimates_transect_stab_update, by=c("FireGrzTrt", "Scale",
+                                                "biomass_stability","biomass_stab_upper",
+                                                "biomass_stab_lower"))
+ 
+ggplot(model_estimates_stab,aes(Scale, biomass_stability, col=FireGrzTrt, linetype=FireGrzTrt))+
   geom_point(size=3)+
-  geom_path(aes(as.numeric(Key)),linewidth=1)+
-  geom_errorbar(aes(ymin=Biomass_stability-biom_stab_se,
-                    ymax=Biomass_stability+biom_stab_se),width=0.2,linetype=1)+
+  geom_path(aes(as.numeric(Scale)),linewidth=1)+
+  geom_errorbar(aes(ymin=biomass_stab_lower,
+                    ymax=biomass_stab_upper),width=0.2,linetype=1)+
   scale_colour_manual(values=c( "#F0E442", "#009E73"))
 
 ###Unit Scale
@@ -626,7 +633,7 @@ PBG_south_mean<-PBG_south_biomass_master%>%
   group_by(RecYear,iteration)%>%
   summarise(biomass_PBG_south=mean(biomass,na.rm=T))
 
-#combine with PBG and ABG
+#combine PBG and ABG
 Combo_north_biomass<-PBG_north_mean%>%
   left_join(ABG_north_biomass, by="RecYear")%>%
   group_by(RecYear)%>%
@@ -654,4 +661,70 @@ ggplot(Combo_south_biomass,aes(biomass_PBG_south))+
   facet_wrap(~RecYear, scales = "free")+
   #facet_grid("RecYear")+
   geom_vline(aes(xintercept=biomass_ABG_south), linetype=2,size=.5)
+
+#create visual using point
+combo_north_geompoint<-Combo_north_biomass%>%
+  pivot_longer(c(biomass_PBG_north_mean_mean,biomass_ABG_north),
+               names_to = "treatment", values_to = "biom_mean")
+ggplot(combo_north_geompoint,aes(RecYear, biom_mean, col=treatment))+
+  geom_point()+
+  geom_path(aes(as.numeric(RecYear)))+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))#+
+  geom_errorbar(aes(ymax=biom_mean+biomass_PBG_north_sd,
+                    ymin=biom_mean-biomass_PBG_north_sd))
+
+combo_south_geompoint<-Combo_south_biomass%>%
+  pivot_longer(c(biomass_PBG_south_mean_mean,biomass_ABG_south),
+               names_to = "treatment", values_to = "biom_mean")
+ggplot(combo_south_geompoint,aes(RecYear, biom_mean, col=treatment))+
+  geom_point()+
+  geom_path(aes(as.numeric(RecYear)))+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))#+
+  geom_errorbar(aes(ymax=biom_mean+biomass_PBG_south_sd,
+                  ymin=biom_mean-biomass_PBG_south_sd))
+  
+#calculate sd and cv at unit level
+biomass_unit_sd_cv<-Combo_north_biomass%>%
+  left_join(Combo_south_biomass, by=c("RecYear","iteration"))%>%
+  mutate(ABG_biomass_mean=(biomass_ABG_north+biomass_ABG_south)/2,
+         ABG_biomass_sd=(sqrt(((biomass_ABG_north-ABG_biomass_mean)^2+
+                           (biomass_ABG_south-ABG_biomass_mean)^2)/(2-1))),
+         ABG_biomass_cv=(ABG_biomass_sd/ABG_biomass_mean))%>%
+  mutate(PBG_biomass_mean=(biomass_PBG_north+biomass_PBG_south)/2,
+         PBG_biomass_sd=(sqrt(((biomass_PBG_north-PBG_biomass_mean)^2+
+                                 (biomass_PBG_south-PBG_biomass_mean)^2)/(2-1))),
+         PBG_biomass_cv=(PBG_biomass_sd/PBG_biomass_mean))%>%
+  select(1:2,15:20)%>%
+  group_by(RecYear)%>%
+  mutate(PBG_mean_mean=mean(PBG_biomass_mean),
+         PBG_mean_sd=sd(PBG_biomass_mean),
+         PBG_sd_mean=mean(PBG_biomass_sd),
+         PBG_sd_sd=sd(PBG_biomass_sd),
+         PBG_biomass_cv_mean=mean(PBG_biomass_cv),
+         PBG_biomass_cv_sd=sd(PBG_biomass_cv))%>%
+  ungroup()%>%
+  mutate(z_score_mean=((ABG_biomass_mean-PBG_mean_mean)/PBG_mean_sd),
+         z_score_sd=((ABG_biomass_sd-PBG_sd_mean)/PBG_sd_sd),
+         z_score_cv=((ABG_biomass_cv-PBG_biomass_cv_mean)/PBG_biomass_cv_sd),
+         pvalue_mean=(2*pnorm(-abs(z_score_mean))),
+         pvalue_sd=(2*pnorm(-abs(z_score_sd))),
+         pvalue_cv=(2*pnorm(-abs(z_score_cv))))
+
+#vidsual with geompoint
+biomass_unit_sd_cv_geompoint<-biomass_unit_sd_cv%>%
+  pivot_longer(c(PBG_sd_mean,ABG_biomass_sd),
+               names_to = "treatment", values_to = "biom_sd")%>%
+  pivot_longer(c(PBG_biomass_cv_mean,ABG_biomass_cv),
+               names_to="treat", values_to="biom_cv")
+ggplot(biomass_unit_sd_cv_geompoint,aes(RecYear, biom_sd, col=treatment))+
+  geom_point()+
+  geom_path(aes(as.numeric(RecYear)))+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))#+
+  geom_errorbar(aes(ymax=biom_sd+PBG_sd_sd,
+                  ymin=biom_sd-PBG_sd_sd))
+  
+ggplot(biomass_unit_sd_cv_geompoint,aes(RecYear, biom_cv, col=treat))+
+  geom_point()+
+  geom_path(aes(as.numeric(RecYear)))+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))
 
