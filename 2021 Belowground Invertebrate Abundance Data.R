@@ -450,12 +450,12 @@ print(permanova <- adonis2(formula = abundanceWide[,8:139]~TreatmentSB, data=abu
 #F=1.6053, df=3,52, p=0.016
 
 #betadisper
-veg <- vegdist(abundanceWide[,8:166], method = "bray")
+veg <- vegdist(abundanceWide[,8:140], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$TreatmentSB)
 permutest(dispersion, pairwise=TRUE, permutations=999) 
 #F=1.5519, df=3,52, p=0.213
 
-BC_Data <- metaMDS(abundanceWide[,8:166])
+BC_Data <- metaMDS(abundanceWide[,8:140])
 sites <- 1:nrow(abundanceWide)
 BC_Meta_Data <- abundanceWide[,1:7]
 plot(BC_Data$points, col=as.factor(BC_Meta_Data$TreatmentSB))
@@ -514,16 +514,16 @@ ggsave()
 
 ### by watershed
 # PERMANOVA
-print(permanova <- adonis2(formula = abundanceWide[,8:177]~Treatment, data=abundanceWide, permutations=999, method="bray"))
+print(permanova <- adonis2(formula = abundanceWide[,8:139]~Treatment, data=abundanceWide, permutations=999, method="bray"))
 #F=1.4498, df=1,52, p=0.119
 
 #betadisper
-veg <- vegdist(abundanceWide[,8:177], method = "bray")
+veg <- vegdist(abundanceWide[,8:139], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$Treatment)
 permutest(dispersion, pairwise=TRUE, permutations=999) 
 #F=9e-4, df=1,52, p=0.976
 
-BC_Data <- metaMDS(abundanceWide[,8:177])
+BC_Data <- metaMDS(abundanceWide[,8:139])
 sites <- 1:nrow(abundanceWide)
 BC_Meta_Data <- abundanceWide[,1:7]
 plot(BC_Data$points, col=as.factor(BC_Meta_Data$Treatment))
