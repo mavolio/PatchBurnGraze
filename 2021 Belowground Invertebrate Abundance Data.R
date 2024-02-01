@@ -8,6 +8,9 @@ library(nlme)
 library(emmeans)
 library(gridExtra)
 library(ggplot2)
+library(boot)
+library(purrr)
+
 
 #### CSV read ####
 
@@ -378,7 +381,7 @@ emmeans(EvenModel, pairwise~TreatmentSB, adjust="tukey") #this gives you contras
 #### Density Plots ####
 
 # Richness Density plot
-ggplot(Joined, aes(x = richness, color = interaction(Trea, block), linetype = interaction(Trea, block))) +
+richness <- ggplot(Joined, aes(x = richness, color = interaction(Trea, block), linetype = interaction(Trea, block))) +
   geom_density() +
   labs(title = "Belowground Invertebrate Richness Density Plot",
        x = "Richness",
@@ -389,7 +392,7 @@ ggplot(Joined, aes(x = richness, color = interaction(Trea, block), linetype = in
 
 # Evenness Density plot
 
-ggplot(Joined, aes(x = Evar, color = interaction(Trea, block), linetype = interaction(Trea, block))) +
+evenness <- ggplot(Joined, aes(x = Evar, color = interaction(Trea, block), linetype = interaction(Trea, block))) +
   geom_density() +
   labs(title = "Belowground Invertebrate Evenness Density Plot",
        x = "Evenness",
@@ -400,7 +403,7 @@ ggplot(Joined, aes(x = Evar, color = interaction(Trea, block), linetype = intera
 
 # Count Density Plot
 
-ggplot(total_counts, aes(x = Count, color = interaction(Treatment, Block), linetype = interaction(Treatment, Block))) +
+counts <- ggplot(total_counts, aes(x = Count, color = interaction(Treatment, Block), linetype = interaction(Treatment, Block))) +
   geom_density() +
   labs(title = "Belowground Invertebrate Count Density Plot",
        x = "Count",
@@ -408,6 +411,8 @@ ggplot(total_counts, aes(x = Count, color = interaction(Treatment, Block), linet
   scale_color_manual(values = rep(c("blue", "red", "blue", "red"), 2)) +
   scale_linetype_manual(values = rep(c("solid", "dashed"), each = 2)) +
   theme_minimal()
+
+grid.arrange(richness, evenness, counts, Weight) #Weight comes from weight script!
 
 #### multivariate community response - PERMANOVA and NMDS ####
 
@@ -571,3 +576,36 @@ ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = 
 
 
 
+
+#### new
+Joined_New <- Joined %>% filter(Trea == "PBG") %>% group_by(block) %>% 
+  mutate(plot_index=1:length(block))
+
+num_bootstrap <- 1000
+bootstrap_vector <- 1:num_bootstrap
+PBG_plot_master <- data.frame()  # Initialize an empty dataframe
+
+for (BOOT in bootstrap_vector) {
+  # Sample 400 rows with replacement from Joined_New
+  Joined_New_Key <- Joined_New %>%
+    dplyr::select(1:9) %>%
+    unique() %>%
+    group_by(block) %>%
+    sample_n(8, replace = TRUE) %>%
+    dplyr::select(plot_index) %>%
+    ungroup()
+  
+  # Join the sampled rows back to the original dataframe
+  PBG_plot_ready <- Joined_New %>%
+    right_join(Joined_New_Key, by = c("block", "plot_index")) %>%
+    mutate(iteration = BOOT)
+  
+  # Append the results to the master dataframe
+  PBG_plot_master <- rbind(PBG_plot_master, PBG_plot_ready)
+}
+
+
+
+
+#Some object with bootstrap PBG values (richness, evennness, count)
+#Compare to ABG mean
