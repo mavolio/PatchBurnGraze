@@ -577,26 +577,30 @@ ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = 
 
 
 
-#### new
+#### Bootstrapping! ####
 Joined_New <- Joined %>% filter(Trea == "PBG") %>% group_by(block) %>% 
   mutate(plot_index=1:length(block))
+
+Total_counts_New <- total_counts %>% filter(Treatment == "PBG") %>% group_by(Block) %>% 
+  mutate(plot_index=1:length(Block))
+
+Combined_Data <- left_join(Joined_New, Total_counts_New, by = c("WS", "Trans", "plot_index"))
 
 num_bootstrap <- 1000
 bootstrap_vector <- 1:num_bootstrap
 PBG_plot_master <- data.frame()  # Initialize an empty dataframe
 
 for (BOOT in bootstrap_vector) {
-  # Sample 400 rows with replacement from Joined_New
-  Joined_New_Key <- Joined_New %>%
+    Joined_New_Key <- Combined_Data %>%
     dplyr::select(1:9) %>%
     unique() %>%
     group_by(block) %>%
-    sample_n(8, replace = TRUE) %>%
+    sample_n(16, replace = TRUE) %>%
     dplyr::select(plot_index) %>%
     ungroup()
   
   # Join the sampled rows back to the original dataframe
-  PBG_plot_ready <- Joined_New %>%
+  PBG_plot_ready <- Combined_Data %>%
     right_join(Joined_New_Key, by = c("block", "plot_index")) %>%
     mutate(iteration = BOOT)
   
@@ -604,8 +608,46 @@ for (BOOT in bootstrap_vector) {
   PBG_plot_master <- rbind(PBG_plot_master, PBG_plot_ready)
 }
 
+#### Z-Score Calculations ####
 
+#Getting average richness per iteration for bootstrapped dataframe
+average_richness <- PBG_plot_master %>%
+  group_by(iteration) %>%
+  summarize(mean_richness = mean(richness))
 
+#Getting evenness richness per iteration for bootstrapped dataframe
+average_evenness <- PBG_plot_master %>%
+  group_by(iteration) %>%
+  summarize(mean_evenness = mean(Evar, na.rm = TRUE))
+
+#Getting average richness per iteration for bootstrapped dataframe
+average_total_count <- PBG_plot_master %>%
+  group_by(iteration) %>%
+  summarize(mean_count = mean(Count, na.rm = TRUE))
+
+#Take the mean of the mean for PBG richness
+PBG_mean_mean_richness <- mean(average_richness$mean_richness, na.rm = TRUE)
+
+#Take the mean of the mean for PBG evenness
+PBG_mean_mean_evenness <- mean(average_evenness$mean_evenness, na.rm = TRUE)
+
+#Take the mean of the mean for PBG total count
+
+#Getting ABG ready
+
+Joined_New_ABG <- Joined %>% filter(Trea == "ABG") %>% group_by(block) %>% 
+  mutate(plot_index=1:length(block))
+
+#Take the mean of the mean for ABG richness
+ABG_mean_richness <- mean(Joined_New_ABG$richness, na.rm = TRUE)
+
+#Take the mean of the mean for ABG evenness
+ABG_mean_evenness <- mean(Joined_New_ABG$Evar, na.rm = TRUE)
+
+# Z-Score for richness 
+
+Z <- ((ABG_mean_richness) - (PBG_mean_mean_richness))/(sd(average_richness$mean_richness))
+Z
 
 #Some object with bootstrap PBG values (richness, evennness, count)
 #Compare to ABG mean
