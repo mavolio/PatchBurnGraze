@@ -592,10 +592,10 @@ PBG_plot_master <- data.frame()  # Initialize an empty dataframe
 
 for (BOOT in bootstrap_vector) {
     Joined_New_Key <- Combined_Data %>%
-    dplyr::select(1:9) %>%
+    dplyr::select(1:13) %>%
     unique() %>%
     group_by(block) %>%
-    sample_n(16, replace = TRUE) %>%
+    sample_n(8, replace = TRUE) %>%
     dplyr::select(plot_index) %>%
     ungroup()
   
