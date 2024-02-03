@@ -578,6 +578,9 @@ ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = 
 
 
 #### Bootstrapping! ####
+
+set.seed(123)
+
 Joined_New <- Joined %>% filter(Trea == "PBG") %>% group_by(block) %>% 
   mutate(plot_index=1:length(block))
 
@@ -595,7 +598,7 @@ for (BOOT in bootstrap_vector) {
     dplyr::select(1:13) %>%
     unique() %>%
     group_by(block) %>%
-    sample_n(8, replace = TRUE) %>%
+    sample_n(16, replace = TRUE) %>%
     dplyr::select(plot_index) %>%
     ungroup()
   
@@ -631,12 +634,20 @@ PBG_mean_mean_richness <- mean(average_richness$mean_richness, na.rm = TRUE)
 #Take the mean of the mean for PBG evenness
 PBG_mean_mean_evenness <- mean(average_evenness$mean_evenness, na.rm = TRUE)
 
+#Take the mean of the mean for PBG evenness
+PBG_mean_mean_total_count <- mean(average_total_count$mean_count, na.rm = TRUE)
+
 #Take the mean of the mean for PBG total count
 
 #Getting ABG ready
 
+Total_counts_ABG <- total_counts %>% filter(Treatment == "ABG") %>% group_by(Block)
+  
 Joined_New_ABG <- Joined %>% filter(Trea == "ABG") %>% group_by(block) %>% 
   mutate(plot_index=1:length(block))
+
+Joined_New_ABG <- rbind(Joined_New_ABG, Total_counts_ABG)
+
 
 #Take the mean of the mean for ABG richness
 ABG_mean_richness <- mean(Joined_New_ABG$richness, na.rm = TRUE)
@@ -644,10 +655,58 @@ ABG_mean_richness <- mean(Joined_New_ABG$richness, na.rm = TRUE)
 #Take the mean of the mean for ABG evenness
 ABG_mean_evenness <- mean(Joined_New_ABG$Evar, na.rm = TRUE)
 
+#Take the mean of the mean for ABG total count
+ABG_mean_total_count <- mean(Joined_New_ABG$Count, na.rm = TRUE)
+
 # Z-Score for richness 
 
-Z <- ((ABG_mean_richness) - (PBG_mean_mean_richness))/(sd(average_richness$mean_richness))
-Z
+Z_R <- ((ABG_mean_richness) - (PBG_mean_mean_richness))/(sd(average_richness$mean_richness))
+Z_R
+#1.952155
+#P = 0.02559
+
+# Z-Score for evenness 
+Z_E <- ((ABG_mean_evenness) - (PBG_mean_mean_evenness))/(sd(average_evenness$mean_evenness))
+Z_E
+#1.280609
+#P = 0.10027
+
+# Z-Score for total count 
+Z_C <- ((ABG_mean_total_count) - (PBG_mean_mean_total_count))/(sd(average_total_count$mean_count))
+Z_C
+#-1.125048
+#P = 0.13136	
 
 #Some object with bootstrap PBG values (richness, evennness, count)
 #Compare to ABG mean
+
+
+
+#### Graphs Bootstrapped Means ####
+
+#Richness means graph
+ggplot(average_richness, aes(x = mean_richness, color = "PBG")) +
+  geom_density(alpha = 0.5) +
+  geom_vline(aes(xintercept = ABG_mean_richness, color = "ABG Mean Richness"), linetype = "dashed", size = 1) +
+  labs(title = "Density Plot of Mean Richness",
+       x = "Mean Richness",
+       y = "Density") +
+  scale_color_manual(values = c("blue", "red"), name = "Legend")
+
+#Evenness means graph
+ggplot(average_evenness, aes(x = mean_evenness, color = "PBG")) +
+  geom_density(alpha = 0.5) +
+  geom_vline(aes(xintercept = ABG_mean_evenness, color = "ABG Mean Evenness"), linetype = "dashed", size = 1) +
+  labs(title = "Density Plot of Mean Evenness",
+       x = "Mean Evenness",
+       y = "Density") +
+  scale_color_manual(values = c("blue", "red"), name = "Legend")
+
+#Total_count means graphs
+ggplot(average_total_count, aes(x = mean_count, color = "PBG")) +
+  geom_density(alpha = 0.5) +
+  geom_vline(aes(xintercept = ABG_mean_total_count, color = "ABG Total Count"), linetype = "dashed", size = 1) +
+  labs(title = "Density Plot of Total Count",
+       x = "Mean Total Count",
+       y = "Density") +
+  scale_color_manual(values = c("blue", "red"), name = "Legend")
