@@ -577,6 +577,158 @@ ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = 
 
 
 
+#### Richness NMDS and PERMANOVA ####
+### by Years since burn
+
+#Combing count with burn info
+
+
+
+RichnessGraph <- full_join(commMetrics2, BurnInfo) %>% 
+  unite("TreatmentSB",c("Treatment","SB"), sep="_") %>% 
+  mutate(sample = paste(WS, Trans, Dist., Trea, sep = "_"))
+
+
+RichnessGraph$Treatment <- ifelse(grepl("C1", RichnessGraph$WS), "ABG", "PBG") 
+
+# PERMANOVA
+
+richnessWide <- RichnessGraph %>% 
+  mutate(block = ifelse(grepl("S", WS), "North", "South")) %>%
+  select(sample, block, WS, Trans, Dist., Trea, TreatmentSB, richness) %>%
+  group_by(sample, block, WS, Trans, Dist., Trea, TreatmentSB, richness) %>% 
+  summarise(richness = sum(richness)) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = 'sample', values_from = 'richness', values_fill = list(Count = 0)) 
+
+richnessWide <- richnessWide %>% 
+  mutate(sum = rowSums(richnessWide[, c(7:61)], na.rm = TRUE))
+  
+
+
+print(permanova <- adonis2(formula = richnessWide[,7:61]~TreatmentSB, data=richnessWide, permutations=999, method="bray"))
+
+#betadisper
+veg <- vegdist(richnessWide[,7:61], method = "bray")
+dispersion <- betadisper(veg, richnessWide$TreatmentSB)
+permutest(dispersion, pairwise=TRUE, permutations=999) 
+#F=1.5519, df=3,52, p=0.213
+
+# richnessWide <- richnessWide %>% 
+#   mutate_all(~replace(., is.na(.), 0))
+
+BC_Data <- metaMDS(richnessWide[,7:61])
+sites <- 1:nrow(richnessWide)
+BC_Meta_Data <- richnessWide[,1:6]
+plot(BC_Data$points, col=as.factor(BC_Meta_Data$TreatmentSB))
+ordiellipse(BC_Data, groups = as.factor(BC_Meta_Data$TreatmentSB), kind = "sd", display = "sites", label = T)
+
+veganCovEllipse <- function (cov, center = c(0, 0), scale = 1, npoints = 100)
+{
+  theta <- (0:npoints) * 2 * pi/npoints
+  Circle <- cbind(cos(theta), sin(theta))
+  t(center + scale * t(Circle %*% chol(cov)))
+}
+
+#Generate ellipses
+BC_NMDS = data.frame(MDS1 = BC_Data$points[,1], MDS2 = BC_Data$points[,2], group=BC_Meta_Data$TreatmentSB)
+BC_NMDS_Graph <- cbind(BC_Meta_Data, BC_NMDS)
+BC_Ord_Ellipses<-ordiellipse(BC_Data, BC_Meta_Data$TreatmentSB, display = "sites",
+                             kind = "se", conf = 0.95, label = T)
+
+BC_Ellipses <- data.frame()
+#Generate ellipses points
+for(g in levels(as.factor(BC_NMDS$group))){
+  BC_Ellipses <- rbind(BC_Ellipses,
+                       cbind(as.data.frame(with(BC_NMDS[BC_NMDS$group==g,], 
+                                                veganCovEllipse(BC_Ord_Ellipses[[g]]$cov,
+                                                                BC_Ord_Ellipses[[g]]$center,
+                                                                BC_Ord_Ellipses[[g]]$scale))),
+                             group=g))
+}
+
+#Plot the data from BC_NMDS_Graph, where x=MDS1 and y=MDS2, make an ellipse based on "group"
+ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = group)) +
+  geom_point(size=6) + 
+  geom_path(data = BC_Ellipses, aes(x = NMDS1, y = NMDS2), size = 3) +
+  labs(color="", linetype = "", shape = "") +
+  scale_colour_manual(values=c("blue", "#7A2021", "#C21A09", "#FF0800"), name = "",
+                      labels=c('ABG', 'PBG 0', 'PBG 1', 'PBG 2')) +
+  scale_linetype_manual(values = c("solid", "twodash", "twodash", "twodash"), name = "",
+                        labels=c('ABG', 'PBG 0', 'PBG 1', 'PBG 2')) +
+  scale_shape_manual(values = c(19, 19, 17, 15),
+                     labels=c('ABG', 'PBG 0', 'PBG 1', 'PBG 2')) +
+  xlab("NMDS1") + 
+  ylab("NMDS2") + 
+  theme_bw() +
+  theme(axis.text.x=element_text(size=24, color = "black"), 
+        axis.text.y = element_text(size = 24, color = "black"), 
+        axis.title.x = element_text(size = 24, color = 'black'),
+        axis.title.y = element_text(size = 24, color = 'black'),
+        legend.text = element_text(size = 24),
+        panel.grid.major=element_blank(), panel.grid.minor=element_blank()
+  )
+#F=1.6053, df=3,52, p=0.016
+#export at 1500x1000
+patchBurn_belowgroundInvert_NMDS_yearsSinceBurn
+
+ggsave()
+
+### by watershed
+# PERMANOVA
+print(permanova <- adonis2(formula = abundanceWide[,8:139]~Treatment, data=abundanceWide, permutations=999, method="bray"))
+#F=1.4498, df=1,52, p=0.119
+
+#betadisper
+veg <- vegdist(abundanceWide[,8:139], method = "bray")
+dispersion <- betadisper(veg, abundanceWide$Treatment)
+permutest(dispersion, pairwise=TRUE, permutations=999) 
+#F=9e-4, df=1,52, p=0.976
+
+BC_Data <- metaMDS(abundanceWide[,8:139])
+sites <- 1:nrow(abundanceWide)
+BC_Meta_Data <- abundanceWide[,1:7]
+plot(BC_Data$points, col=as.factor(BC_Meta_Data$Treatment))
+ordiellipse(BC_Data, groups = as.factor(BC_Meta_Data$Treatment), kind = "sd", display = "sites", label = T)
+
+#Generate ellipses
+BC_NMDS = data.frame(MDS1 = BC_Data$points[,1], MDS2 = BC_Data$points[,2], group=BC_Meta_Data$Treatment)
+BC_NMDS_Graph <- cbind(BC_Meta_Data, BC_NMDS)
+BC_Ord_Ellipses<-ordiellipse(BC_Data, BC_Meta_Data$Treatment, display = "sites",
+                             kind = "se", conf = 0.95, label = T)
+
+BC_Ellipses <- data.frame()
+#Generate ellipses points
+for(g in levels(as.factor(BC_NMDS$group))){
+  BC_Ellipses <- rbind(BC_Ellipses,
+                       cbind(as.data.frame(with(BC_NMDS[BC_NMDS$group==g,], 
+                                                veganCovEllipse(BC_Ord_Ellipses[[g]]$cov,
+                                                                BC_Ord_Ellipses[[g]]$center,
+                                                                BC_Ord_Ellipses[[g]]$scale))),
+                             group=g))
+}
+
+#Plot the data from BC_NMDS_Graph, where x=MDS1 and y=MDS2, make an ellipse based on "group"
+ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = group)) +
+  geom_point(size=6) + 
+  geom_path(data = BC_Ellipses, aes(x = NMDS1, y = NMDS2), size = 3) +
+  labs(color="", linetype = "", shape = "") +
+  scale_colour_manual(values=c("blue", "red"), name = "") +
+  scale_linetype_manual(values = c("solid", "twodash"), name = "") +
+  scale_shape_manual(values = c(19, 19)) +
+  xlab("NMDS1") + 
+  ylab("NMDS2") + 
+  annotate('text', x=-0.04, y=0.03, label=expression(paste('F'['3,52'],' = 1.61')), size=8, hjust='left') +
+  annotate('text', x=-0.04, y=0.028, label='p = 0.016', size=8, hjust='left') +
+  theme_bw() +
+  theme(axis.text.x=element_text(size=24, color = "black"), 
+        axis.text.y = element_text(size = 24, color = "black"), 
+        axis.title.x = element_text(size = 24, color = 'black'),
+        axis.title.y = element_text(size = 24, color = 'black'),
+        legend.text = element_text(size = 24),
+        panel.grid.major=element_blank(), panel.grid.minor=element_blank()
+  )
+
 #### Bootstrapping! ####
 
 set.seed(123)
@@ -710,3 +862,9 @@ ggplot(average_total_count, aes(x = mean_count, color = "PBG")) +
        x = "Mean Total Count",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend")
+
+
+
+
+
+"sd", display = "sites", label = TRUE)
