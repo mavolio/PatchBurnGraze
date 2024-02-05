@@ -2,7 +2,7 @@
 ####Plant Biomass from diskpasture meter
 ###Author: Joshua Ajowele
 ###collaborators: PBG synthesis group
-###last update:1/30/2024
+###last update:2/5/2024
 
 #packages 
 library(tidyverse)
@@ -614,54 +614,108 @@ ABG_south_biomass<-biomass_data%>%
   group_by(RecYear, Unit, Watershed, Transect, Plotnum, FireGrzTrt)%>%
   summarise(biomass=mean(biomass, na.rm=T))%>%
   ungroup()%>%
-  group_by(RecYear)%>%#calculate mean at the unit level
-  summarise(biomass_ABG_south=mean(biomass, na.rm=T))
+  group_by(RecYear)%>%#calculate metrics at the unit level
+  summarise(biomass_ABGSth=mean(biomass, na.rm=T),
+            biomass_ABGSth_sd=sd(biomass),
+            cv_biomass_ABGSth=sd(biomass)/mean(biomass, na.rm=T))%>%
+  ungroup()%>%
+  mutate(Stab_ABGSth=mean(biomass_ABGSth, na.rm =T)/sd(biomass_ABGSth))
 ABG_north_biomass<-biomass_data%>%
   filter(FireGrzTrt=="ABG" & Unit=="north")%>%
   group_by(RecYear, Unit, Watershed, Transect, Plotnum, FireGrzTrt)%>%
   summarise(biomass=mean(biomass, na.rm=T))%>%
   ungroup()%>%
   group_by(RecYear)%>%#calculate mean at the unit level
-  summarise(biomass_ABG_north=mean(biomass, na.rm=T))
+  summarise(biomass_ABGNth=mean(biomass, na.rm=T),
+            biomass_ABGNth_sd=sd(biomass),
+            cv_biomass_ABGNth=sd(biomass)/mean(biomass, na.rm=T))%>%
+  ungroup()%>%
+  mutate(Stab_ABGNth=mean(biomass_ABGNth, na.rm =T)/sd(biomass_ABGNth))
 
 #calculate mean for PBG bootstrap
 PBG_north_mean<-PBG_north_biomass_master%>%
   group_by(RecYear,iteration)%>%
-  summarise(biomass_PBG_north=mean(biomass,na.rm=T))
+  summarise(biomass_PBGNth=mean(biomass,na.rm=T),
+            sd_biomass_PBGNth=sd(biomass),
+            cv_biomass_PBGNth=sd(biomass)/mean(biomass, na.rm=T))%>%
+  group_by(iteration)%>%
+  mutate(stab_PBGNth=mean(biomass_PBGNth, na.rm=T)/sd(biomass_PBGNth))
 
 PBG_south_mean<-PBG_south_biomass_master%>%
   group_by(RecYear,iteration)%>%
-  summarise(biomass_PBG_south=mean(biomass,na.rm=T))
+  summarise(biomass_PBGSth=mean(biomass,na.rm=T),
+            sd_biomass_PBGSth=sd(biomass),
+            cv_biomass_PBGSth=sd(biomass)/mean(biomass, na.rm=T))%>%
+  group_by(iteration)%>%
+  mutate(stab_PBGSth=mean(biomass_PBGSth, na.rm=T)/sd(biomass_PBGSth))
+
 
 #combine PBG and ABG
 Combo_north_biomass<-PBG_north_mean%>%
   left_join(ABG_north_biomass, by="RecYear")%>%
   group_by(RecYear)%>%
-  mutate(biomass_PBG_north_mean_mean=mean(biomass_PBG_north, na.rm=T),
-         biomass_PBG_north_sd=sd(biomass_PBG_north),
-         z_score_north=((biomass_ABG_north-biomass_PBG_north_mean_mean)/biomass_PBG_north_sd),
-         p_value=2*pnorm(-abs(z_score_north)))
+  mutate(biomass_PBGNth_m=mean(biomass_PBGNth, na.rm=T),
+         biomass_PBGNth_sd=sd(biomass_PBGNth),
+         z_score_NthMean=((biomass_ABGNth-biomass_PBGNth_m)/biomass_PBGNth_sd),
+         p_value_NMean=2*pnorm(-abs(z_score_NthMean)),
+         biomass_PBGNth_sd_M=mean(sd_biomass_PBGNth, na.rm=T),
+         biomass_PBGNth_sd_sd=sd(sd_biomass_PBGNth),
+         Z_score_Nsd=((biomass_ABGNth_sd-biomass_PBGNth_sd_M)/biomass_PBGNth_sd_sd),
+         pvalue_Nsd=2*pnorm(-abs(Z_score_Nsd)),
+         biomass_PBGNth_cv_M=mean(cv_biomass_PBGNth, na.rm=T),
+         biomass_PBGNth_cv_sd=sd(cv_biomass_PBGNth),
+         Z_score_Ncv=((cv_biomass_ABGNth-biomass_PBGNth_cv_M)/biomass_PBGNth_cv_sd),
+         pvalue_Ncv=2*pnorm(-abs(Z_score_Ncv)))%>%
+  ungroup()%>%
+  mutate(stab_PBGNm=mean(stab_PBGNth,na.rm=T),
+         stab_PBGN_sd=sd(stab_PBGNth),
+         z_score_NStab=((Stab_ABGNth-stab_PBGNm)/stab_PBGN_sd),
+         pvalue_stab=2*pnorm(-abs(z_score_NStab)))
  
 Combo_south_biomass<-PBG_south_mean%>%
   left_join(ABG_south_biomass, by="RecYear")%>%
   group_by(RecYear)%>%
-  mutate(biomass_PBG_south_mean_mean=mean(biomass_PBG_south, na.rm=T),
-         biomass_PBG_south_sd=sd(biomass_PBG_south),
-         z_score_south=((biomass_ABG_south-biomass_PBG_south_mean_mean)/biomass_PBG_south_sd),
-         p_value=2*pnorm(-abs(z_score_south)))
+  mutate(biomass_PBGSth_m=mean(biomass_PBGSth, na.rm=T),
+         biomass_PBGSth_sd=sd(biomass_PBGSth),
+         z_score_SthMean=((biomass_ABGSth-biomass_PBGSth_m)/biomass_PBGSth_sd),
+         p_value_SMean=2*pnorm(-abs(z_score_SthMean)),
+         biomass_PBGSth_sd_M=mean(sd_biomass_PBGSth, na.rm=T),
+         biomass_PBGSth_sd_sd=sd(sd_biomass_PBGSth),
+         Z_score_Ssd=((biomass_ABGSth_sd-biomass_PBGSth_sd_M)/biomass_PBGSth_sd_sd),
+         pvalue_Ssd=2*pnorm(-abs(Z_score_Ssd)),
+         biomass_PBGSth_cv_M=mean(cv_biomass_PBGSth, na.rm=T),
+         biomass_PBGSth_cv_sd=sd(cv_biomass_PBGSth),
+         Z_score_Scv=((cv_biomass_ABGSth-biomass_PBGSth_cv_M)/biomass_PBGSth_cv_sd),
+         pvalue_Scv=2*pnorm(-abs(Z_score_Scv)))%>%
+  ungroup()%>%
+  mutate(stab_PBGSm=mean(stab_PBGSth,na.rm=T),
+         stab_PBGS_sd=sd(stab_PBGSth),
+         z_score_SStab=((Stab_ABGSth-stab_PBGSm)/stab_PBGS_sd),
+         pvalue_stab=2*pnorm(-abs(z_score_SStab)))
 
 #create a visual of the distribution
-ggplot(Combo_north_biomass,aes(biomass_PBG_north))+
+ggplot(Combo_north_biomass,aes(biomass_PBGNth))+
   geom_density(size=.5)+
   facet_wrap(~RecYear, scales = "free")+
   #facet_grid("RecYear")+
-  geom_vline(aes(xintercept=biomass_ABG_north), linetype=2,size=.5)
-ggplot(Combo_south_biomass,aes(biomass_PBG_south))+
+  geom_vline(aes(xintercept=biomass_ABGNth), linetype=2,size=.5)
+ggplot(Combo_south_biomass,aes(biomass_PBGSth))+
   geom_density(size=.5)+
   facet_wrap(~RecYear, scales = "free")+
   #facet_grid("RecYear")+
-  geom_vline(aes(xintercept=biomass_ABG_south), linetype=2,size=.5)
+  geom_vline(aes(xintercept=biomass_ABGSth), linetype=2,size=.5)
 
+#create visual for stab
+ggplot(Combo_north_biomass,aes(stab_PBGNth))+
+  geom_density(size=1)+
+  #facet_grid("RecYear")+
+  geom_vline(aes(xintercept=Stab_ABGNth), linetype=2,size=1)+
+  xlab("Stability North Unit")
+ggplot(Combo_south_biomass,aes(stab_PBGSth))+
+  geom_density(size=1)+
+  #facet_grid("RecYear")+
+  geom_vline(aes(xintercept=Stab_ABGSth), linetype=2,size=1)+
+  xlab("Stability South Unit")
 #create visual using point
 combo_north_geompoint<-Combo_north_biomass%>%
   pivot_longer(c(biomass_PBG_north_mean_mean,biomass_ABG_north),
