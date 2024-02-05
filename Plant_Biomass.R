@@ -716,6 +716,7 @@ ggplot(Combo_south_biomass,aes(stab_PBGSth))+
   #facet_grid("RecYear")+
   geom_vline(aes(xintercept=Stab_ABGSth), linetype=2,size=1)+
   xlab("Stability South Unit")
+
 #create visual using point
 combo_north_geompoint<-Combo_north_biomass%>%
   pivot_longer(c(biomass_PBG_north_mean_mean,biomass_ABG_north),
@@ -733,11 +734,22 @@ combo_south_geompoint<-Combo_south_biomass%>%
 ggplot(combo_south_geompoint,aes(RecYear, biom_mean, col=treatment))+
   geom_point()+
   geom_path(aes(as.numeric(RecYear)))+
-  scale_colour_manual(values=c( "#F0E442", "#009E73"))#+
-  geom_errorbar(aes(ymax=biom_mean+biomass_PBG_south_sd,
-                  ymin=biom_mean-biomass_PBG_south_sd))
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))
+
+#create visual sd-cv using point
+combo_north_geompoint_cv<-Combo_north_biomass%>%
+  pivot_longer(c(biomass_PBGNth_cv_M,cv_biomass_ABGNth),
+               names_to = "treatment", values_to = "biom_cv")
+ggplot(combo_north_geompoint_cv,aes(RecYear, biom_cv, col=treatment))+
+  geom_point()+
+  geom_path(aes(as.numeric(RecYear)))+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))
   
-#calculate sd and cv at unit level
+###graph for the south unit and sd
+
+  
+####calculate sd and cv at unit level
+  #delete this code, no longer relevant
 biomass_unit_sd_cv<-Combo_north_biomass%>%
   left_join(Combo_south_biomass, by=c("RecYear","iteration"))%>%
   mutate(ABG_biomass_mean=(biomass_ABG_north+biomass_ABG_south)/2,
@@ -763,6 +775,7 @@ biomass_unit_sd_cv<-Combo_north_biomass%>%
          pvalue_mean=(2*pnorm(-abs(z_score_mean))),
          pvalue_sd=(2*pnorm(-abs(z_score_sd))),
          pvalue_cv=(2*pnorm(-abs(z_score_cv))))
+#######deletion ends here#######
 
 #vidsual with geompoint
 biomass_unit_sd_cv_geompoint<-biomass_unit_sd_cv%>%
