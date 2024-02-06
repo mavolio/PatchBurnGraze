@@ -659,20 +659,35 @@ ABG_mean_total_count <- mean(Joined_New_ABG$Count, na.rm = TRUE)
 
 Z_R <- ((ABG_mean_richness) - (PBG_mean_mean_richness))/(sd(average_richness$mean_richness))
 Z_R
+
+p_value_R <- 1 - pnorm(Z_R)
+
+print(p_value_R)
+
 #1.952155
-#P = 0.02559
+#P = 0.02545992
 
 # Z-Score for evenness 
 Z_E <- ((ABG_mean_evenness) - (PBG_mean_mean_evenness))/(sd(average_evenness$mean_evenness))
 Z_E
+
+p_value_E <- 1 - pnorm(Z_E)
+
+print(p_value_E)
 #1.280609
-#P = 0.10027
+#P = 0.1001654
 
 # Z-Score for total count 
 Z_C <- ((ABG_mean_total_count) - (PBG_mean_mean_total_count))/(sd(average_total_count$mean_count))
 Z_C
-#-1.125048
-#P = 0.13136	
+
+p_value_C <- 1 - pnorm(Z_C)
+
+print(p_value_C)
+#Z-Score: -1.125048
+#P = 0.8697156
+
+
 
 #Some object with bootstrap PBG values (richness, evennness, count)
 #Compare to ABG mean
