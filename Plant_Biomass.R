@@ -738,60 +738,39 @@ ggplot(combo_south_geompoint,aes(RecYear, biom_mean, col=treatment))+
 
 #create visual sd-cv using point
 combo_north_geompoint_cv<-Combo_north_biomass%>%
-  pivot_longer(c(biomass_PBGNth_cv_M,cv_biomass_ABGNth),
+  rename(cv_biomass_PBGNth_M=biomass_PBGNth_cv_M)%>%
+  pivot_longer(c(cv_biomass_PBGNth_M,cv_biomass_ABGNth),
                names_to = "treatment", values_to = "biom_cv")
 ggplot(combo_north_geompoint_cv,aes(RecYear, biom_cv, col=treatment))+
   geom_point()+
   geom_path(aes(as.numeric(RecYear)))+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))#+
+  #geom_errorbar(aes(ymin=min(cv_biomass_PBGNth),
+                   # ymax=max(cv_biomass_PBGNth)))
+combo_north_geompoint_sd<-Combo_north_biomass%>%
+  pivot_longer(c(biomass_PBGNth_sd_M,biomass_ABGNth_sd),
+               names_to = "treatment", values_to = "biom_sd")
+ggplot(combo_north_geompoint_sd,aes(RecYear, biom_sd, col=treatment))+
+  geom_point()+
+  geom_path(aes(as.numeric(RecYear)))+
   scale_colour_manual(values=c( "#F0E442", "#009E73"))
-  
 ###graph for the south unit and sd
-
-  
-####calculate sd and cv at unit level
-  #delete this code, no longer relevant
-biomass_unit_sd_cv<-Combo_north_biomass%>%
-  left_join(Combo_south_biomass, by=c("RecYear","iteration"))%>%
-  mutate(ABG_biomass_mean=(biomass_ABG_north+biomass_ABG_south)/2,
-         ABG_biomass_sd=(sqrt(((biomass_ABG_north-ABG_biomass_mean)^2+
-                           (biomass_ABG_south-ABG_biomass_mean)^2)/(2-1))),
-         ABG_biomass_cv=(ABG_biomass_sd/ABG_biomass_mean))%>%
-  mutate(PBG_biomass_mean=(biomass_PBG_north+biomass_PBG_south)/2,
-         PBG_biomass_sd=(sqrt(((biomass_PBG_north-PBG_biomass_mean)^2+
-                                 (biomass_PBG_south-PBG_biomass_mean)^2)/(2-1))),
-         PBG_biomass_cv=(PBG_biomass_sd/PBG_biomass_mean))%>%
-  select(1:2,15:20)%>%
-  group_by(RecYear)%>%
-  mutate(PBG_mean_mean=mean(PBG_biomass_mean),
-         PBG_mean_sd=sd(PBG_biomass_mean),
-         PBG_sd_mean=mean(PBG_biomass_sd),
-         PBG_sd_sd=sd(PBG_biomass_sd),
-         PBG_biomass_cv_mean=mean(PBG_biomass_cv),
-         PBG_biomass_cv_sd=sd(PBG_biomass_cv))%>%
-  ungroup()%>%
-  mutate(z_score_mean=((ABG_biomass_mean-PBG_mean_mean)/PBG_mean_sd),
-         z_score_sd=((ABG_biomass_sd-PBG_sd_mean)/PBG_sd_sd),
-         z_score_cv=((ABG_biomass_cv-PBG_biomass_cv_mean)/PBG_biomass_cv_sd),
-         pvalue_mean=(2*pnorm(-abs(z_score_mean))),
-         pvalue_sd=(2*pnorm(-abs(z_score_sd))),
-         pvalue_cv=(2*pnorm(-abs(z_score_cv))))
-#######deletion ends here#######
-
-#vidsual with geompoint
-biomass_unit_sd_cv_geompoint<-biomass_unit_sd_cv%>%
-  pivot_longer(c(PBG_sd_mean,ABG_biomass_sd),
-               names_to = "treatment", values_to = "biom_sd")%>%
-  pivot_longer(c(PBG_biomass_cv_mean,ABG_biomass_cv),
-               names_to="treat", values_to="biom_cv")
-ggplot(biomass_unit_sd_cv_geompoint,aes(RecYear, biom_sd, col=treatment))+
+combo_south_geompoint_cv<-Combo_south_biomass%>%
+  rename(cv_biomass_PBGSth_M=biomass_PBGSth_cv_M)%>%
+  pivot_longer(c(cv_biomass_PBGSth_M,cv_biomass_ABGSth),
+               names_to = "treatment", values_to = "biom_cv")
+ggplot(combo_south_geompoint_cv,aes(RecYear, biom_cv, col=treatment))+
   geom_point()+
   geom_path(aes(as.numeric(RecYear)))+
   scale_colour_manual(values=c( "#F0E442", "#009E73"))#+
-  geom_errorbar(aes(ymax=biom_sd+PBG_sd_sd,
-                  ymin=biom_sd-PBG_sd_sd))
-  
-ggplot(biomass_unit_sd_cv_geompoint,aes(RecYear, biom_cv, col=treat))+
+#geom_errorbar(aes(ymin=min(cv_biomass_PBGNth),
+# ymax=max(cv_biomass_PBGNth)))
+combo_south_geompoint_sd<-Combo_south_biomass%>%
+  pivot_longer(c(biomass_PBGSth_sd_M,biomass_ABGSth_sd),
+               names_to = "treatment", values_to = "biom_sd")
+ggplot(combo_south_geompoint_sd,aes(RecYear, biom_sd, col=treatment))+
   geom_point()+
   geom_path(aes(as.numeric(RecYear)))+
   scale_colour_manual(values=c( "#F0E442", "#009E73"))
-
+  
+#
