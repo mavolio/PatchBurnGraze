@@ -681,11 +681,11 @@ print(p_value_E)
 Z_C <- ((ABG_mean_total_count) - (PBG_mean_mean_total_count))/(sd(average_total_count$mean_count))
 Z_C
 
-p_value_C <- 1 - pnorm(Z_C)
+p_value_C <- 1 - pnorm(Z_C, lower.tail = FALSE)
 
 print(p_value_C)
 #Z-Score: -1.125048
-#P = 0.8697156
+#P = 0.1302844
 
 
 
