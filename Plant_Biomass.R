@@ -606,7 +606,6 @@ for(BOOT in 1:length(bootstrap_vector)){
   PBG_north_biomass_master<-rbind(PBG_north_biomass_master, biomass_north_ready)
 }
 write.csv(PBG_north_biomass_master, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/PBG_north_biomass.csv")
-
 #extract ABG
 #extract ABG and separate into Unit
 ABG_south_biomass<-biomass_data%>%
@@ -773,4 +772,51 @@ ggplot(combo_south_geompoint_sd,aes(RecYear, biom_sd, col=treatment))+
   geom_path(aes(as.numeric(RecYear)))+
   scale_colour_manual(values=c( "#F0E442", "#009E73"))
   
-#
+#bootstrapping for same plot for each year in each unit
+#create an index for the north plots
+biomass_north_index<-PBG_north_biomass%>%
+  group_by(RecYear)%>%
+  mutate(plot_index=1:length(RecYear))
+#use sample_n to repeat the dataframe for 1000 iteration
+num_bootstrap<-1000
+bootstrap_vector<-1:num_bootstrap
+PBG_Nth_master_all<-{}
+for(BOOT in 1:length(bootstrap_vector)){
+  north_rand_key_all<-biomass_north_index%>%
+    dplyr::select(RecYear, Unit, Watershed, FireGrzTrt, Transect, Plotnum, plot_index)%>%
+    unique(.)%>%
+    group_by(RecYear)%>%
+    sample_n(600)%>%
+    dplyr::select(plot_index,RecYear)%>%
+    ungroup()
+  biomass_north_ready_all<-biomass_north_index%>%
+    right_join(north_rand_key_all, by= c("RecYear", "plot_index"),
+               multiple="all")%>%
+    mutate(iteration=BOOT)
+  PBG_Nth_master_all<-rbind(PBG_Nth_master_all, biomass_north_ready_all)
+}
+write.csv(PBG_Nth_master_all, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/PBG_Nth_master_all.csv")
+
+#sample at random for a year to be used as key for other years
+PBG_Nth_key<-{}
+for(BOOT in 1:length(bootstrap_vector)){
+  north_rand_key_2012<-biomass_north_index%>%
+    dplyr::select(RecYear, Unit, Watershed, FireGrzTrt, Transect, Plotnum, plot_index)%>%
+    unique(.)%>%
+    filter(RecYear==2012)%>%
+    group_by(RecYear)%>%
+    sample_n(200, replace=T)%>%
+    dplyr::select(plot_index, RecYear)%>%
+    ungroup()
+  biomass_north_ready_2012<-biomass_north_index%>%
+    right_join(north_rand_key_2012, by= c("RecYear", "plot_index"),
+               multiple="all")%>%
+    mutate(iteration=BOOT)
+  PBG_Nth_key<-rbind(PBG_Nth_key, biomass_north_ready_2012)
+}
+write.csv(PBG_Nth_master_all, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/PBG_Nth_master_all.csv")
+
+PBG_Nth_merge<-PBG_Nth_key%>%
+  ungroup()%>%
+  select(iteration,plot_index)%>%
+  right_join(PBG_Nth_master_all, by="iteration")
