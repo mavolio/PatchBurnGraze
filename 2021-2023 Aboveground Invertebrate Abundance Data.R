@@ -5,6 +5,7 @@ library(codyn)
 library(ggplot2)
 library(ggpubr)
 library(gridExtra)
+library(vegan)
 
 #### CSV read ####
 
@@ -420,7 +421,9 @@ ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = 
         axis.title.y = element_text(size = 24, color = 'black'),
         legend.text = element_text(size = 24),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank()
-  )
+  ) +
+ggtitle("2021 year sense burned")
+
 #F=1.6053, df=3,52, p=0.016
 #export at 1500x1000
 
@@ -477,6 +480,300 @@ ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = group, linetype = group, s
         axis.title.y = element_text(size = 24, color = 'black'),
         legend.text = element_text(size = 24),
         panel.grid.major = element_blank(), panel.grid.minor = element_blank()
-  )
+  ) +
+  ggtitle("2021 ABG vs PBG")
 
+
+
+
+
+#### 2022 PERMANOVA & NMDS ####
+# Combine count with burn info
+
+# Merge with burn data
+Abundance_Data2022 <- full_join(Abundance_ID_aboveground, BurnInfo2022, by = "WS") %>% 
+  unite("TreatmentSB", c("Treatment", "SB"), sep = "_") %>% 
+  filter(Date == "2022")
+
+# Tag ABG and PBG
+Abundance_Data2022$Sample <- paste(Abundance_Data2022$WS, Abundance_Data2022$Trans, Abundance_Data2022$Plot, sep = "_")
+Abundance_Data2022$Treatment <- ifelse(grepl("C1", Abundance_Data2022$Sample), "ABG", "PBG") 
+
+# PERMANOVA
+abundanceWide <- Abundance_Data2022 %>% 
+  mutate(block = ifelse(grepl("S", Sample), "North", "South")) %>%
+  select(Sample, block, WS, Trans, Plot, Treatment, TreatmentSB, Count, ID) %>%
+  group_by(Sample, block, WS, Trans, Plot, Treatment, TreatmentSB, ID) %>% 
+  summarise(Count = sum(Count)) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = 'ID', values_from = 'Count', values_fill = list(Count = 0)) 
+
+abundanceWide <- abundanceWide %>% 
+  mutate(sum = rowSums(abundanceWide[, c(8:118)], na.rm = TRUE)) %>% 
+  filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
+
+print(permanova <- adonis2(formula = abundanceWide[, 8:118] ~ TreatmentSB, data = abundanceWide, permutations = 999, method = "bray"))
+# F=1.6053, df=3,52, p=0.016
+
+# Betadisper
+veg <- vegdist(abundanceWide[, 8:117], method = "bray")
+dispersion <- betadisper(veg, abundanceWide$TreatmentSB)
+permutest(dispersion, pairwise = TRUE, permutations = 999) 
+# F=1.5519, df=3,52, p=0.213
+
+BC_Data <- metaMDS(abundanceWide[, 8:117])
+sites <- 1:nrow(abundanceWide)
+BC_Meta_Data <- abundanceWide[, 1:7]
+plot(BC_Data$points, col = as.factor(BC_Meta_Data$TreatmentSB))
+ordiellipse(BC_Data, groups = as.factor(BC_Meta_Data$TreatmentSB), kind = "sd", display = "sites", label = TRUE)
+
+veganCovEllipse <- function (cov, center = c(0, 0), scale = 1, npoints = 100) {
+  theta <- (0:npoints) * 2 * pi / npoints
+  Circle <- cbind(cos(theta), sin(theta))
+  t(center + scale * t(Circle %*% chol(cov)))
+}
+
+# Generate ellipses
+BC_NMDS <- data.frame(MDS1 = BC_Data$points[, 1], MDS2 = BC_Data$points[, 2], group = BC_Meta_Data$TreatmentSB)
+BC_NMDS_Graph <- cbind(BC_Meta_Data, BC_NMDS)
+BC_Ord_Ellipses <- ordiellipse(BC_Data, BC_Meta_Data$TreatmentSB, display = "sites", kind = "se", conf = 0.95, label = TRUE)
+
+BC_Ellipses <- data.frame()
+# Generate ellipses points
+for (g in levels(as.factor(BC_NMDS$group))) {
+  BC_Ellipses <- rbind(BC_Ellipses,
+                       cbind(as.data.frame(with(BC_NMDS[BC_NMDS$group == g, ], 
+                                                veganCovEllipse(BC_Ord_Ellipses[[g]]$cov,
+                                                                BC_Ord_Ellipses[[g]]$center,
+                                                                BC_Ord_Ellipses[[g]]$scale))),
+                             group = g))
+}
+
+ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = group)) +
+  geom_point(size=6) + 
+  geom_path(data = BC_Ellipses, aes(x = NMDS1, y = NMDS2), size = 3) +
+  labs(color="", linetype = "", shape = "") +
+  scale_colour_manual(values=c("blue", "#7A2021", "#C21A09", "#FF0800"), name = "",
+                      labels=c('ABG', 'PBG 0', 'PBG 1', 'PBG 2')) +
+  scale_linetype_manual(values = c("solid", "twodash", "twodash", "twodash"), name = "",
+                        labels=c('ABG', 'PBG 0', 'PBG 1', 'PBG 2')) +
+  scale_shape_manual(values = c(19, 19, 17, 15),
+                     labels=c('ABG', 'PBG 0', 'PBG 1', 'PBG 2')) +
+  xlab("NMDS1") + 
+  ylab("NMDS2") + 
+  theme_bw() +
+  theme(axis.text.x=element_text(size=24, color = "black"), 
+        axis.text.y = element_text(size = 24, color = "black"), 
+        axis.title.x = element_text(size = 24, color = 'black'),
+        axis.title.y = element_text(size = 24, color = 'black'),
+        legend.text = element_text(size = 24),
+        panel.grid.major=element_blank(), panel.grid.minor=element_blank()
+  ) +
+  ggtitle("2022 year sense burned")
+
+
+
+### by watershed
+# PERMANOVA
+print(permanova <- adonis2(formula = abundanceWide[,8:118]~Treatment, data=abundanceWide, permutations=999, method="bray"))
+#F=1.4498, df=1,52, p=0.119
+
+#betadisper
+veg <- vegdist(abundanceWide[,8:117], method = "bray")
+dispersion <- betadisper(veg, abundanceWide$Treatment)
+permutest(dispersion, pairwise=TRUE, permutations=999) 
+
+#F=9e-4, df=1,52, p=0.976
+
+BC_Data <- metaMDS(abundanceWide[,8:117])
+sites <- 1:nrow(abundanceWide)
+BC_Meta_Data <- abundanceWide[,1:7]
+plot(BC_Data$points, col=as.factor(BC_Meta_Data$Treatment))
+ordiellipse(BC_Data, groups = as.factor(BC_Meta_Data$Treatment), kind = "sd", display = "sites", label = T)
+
+#Generate ellipses
+BC_NMDS = data.frame(MDS1 = BC_Data$points[,1], MDS2 = BC_Data$points[,2], group=BC_Meta_Data$Treatment)
+BC_NMDS_Graph <- cbind(BC_Meta_Data, BC_NMDS)
+BC_Ord_Ellipses<-ordiellipse(BC_Data, BC_Meta_Data$Treatment, display = "sites",
+                             kind = "se", conf = 0.95, label = T)
+
+BC_Ellipses <- data.frame()
+#Generate ellipses points
+for(g in levels(as.factor(BC_NMDS$group))){
+  BC_Ellipses <- rbind(BC_Ellipses,
+                       cbind(as.data.frame(with(BC_NMDS[BC_NMDS$group==g,], 
+                                                veganCovEllipse(BC_Ord_Ellipses[[g]]$cov,
+                                                                BC_Ord_Ellipses[[g]]$center,
+                                                                BC_Ord_Ellipses[[g]]$scale))),
+                             group=g))
+}
+
+#Plot the data from BC_NMDS_Graph, where x=MDS1 and y=MDS2, make an ellipse based on "group"
+ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = group, linetype = group, shape = group)) +
+  geom_point(size = 6) + 
+  geom_path(data = BC_Ellipses, aes(x = NMDS1, y = NMDS2), size = 3) +
+  labs(color = "", linetype = "", shape = "") +
+  scale_colour_manual(values = c("blue", "red"), name = "") +
+  scale_linetype_manual(values = c("solid", "twodash"), name = "") +
+  scale_shape_manual(values = c(19, 19)) +
+  xlab("NMDS1") + 
+  ylab("NMDS2") + 
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = expression(paste('F'['3,52'], ' = 1.61')), size = 8, hjust = 'left') +
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.1, label = 'p = 0.016', size = 8, hjust = 'left') +
+  theme_classic() +
+  theme(axis.text.x = element_text(size = 24, color = "black"), 
+        axis.text.y = element_text(size = 24, color = "black"), 
+        axis.title.x = element_text(size = 24, color = 'black'),
+        axis.title.y = element_text(size = 24, color = 'black'),
+        legend.text = element_text(size = 24),
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank()
+  ) +
+  ggtitle("2022 ABG vs PBG")
+
+
+
+
+
+#### 2023 PERMANOVA & NMDS ####
+# Combine count with burn info
+
+# Merge with burn data
+Abundance_Data2023 <- full_join(Abundance_ID_aboveground, BurnInfo2023, by = "WS") %>% 
+  unite("TreatmentSB", c("Treatment", "SB"), sep = "_") %>% 
+  filter(Date == "2023")
+
+# Tag ABG and PBG
+Abundance_Data2023$Sample <- paste(Abundance_Data2023$WS, Abundance_Data2023$Trans, Abundance_Data2023$Plot, sep = "_")
+Abundance_Data2023$Treatment <- ifelse(grepl("C1", Abundance_Data2023$Sample), "ABG", "PBG") 
+
+# PERMANOVA
+abundanceWide <- Abundance_Data2023 %>% 
+  mutate(block = ifelse(grepl("S", Sample), "North", "South")) %>%
+  select(Sample, block, WS, Trans, Plot, Treatment, TreatmentSB, Count, ID) %>%
+  group_by(Sample, block, WS, Trans, Plot, Treatment, TreatmentSB, ID) %>% 
+  summarise(Count = sum(Count)) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = 'ID', values_from = 'Count', values_fill = list(Count = 0)) 
+
+abundanceWide <- abundanceWide %>% 
+  mutate(sum = rowSums(abundanceWide[, c(8:75)], na.rm = TRUE)) %>% 
+  filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
+
+print(permanova <- adonis2(formula = abundanceWide[, 8:75] ~ TreatmentSB, data = abundanceWide, permutations = 999, method = "bray"))
+# F=1.6053, df=3,52, p=0.016
+
+# Betadisper
+veg <- vegdist(abundanceWide[, 8:74], method = "bray")
+dispersion <- betadisper(veg, abundanceWide$TreatmentSB)
+permutest(dispersion, pairwise = TRUE, permutations = 999) 
+# F=1.5519, df=3,52, p=0.213
+
+BC_Data <- metaMDS(abundanceWide[, 8:74])
+sites <- 1:nrow(abundanceWide)
+BC_Meta_Data <- abundanceWide[, 1:7]
+plot(BC_Data$points, col = as.factor(BC_Meta_Data$TreatmentSB))
+ordiellipse(BC_Data, groups = as.factor(BC_Meta_Data$TreatmentSB), kind = "sd", display = "sites", label = TRUE)
+
+veganCovEllipse <- function (cov, center = c(0, 0), scale = 1, npoints = 100) {
+  theta <- (0:npoints) * 2 * pi / npoints
+  Circle <- cbind(cos(theta), sin(theta))
+  t(center + scale * t(Circle %*% chol(cov)))
+}
+
+# Generate ellipses
+BC_NMDS <- data.frame(MDS1 = BC_Data$points[, 1], MDS2 = BC_Data$points[, 2], group = BC_Meta_Data$TreatmentSB)
+BC_NMDS_Graph <- cbind(BC_Meta_Data, BC_NMDS)
+BC_Ord_Ellipses <- ordiellipse(BC_Data, BC_Meta_Data$TreatmentSB, display = "sites", kind = "se", conf = 0.95, label = TRUE)
+
+BC_Ellipses <- data.frame()
+# Generate ellipses points
+for (g in levels(as.factor(BC_NMDS$group))) {
+  BC_Ellipses <- rbind(BC_Ellipses,
+                       cbind(as.data.frame(with(BC_NMDS[BC_NMDS$group == g, ], 
+                                                veganCovEllipse(BC_Ord_Ellipses[[g]]$cov,
+                                                                BC_Ord_Ellipses[[g]]$center,
+                                                                BC_Ord_Ellipses[[g]]$scale))),
+                             group = g))
+}
+
+ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = group)) +
+  geom_point(size=6) + 
+  geom_path(data = BC_Ellipses, aes(x = NMDS1, y = NMDS2), size = 3) +
+  labs(color="", linetype = "", shape = "") +
+  scale_colour_manual(values=c("blue", "#7A2021", "#C21A09", "#FF0800"), name = "",
+                      labels=c('ABG', 'PBG 0', 'PBG 1', 'PBG 2')) +
+  scale_linetype_manual(values = c("solid", "twodash", "twodash", "twodash"), name = "",
+                        labels=c('ABG', 'PBG 0', 'PBG 1', 'PBG 2')) +
+  scale_shape_manual(values = c(19, 19, 17, 15),
+                     labels=c('ABG', 'PBG 0', 'PBG 1', 'PBG 2')) +
+  xlab("NMDS1") + 
+  ylab("NMDS2") + 
+  theme_bw() +
+  theme(axis.text.x=element_text(size=24, color = "black"), 
+        axis.text.y = element_text(size = 24, color = "black"), 
+        axis.title.x = element_text(size = 24, color = 'black'),
+        axis.title.y = element_text(size = 24, color = 'black'),
+        legend.text = element_text(size = 24),
+        panel.grid.major=element_blank(), panel.grid.minor=element_blank()
+  ) +
+  ggtitle("2023 year sense burned")
+
+
+
+### by watershed
+# PERMANOVA
+print(permanova <- adonis2(formula = abundanceWide[,8:75]~Treatment, data=abundanceWide, permutations=999, method="bray"))
+#F=1.4498, df=1,52, p=0.119
+
+#betadisper
+veg <- vegdist(abundanceWide[,8:74], method = "bray")
+dispersion <- betadisper(veg, abundanceWide$Treatment)
+permutest(dispersion, pairwise=TRUE, permutations=999) 
+
+#F=9e-4, df=1,52, p=0.976
+
+BC_Data <- metaMDS(abundanceWide[,8:74])
+sites <- 1:nrow(abundanceWide)
+BC_Meta_Data <- abundanceWide[,1:7]
+plot(BC_Data$points, col=as.factor(BC_Meta_Data$Treatment))
+ordiellipse(BC_Data, groups = as.factor(BC_Meta_Data$Treatment), kind = "sd", display = "sites", label = T)
+
+#Generate ellipses
+BC_NMDS = data.frame(MDS1 = BC_Data$points[,1], MDS2 = BC_Data$points[,2], group=BC_Meta_Data$Treatment)
+BC_NMDS_Graph <- cbind(BC_Meta_Data, BC_NMDS)
+BC_Ord_Ellipses<-ordiellipse(BC_Data, BC_Meta_Data$Treatment, display = "sites",
+                             kind = "se", conf = 0.95, label = T)
+
+BC_Ellipses <- data.frame()
+#Generate ellipses points
+for(g in levels(as.factor(BC_NMDS$group))){
+  BC_Ellipses <- rbind(BC_Ellipses,
+                       cbind(as.data.frame(with(BC_NMDS[BC_NMDS$group==g,], 
+                                                veganCovEllipse(BC_Ord_Ellipses[[g]]$cov,
+                                                                BC_Ord_Ellipses[[g]]$center,
+                                                                BC_Ord_Ellipses[[g]]$scale))),
+                             group=g))
+}
+
+#Plot the data from BC_NMDS_Graph, where x=MDS1 and y=MDS2, make an ellipse based on "group"
+ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = group, linetype = group, shape = group)) +
+  geom_point(size = 6) + 
+  geom_path(data = BC_Ellipses, aes(x = NMDS1, y = NMDS2), size = 3) +
+  labs(color = "", linetype = "", shape = "") +
+  scale_colour_manual(values = c("blue", "red"), name = "") +
+  scale_linetype_manual(values = c("solid", "twodash"), name = "") +
+  scale_shape_manual(values = c(19, 19)) +
+  xlab("NMDS1") + 
+  ylab("NMDS2") + 
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = expression(paste('F'['3,52'], ' = 1.61')), size = 8, hjust = 'left') +
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.1, label = 'p = 0.016', size = 8, hjust = 'left') +
+  theme_classic() +
+  theme(axis.text.x = element_text(size = 24, color = "black"), 
+        axis.text.y = element_text(size = 24, color = "black"), 
+        axis.title.x = element_text(size = 24, color = 'black'),
+        axis.title.y = element_text(size = 24, color = 'black'),
+        legend.text = element_text(size = 24),
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank()
+  ) +
+  ggtitle("2023 ABG vs PBG")
 
