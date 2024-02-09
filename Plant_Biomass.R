@@ -2,7 +2,7 @@
 ####Plant Biomass from diskpasture meter
 ###Author: Joshua Ajowele
 ###collaborators: PBG synthesis group
-###last update:2/5/2024
+###last update:2/9/2024
 
 #packages 
 library(tidyverse)
@@ -795,7 +795,6 @@ for(BOOT in 1:length(bootstrap_vector)){
     mutate(iteration=BOOT)
   PBG_Nth_master_all<-rbind(PBG_Nth_master_all, biomass_north_ready_all)
 }
-write.csv(PBG_Nth_master_all, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/PBG_Nth_master_all.csv")
 
 #sample at random for a year to be used as key for other years
 PBG_Nth_key<-{}
@@ -814,9 +813,113 @@ for(BOOT in 1:length(bootstrap_vector)){
     mutate(iteration=BOOT)
   PBG_Nth_key<-rbind(PBG_Nth_key, biomass_north_ready_2012)
 }
-write.csv(PBG_Nth_master_all, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/PBG_Nth_master_all.csv")
 
+#select columns needed for matching
 PBG_Nth_merge<-PBG_Nth_key%>%
   ungroup()%>%
-  select(iteration,plot_index)%>%
-  right_join(PBG_Nth_master_all, by="iteration")
+  select(iteration,plot_index, Plotnum)
+#inner join works best-semi join removes duplicates
+PBG_Nth_merger<-PBG_Nth_master_all%>%
+  inner_join(PBG_Nth_merge, by=c("iteration","Plotnum","plot_index"))
+
+#confirm each year has the same plot id fir each iteration
+checking<-PBG_Nth_merger%>%
+  filter(iteration==2)
+#saving this so I don't have to repeat bootstrap when I close R
+write.csv(PBG_Nth_merger, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/PBG_Nth_merger_biomass.csv")
+
+PBG_Nth_biomass_ready<-PBG_Nth_merger%>%
+  ungroup()%>%
+  group_by(RecYear,iteration)%>%
+  summarise(PBG_Nmean=mean(biomass, na.rm=T))%>%
+  ungroup()%>%
+  group_by(iteration)%>%
+  mutate(PBG_Nstab=mean(PBG_Nmean,na.rm=T)/sd(PBG_Nmean))%>%
+  ungroup()%>%
+  mutate(PBG_Nstab_M=mean(PBG_Nstab, na.rm=T),
+         PBG_Nstab_sd=sd(PBG_Nstab))%>%
+  left_join(ABG_north_biomass, by="RecYear")%>%
+  mutate(zscore_stab=((Stab_ABGNth-PBG_Nstab_M)/PBG_Nstab_sd),
+  pval_stabN=2*pnorm(-abs(zscore_stab)))
+#visual
+ggplot(PBG_Nth_biomass_ready,aes(PBG_Nstab))+
+  geom_density(size=1)+
+  #facet_grid("RecYear")+
+  geom_vline(aes(xintercept=Stab_ABGNth), linetype=2,size=1)+
+  xlab("Stability North Unit")
+           
+#create an index for the south plots
+biomass_south_index<-PBG_south_biomass%>%
+  group_by(RecYear)%>%
+  mutate(plot_index=1:length(RecYear))
+#use sample_n to repeat the dataframe for 1000 iteration
+num_bootstrap<-1000
+bootstrap_vector<-1:num_bootstrap
+PBG_Sth_master_all<-{}
+for(BOOT in 1:length(bootstrap_vector)){
+  south_rand_key_all<-biomass_south_index%>%
+    dplyr::select(RecYear, Unit, Watershed, FireGrzTrt, Transect, Plotnum, plot_index)%>%
+    unique(.)%>%
+    group_by(RecYear)%>%
+    sample_n(600)%>%
+    dplyr::select(plot_index,RecYear)%>%
+    ungroup()
+  biomass_south_ready_all<-biomass_south_index%>%
+    right_join(south_rand_key_all, by= c("RecYear", "plot_index"),
+               multiple="all")%>%
+    mutate(iteration=BOOT)
+  PBG_Sth_master_all<-rbind(PBG_Sth_master_all, biomass_south_ready_all)
+}
+
+#sample at random for a year to be used as key for other years
+PBG_Sth_key<-{}
+for(BOOT in 1:length(bootstrap_vector)){
+  south_rand_key_2012<-biomass_south_index%>%
+    dplyr::select(RecYear, Unit, Watershed, FireGrzTrt, Transect, Plotnum, plot_index)%>%
+    unique(.)%>%
+    filter(RecYear==2012)%>%
+    group_by(RecYear)%>%
+    sample_n(200, replace=T)%>%
+    dplyr::select(plot_index, RecYear)%>%
+    ungroup()
+  biomass_south_ready_2012<-biomass_south_index%>%
+    right_join(south_rand_key_2012, by= c("RecYear", "plot_index"),
+               multiple="all")%>%
+    mutate(iteration=BOOT)
+  PBG_Sth_key<-rbind(PBG_Sth_key, biomass_south_ready_2012)
+}
+
+#select columns needed for matching
+PBG_Sth_merge<-PBG_Sth_key%>%
+  ungroup()%>%
+  select(iteration,plot_index, Plotnum)
+#inner join works best-semi join removes duplicates
+PBG_Sth_merger<-PBG_Sth_master_all%>%
+  inner_join(PBG_Sth_merge, by=c("iteration","Plotnum","plot_index"))
+
+#confirm each year has the same plot id fir each iteration
+checking_S<-PBG_Sth_merger%>%
+  filter(iteration==2)
+#saving this so I don't have to repeat bootstrap when I close R
+write.csv(PBG_Sth_merger, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/PBG_Sth_merger_biomass.csv")
+
+PBG_Sth_biomass_ready<-PBG_Sth_merger%>%
+  ungroup()%>%
+  group_by(RecYear,iteration)%>%
+  summarise(PBG_Smean=mean(biomass, na.rm=T))%>%
+  ungroup()%>%
+  group_by(iteration)%>%
+  mutate(PBG_Sstab=mean(PBG_Smean,na.rm=T)/sd(PBG_Smean))%>%
+  ungroup()%>%
+  mutate(PBG_Sstab_M=mean(PBG_Sstab, na.rm=T),
+         PBG_Sstab_sd=sd(PBG_Sstab))%>%
+  left_join(ABG_south_biomass, by="RecYear")%>%
+  mutate(zscore_stab=((Stab_ABGSth-PBG_Sstab_M)/PBG_Sstab_sd),
+         pval_stabS=2*pnorm(-abs(zscore_stab)))
+#visual
+ggplot(PBG_Sth_biomass_ready,aes(PBG_Sstab))+
+  geom_density(size=1)+
+  #facet_grid("RecYear")+
+  geom_vline(aes(xintercept=Stab_ABGSth), linetype=2,size=1)+
+  xlab("Stability South Unit")
+
