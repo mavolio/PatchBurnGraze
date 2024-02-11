@@ -104,7 +104,7 @@ commMetrics2 <- commMetrics %>% mutate(block = ifelse(grepl("S", Sample), "North
 
 #Joining Burn information with Treatment
 
-# Joined <- full_join(BurnInfo, commMetrics2) %>% unite("TreatmentSB",c("Treatment","SB"), sep="_") 
+# Joined full_join(BurnInfo, commMetrics2) %>% unite("TreatmentSB",c("Treatment","SB"), sep="_") 
 
 #### CV Count Graph Prep  ####
 
@@ -301,7 +301,7 @@ print(evenness)
 #Adding PBG and ABG 
 
 total_counts <- aggregate(Count ~ Sample + Treatment, data = Abundance_ID_aboveground, FUN = sum) %>% 
-  separate(Sample, into = c("WS", "Trans", "Dist"), sep = "_", extra = "drop") %>% mutate(block = ifelse(grepl("S", WS), "North", "South"))
+  separate(Sample, into = c("WS", "Trans", "Plot"), sep = "_", extra = "drop") %>% mutate(block = ifelse(grepl("S", WS), "North", "South"))
 
 
 
@@ -363,13 +363,13 @@ abundanceWide <- abundanceWide %>%
 
 
 print(permanova <- adonis2(formula = abundanceWide[,8:166]~TreatmentSB, data=abundanceWide, permutations=999, method="bray"))
-#F=1.6053, df=3,52, p=0.016
+#F=1.045  , df=3,52, p=0.391
 
 #betadisper
 veg <- vegdist(abundanceWide[,8:167], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$TreatmentSB)
 permutest(dispersion, pairwise=TRUE, permutations=999) 
-#F=1.5519, df=3,52, p=0.213
+#F=1.3302, df=3,52, p=0.247
 
 BC_Data <- metaMDS(abundanceWide[,8:167])
 sites <- 1:nrow(abundanceWide)
@@ -776,4 +776,432 @@ ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = group, linetype = group, s
         panel.grid.major = element_blank(), panel.grid.minor = element_blank()
   ) +
   ggtitle("2023 ABG vs PBG")
+
+
+### Prep for Bootstrapping ####
+
+#2021 Prep
+Abundance2021 <- Abundance_ID_aboveground %>% filter(Date == 2021)
+commMetircs2021 <-  Abundance2021 %>% community_structure(abundance.var='Count', replicate.var='Sample')
+commMetircs2021$Treatment <- ifelse(grepl("C1", commMetircs2021$Sample), "ABG", "PBG") 
+commMetircs2021 <- commMetircs2021 %>% separate(Sample, into = c('WS', 'Trans', 'Plot'), sep = '_')
+
+#making a 2021 total counts
+total_counts_2021 <- aggregate(Count ~ Sample + Treatment, data = Abundance2021, FUN = sum) %>% 
+  separate(Sample, into = c("WS", "Trans", "Plot"), sep = "_", extra = "drop") %>% 
+  mutate(block = ifelse(grepl("S", WS), "North", "South"))
+
+#2022 Prep
+Abundance2022 <- Abundance_ID_aboveground %>% filter(Date == 2022)
+commMetircs2022 <-  Abundance2022 %>% community_structure(abundance.var='Count', replicate.var='Sample')
+commMetircs2022$Treatment <- ifelse(grepl("C1", commMetircs2022$Sample), "ABG", "PBG") 
+commMetircs2022 <- commMetircs2022 %>% separate(Sample, into = c('WS', 'Trans', 'Plot'), sep = '_')
+
+#making a 2022 total counts
+total_counts_2022 <- aggregate(Count ~ Sample + Treatment, data = Abundance2022, FUN = sum) %>% 
+  separate(Sample, into = c("WS", "Trans", "Plot"), sep = "_", extra = "drop") %>% 
+  mutate(block = ifelse(grepl("S", WS), "North", "South"))
+
+#2023 Prep
+Abundance2023 <- Abundance_ID_aboveground %>% filter(Date == 2023)
+commMetircs2023 <-  Abundance2023 %>% community_structure(abundance.var='Count', replicate.var='Sample')
+commMetircs2023$Treatment <- ifelse(grepl("C1", commMetircs2023$Sample), "ABG", "PBG") 
+commMetircs2023 <- commMetircs2023 %>% separate(Sample, into = c('WS', 'Trans', 'Plot'), sep = '_')
+
+#making a 2023 total counts
+total_counts_2023 <- aggregate(Count ~ Sample + Treatment, data = Abundance2023, FUN = sum) %>% 
+  separate(Sample, into = c("WS", "Trans", "Plot"), sep = "_", extra = "drop") %>% 
+  mutate(block = ifelse(grepl("S", WS), "North", "South"))
+
+
+#Making Joined Dataframs for all years
+Joined2021 <- full_join(BurnInfo2021, commMetircs2021) %>% unite("TreatmentSB",c("Treatment","SB"), sep="_") %>% 
+  mutate(block = ifelse(grepl("S", WS), "North", "South")) %>% 
+  mutate(Treatment = ifelse(grepl("C1", WS), "ABG", "PBG"))
+
+Joined2022 <- full_join(BurnInfo2022, commMetircs2022) %>% unite("TreatmentSB",c("Treatment","SB"), sep="_") %>% 
+  mutate(block = ifelse(grepl("S", WS), "North", "South")) %>% 
+  mutate(Treatment = ifelse(grepl("C1", WS), "ABG", "PBG"))
+
+Joined2023 <- full_join(BurnInfo2023, commMetircs2023) %>% unite("TreatmentSB",c("Treatment","SB"), sep="_") %>% 
+  mutate(block = ifelse(grepl("S", WS), "North", "South")) %>% 
+  mutate(Treatment = ifelse(grepl("C1", WS), "ABG", "PBG"))
+
+#### 2021 Bootstrapping! ####
+set.seed(123)
+
+Joined_New_2021 <- Joined2021 %>%
+  filter(Treatment == "PBG") %>%
+  group_by(block) %>%
+  mutate(plot_index=1:length(block))
+
+total_counts_2021 <- total_counts_2021 %>% filter(Treatment == "PBG") %>% group_by(block) %>% 
+  mutate(plot_index=1:length(block)) %>%  filter()
+
+Combined_Data_2021 <- left_join(Joined_New_2021, total_counts_2021, by = c("WS", "Trans", "Plot", "block", "plot_index"))
+
+
+
+num_bootstrap <- 1000
+bootstrap_vector <- 1:num_bootstrap
+PBG_plot_master_2021 <- data.frame()  # Initialize an empty dataframe
+
+for (BOOT in bootstrap_vector) {
+  Joined_New_Key_2021 <- Combined_Data_2021 %>%
+    dplyr::select(1:10) %>%
+    unique() %>%
+    group_by(block) %>%
+    sample_n(16, replace = TRUE) %>%
+    dplyr::select(plot_index) %>%
+    ungroup()
+  
+  # Join the sampled rows back to the original dataframe
+  PBG_plot_ready_2021 <- Combined_Data_2021 %>%
+    right_join(Joined_New_Key_2021, by = c("block", "plot_index")) %>%
+    mutate(iteration = BOOT)
+  
+  # Append the results to the master dataframe
+  PBG_plot_master_2021 <- rbind(PBG_plot_master_2021, PBG_plot_ready_2021)
+}
+
+#### 2022 Bootstrapping! ####
+set.seed(123)
+
+Joined_New_2022 <- Joined2022 %>%
+  filter(Treatment == "PBG") %>%
+  group_by(block) %>%
+  mutate(plot_index=1:length(block))
+
+total_counts_2022 <- total_counts_2022 %>% filter(Treatment == "PBG") %>% group_by(block) %>% 
+  mutate(plot_index=1:length(block)) %>%  filter()
+
+Combined_Data_2022 <- left_join(Joined_New_2022, total_counts_2022, by = c("WS", "Trans", "Plot", "block", "plot_index"))
+
+
+
+num_bootstrap <- 1000
+bootstrap_vector <- 1:num_bootstrap
+PBG_plot_master_2022<- data.frame()  # Initialize an empty dataframe
+
+for (BOOT in bootstrap_vector) {
+  Joined_New_Key_2022 <- Combined_Data_2022 %>%
+    dplyr::select(1:10) %>%
+    unique() %>%
+    group_by(block) %>%
+    sample_n(16, replace = TRUE) %>%
+    dplyr::select(plot_index) %>%
+    ungroup()
+  
+  # Join the sampled rows back to the original dataframe
+  PBG_plot_ready_2022 <- Combined_Data_2022 %>%
+    right_join(Joined_New_Key_2022, by = c("block", "plot_index")) %>%
+    mutate(iteration = BOOT)
+  
+  # Append the results to the master dataframe
+  PBG_plot_master_2022 <- rbind(PBG_plot_master_2022, PBG_plot_ready_2022)
+}
+
+#### 2023 Bootstrapping! ####
+set.seed(123)
+
+Joined_New_2023 <- Joined2023 %>%
+  filter(Treatment == "PBG") %>%
+  group_by(block) %>%
+  mutate(plot_index=1:length(block))
+
+total_counts_2023 <- total_counts_2023 %>% filter(Treatment == "PBG") %>% group_by(block) %>% 
+  mutate(plot_index=1:length(block)) %>%  filter()
+
+Combined_Data_2023 <- left_join(Joined_New_2023, total_counts_2023, by = c("WS", "Trans", "Plot", "block", "plot_index"))
+
+
+
+num_bootstrap <- 1000
+bootstrap_vector <- 1:num_bootstrap
+PBG_plot_master_2023 <- data.frame()  # Initialize an empty dataframe
+
+for (BOOT in bootstrap_vector) {
+  Joined_New_Key_2023 <- Combined_Data_2023 %>%
+    dplyr::select(1:10) %>%
+    unique() %>%
+    group_by(block) %>%
+    sample_n(16, replace = TRUE) %>%
+    dplyr::select(plot_index) %>%
+    ungroup()
+  
+  # Join the sampled rows back to the original dataframe
+  PBG_plot_ready_2023 <- Combined_Data_2023 %>%
+    right_join(Joined_New_Key_2023, by = c("block", "plot_index")) %>%
+    mutate(iteration = BOOT)
+  
+  # Append the results to the master dataframe
+  PBG_plot_master_2023 <- rbind(PBG_plot_master_2023, PBG_plot_ready_2023)
+}
+
+
+#### 2021 Z-Score  Calculations ####
+
+
+#Getting average richness per iteration for bootstrapped dataframe
+average_richness_2021 <- PBG_plot_master_2021 %>%
+  group_by(iteration) %>%
+  summarize(mean_richness = mean(richness))
+
+#Getting evenness richness per iteration for bootstrapped dataframe
+average_evenness_2021 <- PBG_plot_master_2021 %>%
+  group_by(iteration) %>%
+  summarize(mean_evenness = mean(Evar, na.rm = TRUE))
+
+#Getting average richness per iteration for bootstrapped dataframe
+average_total_count_2021 <- PBG_plot_master_2021 %>%
+  group_by(iteration) %>%
+  summarize(mean_count = mean(Count, na.rm = TRUE))
+
+#Take the mean of the mean for PBG richness
+PBG_mean_mean_richness_2021 <- mean(average_richness_2021$mean_richness, na.rm = TRUE)
+
+#Take the mean of the mean for PBG evenness
+PBG_mean_mean_evenness_2021 <- mean(average_evenness_2021$mean_evenness, na.rm = TRUE)
+
+#Take the mean of the mean for PBG evenness
+PBG_mean_mean_total_count_2021 <- mean(average_total_count_2021$mean_count, na.rm = TRUE)
+
+#Take the mean of the mean for PBG total count
+
+#Getting ABG ready
+
+Total_counts_ABG <- total_counts %>% filter(Treatment == "ABG")
+
+Joined_New_ABG <- Joined2021 %>% filter(Treatment == "ABG") %>% group_by(block) %>% 
+  mutate(plot_index=1:length(block))
+
+
+#Take the mean of the mean for ABG richness
+ABG_mean_richness <- mean(Joined_New_ABG$richness, na.rm = TRUE)
+
+
+#Take the mean of the mean for ABG evenness
+ABG_mean_evenness <- mean(Joined_New_ABG$Evar, na.rm = TRUE)
+
+#Take the mean of the mean for ABG total count
+ABG_mean_total_count <- mean(Total_counts_ABG$Count, na.rm = TRUE)
+
+# Z-Score for richness 
+
+Z_R_2021 <- ((ABG_mean_richness) - (PBG_mean_mean_richness_2021))/(sd(average_richness_2021$mean_richness))
+Z_R_2021
+
+p_value_R_2021 <- 1 - pnorm(Z_R_2021)
+
+print(p_value_R_2021)
+
+#0.08558674
+#P = 0.5341025
+
+# Z-Score for evenness 
+Z_E_2021 <- ((ABG_mean_evenness) - (PBG_mean_mean_evenness_2021))/(sd(average_evenness_2021$mean_evenness))
+Z_E_2021
+
+p_value_E_2021 <- 1 - pnorm(Z_E_2021, lower.tail = FALSE)
+
+print(p_value_E_2021)
+#-0.4711009
+#P = 0.3091665
+
+# Z-Score for total count 
+Z_C_2021 <- ((ABG_mean_total_count) - (PBG_mean_mean_total_count_2021))/(sd(average_total_count_2021$mean_count))
+Z_C_2021
+
+p_value_C_2021 <- 1 - pnorm(Z_C_2021, lower.tail = FALSE)
+
+print(p_value_C_2021)
+#Z-Score: 3.33881
+#P 0.9995793
+
+#### 2022 Z-Score  Calculations ####
+
+
+#Getting average richness per iteration for bootstrapped dataframe
+average_richness_2022 <- PBG_plot_master_2022 %>%
+  group_by(iteration) %>%
+  summarize(mean_richness = mean(richness))
+
+#Getting evenness richness per iteration for bootstrapped dataframe
+average_evenness_2022 <- PBG_plot_master_2022 %>%
+  group_by(iteration) %>%
+  summarize(mean_evenness = mean(Evar, na.rm = TRUE))
+
+#Getting average richness per iteration for bootstrapped dataframe
+average_total_count_2022 <- PBG_plot_master_2022 %>%
+  group_by(iteration) %>%
+  summarize(mean_count = mean(Count, na.rm = TRUE))
+
+#Take the mean of the mean for PBG richness
+PBG_mean_mean_richness_2022 <- mean(average_richness_2022$mean_richness, na.rm = TRUE)
+
+#Take the mean of the mean for PBG evenness
+PBG_mean_mean_evenness_2022 <- mean(average_evenness_2022$mean_evenness, na.rm = TRUE)
+
+#Take the mean of the mean for PBG evenness
+PBG_mean_mean_total_count_2022 <- mean(average_total_count_2022$mean_count, na.rm = TRUE)
+
+#Take the mean of the mean for PBG total count
+
+#Getting ABG ready
+
+Total_counts_ABG <- total_counts %>% filter(Treatment == "ABG")
+
+Joined_New_ABG <- Joined2022 %>% filter(Treatment == "ABG") %>% group_by(block) %>% 
+  mutate(plot_index=1:length(block))
+
+#Take the mean of the mean for ABG richness
+ABG_mean_richness <- mean(Joined_New_ABG$richness, na.rm = TRUE)
+
+#Take the mean of the mean for ABG evenness
+ABG_mean_evenness <- mean(Joined_New_ABG$Evar, na.rm = TRUE)
+
+#Take the mean of the mean for ABG total count
+ABG_mean_total_count <- mean(Total_counts_ABG$Count, na.rm = TRUE)
+
+# Z-Score for richness 
+
+Z_R_2022 <- ((ABG_mean_richness) - (PBG_mean_mean_richness_2022))/(sd(average_richness_2022$mean_richness))
+Z_R_2022
+
+p_value_R_2022 <- 1 - pnorm(Z_R_2022)
+
+print(p_value_R_2022)
+
+#2.180227
+#P = 0.01462034
+
+# Z-Score for evenness 
+Z_E_2022 <- ((ABG_mean_evenness) - (PBG_mean_mean_evenness_2022))/(sd(average_evenness_2022$mean_evenness))
+Z_E_2022
+
+p_value_E_2022 <- 1 - pnorm(Z_E_2022)
+
+print(p_value_E_2022)
+#0.4982143
+#P = 0.6908335
+
+# Z-Score for total count 
+Z_C_2022 <- ((ABG_mean_total_count) - (PBG_mean_mean_total_count_2022))/(sd(average_total_count_2022$mean_count))
+Z_C_2022
+
+p_value_C_2022 <- 1 - pnorm(Z_C_2022, lower.tail = FALSE)
+
+print(p_value_C_2022)
+#Z-Score: 7.391556
+#P = 0.9995793
+
+#### 2023 Z-Score  Calculations ####
+
+
+#Getting average richness per iteration for bootstrapped dataframe
+average_richness_2023 <- PBG_plot_master_2023 %>%
+  group_by(iteration) %>%
+  summarize(mean_richness = mean(richness))
+
+#Getting evenness richness per iteration for bootstrapped dataframe
+average_evenness_2023 <- PBG_plot_master_2023 %>%
+  group_by(iteration) %>%
+  summarize(mean_evenness = mean(Evar, na.rm = TRUE))
+
+#Getting average richness per iteration for bootstrapped dataframe
+average_total_count_2023 <- PBG_plot_master_2023 %>%
+  group_by(iteration) %>%
+  summarize(mean_count = mean(Count, na.rm = TRUE))
+
+#Take the mean of the mean for PBG richness
+PBG_mean_mean_richness_2023 <- mean(average_richness_2023$mean_richness, na.rm = TRUE)
+
+#Take the mean of the mean for PBG evenness
+PBG_mean_mean_evenness_2023 <- mean(average_evenness_2023$mean_evenness, na.rm = TRUE)
+
+#Take the mean of the mean for PBG evenness
+PBG_mean_mean_total_count_2023 <- mean(average_total_count_2023$mean_count, na.rm = TRUE)
+
+#Take the mean of the mean for PBG total count
+
+#Getting ABG ready
+
+Total_counts_ABG <- total_counts %>% filter(Treatment == "ABG")
+
+Joined_New_ABG <- Joined2023 %>% filter(Treatment == "ABG") %>% group_by(block) %>% 
+  mutate(plot_index=1:length(block))
+
+#Take the mean of the mean for ABG richness
+ABG_mean_richness <- mean(Joined_New_ABG$richness, na.rm = TRUE)
+
+#Take the mean of the mean for ABG evenness
+ABG_mean_evenness <- mean(Joined_New_ABG$Evar, na.rm = TRUE)
+
+#Take the mean of the mean for ABG total count
+ABG_mean_total_count <- mean(Total_counts_ABG$Count, na.rm = TRUE)
+
+# Z-Score for richness 
+
+Z_R_2023 <- ((ABG_mean_richness) - (PBG_mean_mean_richness_2023))/(sd(average_richness_2023$mean_richness))
+Z_R_2023
+
+p_value_R_2023 <- 1 - pnorm(Z_R_2023, lower.tail = FALSE)
+
+print(p_value_R_2023)
+
+#-0.4141497
+#P = 0.3393822
+
+# Z-Score for evenness 
+Z_E_2023 <- ((ABG_mean_evenness) - (PBG_mean_mean_evenness_2023))/(sd(average_evenness_2023$mean_evenness))
+Z_E_2023
+
+p_value_E_2023 <- 1 - pnorm(Z_E_2023, lower.tail = FALSE)
+
+print(p_value_E_2023)
+#-2.081953
+#P = 0.01867338
+
+# Z-Score for total count 
+Z_C_2023 <- ((ABG_mean_total_count) - (PBG_mean_mean_total_count_2023))/(sd(average_total_count_2023$mean_count))
+Z_C_2023
+
+p_value_C_2023 <- 1 - pnorm(Z_C_2023, lower.tail = FALSE)
+
+print(p_value_C_2023)
+#Z-Score: 15.0405
+#P = 1
+
+
+
+#### Graphs Bootstrapped Means 2021 ####
+
+#Richness means graph
+ggplot(average_richness_2021, aes(x = mean_richness, color = "PBG")) +
+  geom_density(alpha = 0.5) +
+  geom_vline(aes(xintercept = ABG_mean_richness, color = "ABG Mean Richness"), linetype = "dashed", size = 1) +
+  labs(title = "Density Plot of Mean Richness",
+       x = "Mean Richness",
+       y = "Density") +
+  scale_color_manual(values = c("blue", "red"), name = "Legend")
+
+#Evenness means graph
+ggplot(average_evenness_2021, aes(x = mean_evenness, color = "PBG")) +
+  geom_density(alpha = 0.5) +
+  geom_vline(aes(xintercept = ABG_mean_evenness, color = "ABG Mean Evenness"), linetype = "dashed", size = 1) +
+  labs(title = "Density Plot of Mean Evenness",
+       x = "Mean Evenness",
+       y = "Density") +
+  scale_color_manual(values = c("blue", "red"), name = "Legend")
+
+#Total_count means graphs
+ggplot(average_total_count_2021, aes(x = mean_count, color = "PBG")) +
+  geom_density(alpha = 0.5) +
+  geom_vline(aes(xintercept = ABG_mean_total_count, color = "ABG Total Count"), linetype = "dashed", size = 1) +
+  labs(title = "Density Plot of Total Count",
+       x = "Mean Total Count",
+       y = "Density") +
+  scale_color_manual(values = c("blue", "red"), name = "Legend")
+
+
 
