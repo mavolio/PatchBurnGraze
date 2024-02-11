@@ -970,25 +970,43 @@ PBG_mean_mean_total_count_2021 <- mean(average_total_count_2021$mean_count, na.r
 
 #Getting ABG ready
 
-Total_counts_ABG <- total_counts %>% filter(Treatment == "ABG")
+### 2021 ABG Count ###
 
-Joined_New_ABG <- Joined2021 %>% filter(Treatment == "ABG") %>% group_by(block) %>% 
-  mutate(plot_index=1:length(block))
+Z_total_counts_2021 <- Abundance_ID_aboveground %>%
+  filter(Date == 2021) %>%
+  group_by(WS, Trans, Plot, Treatment) %>%
+  summarise(Count = sum(Count, na.rm = TRUE))
 
-
-#Take the mean of the mean for ABG richness
-ABG_mean_richness <- mean(Joined_New_ABG$richness, na.rm = TRUE)
-
-
-#Take the mean of the mean for ABG evenness
-ABG_mean_evenness <- mean(Joined_New_ABG$Evar, na.rm = TRUE)
+total_counts_ABG_2021 <- Z_total_counts_2021 %>% filter(Treatment == "ABG")
 
 #Take the mean of the mean for ABG total count
-ABG_mean_total_count <- mean(Total_counts_ABG$Count, na.rm = TRUE)
+ABG_mean_total_count_2021 <- mean(Total_counts_ABG_2021$Count, na.rm = TRUE)
+
+### 2021 ABG Richness ###
+
+Z_total_richness_2021 <- commMetircs2021 %>%
+  group_by(WS, Trans, Plot, Treatment) %>%
+  summarise(richness = sum(richness, na.rm = TRUE))
+
+Total_richness_ABG_2021 <- Z_total_richness_2021 %>% filter(Treatment == "ABG")
+
+#Take the mean of the mean for ABG total count
+mean_richness_ABG_2021 <- mean(Total_richness_ABG_2021$richness, na.rm = TRUE)
+
+### 2021 ABG Evenness ###
+
+Z_total_evenness_2021 <- commMetircs2021 %>%
+  group_by(WS, Trans, Plot, Treatment) %>%
+  summarise(Evar = sum(Evar, na.rm = TRUE))
+
+Total_evenness_ABG_2021 <- Z_total_evenness_2021 %>% filter(Treatment == "ABG")
+
+#Take the mean of the mean for ABG total count
+mean_evenness_ABG_2021 <- mean(Total_evenness_ABG_2021$Evar, na.rm = TRUE)
 
 # Z-Score for richness 
 
-Z_R_2021 <- ((ABG_mean_richness) - (PBG_mean_mean_richness_2021))/(sd(average_richness_2021$mean_richness))
+Z_R_2021 <- ((mean_richness_ABG_2021) - (PBG_mean_mean_richness_2021))/(sd(average_richness_2021$mean_richness))
 Z_R_2021
 
 p_value_R_2021 <- 1 - pnorm(Z_R_2021)
@@ -999,7 +1017,7 @@ print(p_value_R_2021)
 #P = 0.5341025
 
 # Z-Score for evenness 
-Z_E_2021 <- ((ABG_mean_evenness) - (PBG_mean_mean_evenness_2021))/(sd(average_evenness_2021$mean_evenness))
+Z_E_2021 <- ((mean_evenness_ABG_2021) - (PBG_mean_mean_evenness_2021))/(sd(average_evenness_2021$mean_evenness))
 Z_E_2021
 
 p_value_E_2021 <- 1 - pnorm(Z_E_2021, lower.tail = FALSE)
@@ -1009,17 +1027,16 @@ print(p_value_E_2021)
 #P = 0.3091665
 
 # Z-Score for total count 
-Z_C_2021 <- ((ABG_mean_total_count) - (PBG_mean_mean_total_count_2021))/(sd(average_total_count_2021$mean_count))
+Z_C_2021 <- ((ABG_mean_total_count_2021) - (PBG_mean_mean_total_count_2021))/(sd(average_total_count_2021$mean_count))
 Z_C_2021
 
 p_value_C_2021 <- 1 - pnorm(Z_C_2021, lower.tail = FALSE)
 
 print(p_value_C_2021)
-#Z-Score: 3.33881
-#P 0.9995793
+#Z-Score: 0.171785
+#P = 0.5681967
 
-#### 2022 Z-Score  Calculations ####
-
+#### 2022 Z-Score Calculations ####
 
 #Getting average richness per iteration for bootstrapped dataframe
 average_richness_2022 <- PBG_plot_master_2022 %>%
@@ -1045,58 +1062,67 @@ PBG_mean_mean_evenness_2022 <- mean(average_evenness_2022$mean_evenness, na.rm =
 #Take the mean of the mean for PBG evenness
 PBG_mean_mean_total_count_2022 <- mean(average_total_count_2022$mean_count, na.rm = TRUE)
 
-#Take the mean of the mean for PBG total count
-
 #Getting ABG ready
 
-Total_counts_ABG <- total_counts %>% filter(Treatment == "ABG")
+### 2022 ABG Count ###
 
-Joined_New_ABG <- Joined2022 %>% filter(Treatment == "ABG") %>% group_by(block) %>% 
-  mutate(plot_index=1:length(block))
+Z_total_counts_2022 <- Abundance_ID_aboveground %>%
+  filter(Date == 2022) %>%
+  group_by(WS, Trans, Plot, Treatment) %>%
+  summarise(Count = sum(Count, na.rm = TRUE))
 
-#Take the mean of the mean for ABG richness
-ABG_mean_richness <- mean(Joined_New_ABG$richness, na.rm = TRUE)
-
-#Take the mean of the mean for ABG evenness
-ABG_mean_evenness <- mean(Joined_New_ABG$Evar, na.rm = TRUE)
+total_counts_ABG_2022 <- Z_total_counts_2022 %>% filter(Treatment == "ABG")
 
 #Take the mean of the mean for ABG total count
-ABG_mean_total_count <- mean(Total_counts_ABG$Count, na.rm = TRUE)
+ABG_mean_total_count_2022 <- mean(total_counts_ABG_2022$Count, na.rm = TRUE)
+
+### 2022 ABG Richness ###
+
+Z_total_richness_2022 <- commMetircs2022 %>%
+  group_by(WS, Trans, Plot, Treatment) %>%
+  summarise(richness = sum(richness, na.rm = TRUE))
+
+Total_richness_ABG_2022 <- Z_total_richness_2022 %>% filter(Treatment == "ABG")
+
+#Take the mean of the mean for ABG total count
+mean_richness_ABG_2022 <- mean(Total_richness_ABG_2022$richness, na.rm = TRUE)
+
+### 2022 ABG Evenness ###
+
+Z_total_evenness_2022 <- commMetircs2022 %>%
+  group_by(WS, Trans, Plot, Treatment) %>%
+  summarise(Evar = sum(Evar, na.rm = TRUE))
+
+Total_evenness_ABG_2022 <- Z_total_evenness_2022 %>% filter(Treatment == "ABG")
+
+#Take the mean of the mean for ABG total count
+mean_evenness_ABG_2022 <- mean(Total_evenness_ABG_2022$Evar, na.rm = TRUE)
 
 # Z-Score for richness 
-
-Z_R_2022 <- ((ABG_mean_richness) - (PBG_mean_mean_richness_2022))/(sd(average_richness_2022$mean_richness))
+Z_R_2022 <- ((mean_richness_ABG_2022) - (PBG_mean_mean_richness_2022))/(sd(average_richness_2022$mean_richness))
 Z_R_2022
-
 p_value_R_2022 <- 1 - pnorm(Z_R_2022)
-
 print(p_value_R_2022)
-
-#2.180227
-#P = 0.01462034
+#0.08558674
+#P = 0.5341025
 
 # Z-Score for evenness 
-Z_E_2022 <- ((ABG_mean_evenness) - (PBG_mean_mean_evenness_2022))/(sd(average_evenness_2022$mean_evenness))
+Z_E_2022 <- ((mean_evenness_ABG_2022) - (PBG_mean_mean_evenness_2022))/(sd(average_evenness_2022$mean_evenness))
 Z_E_2022
-
-p_value_E_2022 <- 1 - pnorm(Z_E_2022)
-
+p_value_E_2022 <- 1 - pnorm(Z_E_2022, lower.tail = FALSE)
 print(p_value_E_2022)
-#0.4982143
-#P = 0.6908335
+#-0.4711009
+#P = 0.3091665
 
 # Z-Score for total count 
-Z_C_2022 <- ((ABG_mean_total_count) - (PBG_mean_mean_total_count_2022))/(sd(average_total_count_2022$mean_count))
+Z_C_2022 <- ((ABG_mean_total_count_2022) - (PBG_mean_mean_total_count_2022))/(sd(average_total_count_2022$mean_count))
 Z_C_2022
-
 p_value_C_2022 <- 1 - pnorm(Z_C_2022, lower.tail = FALSE)
-
 print(p_value_C_2022)
-#Z-Score: 7.391556
-#P = 0.9995793
+#Z-Score: 0.171785
+#P = 0.5681967
 
-#### 2023 Z-Score  Calculations ####
-
+#### 2023 Z-Score Calculations ####
 
 #Getting average richness per iteration for bootstrapped dataframe
 average_richness_2023 <- PBG_plot_master_2023 %>%
@@ -1122,86 +1148,154 @@ PBG_mean_mean_evenness_2023 <- mean(average_evenness_2023$mean_evenness, na.rm =
 #Take the mean of the mean for PBG evenness
 PBG_mean_mean_total_count_2023 <- mean(average_total_count_2023$mean_count, na.rm = TRUE)
 
-#Take the mean of the mean for PBG total count
-
 #Getting ABG ready
 
-Total_counts_ABG <- total_counts %>% filter(Treatment == "ABG")
+### 2023 ABG Count ###
 
-Joined_New_ABG <- Joined2023 %>% filter(Treatment == "ABG") %>% group_by(block) %>% 
-  mutate(plot_index=1:length(block))
+Z_total_counts_2023 <- Abundance_ID_aboveground %>%
+  filter(Date == 2023) %>%
+  group_by(WS, Trans, Plot, Treatment) %>%
+  summarise(Count = sum(Count, na.rm = TRUE))
 
-#Take the mean of the mean for ABG richness
-ABG_mean_richness <- mean(Joined_New_ABG$richness, na.rm = TRUE)
-
-#Take the mean of the mean for ABG evenness
-ABG_mean_evenness <- mean(Joined_New_ABG$Evar, na.rm = TRUE)
+total_counts_ABG_2023 <- Z_total_counts_2023 %>% filter(Treatment == "ABG")
 
 #Take the mean of the mean for ABG total count
-ABG_mean_total_count <- mean(Total_counts_ABG$Count, na.rm = TRUE)
+ABG_mean_total_count_2023 <- mean(total_counts_ABG_2023$Count, na.rm = TRUE)
+
+### 2023 ABG Richness ###
+
+Z_total_richness_2023 <- commMetircs2023 %>%
+  group_by(WS, Trans, Plot, Treatment) %>%
+  summarise(richness = sum(richness, na.rm = TRUE))
+
+Total_richness_ABG_2023 <- Z_total_richness_2023 %>% filter(Treatment == "ABG")
+
+#Take the mean of the mean for ABG total count
+mean_richness_ABG_2023 <- mean(Total_richness_ABG_2023$richness, na.rm = TRUE)
+
+### 2023 ABG Evenness ###
+
+Z_total_evenness_2023 <- commMetircs2023 %>%
+  group_by(WS, Trans, Plot, Treatment) %>%
+  summarise(Evar = sum(Evar, na.rm = TRUE))
+
+Total_evenness_ABG_2023 <- Z_total_evenness_2023 %>% filter(Treatment == "ABG")
+
+#Take the mean of the mean for ABG total count
+mean_evenness_ABG_2023 <- mean(Total_evenness_ABG_2023$Evar, na.rm = TRUE)
 
 # Z-Score for richness 
-
-Z_R_2023 <- ((ABG_mean_richness) - (PBG_mean_mean_richness_2023))/(sd(average_richness_2023$mean_richness))
+Z_R_2023 <- ((mean_richness_ABG_2023) - (PBG_mean_mean_richness_2023))/(sd(average_richness_2023$mean_richness))
 Z_R_2023
-
-p_value_R_2023 <- 1 - pnorm(Z_R_2023, lower.tail = FALSE)
-
+p_value_R_2023 <- 1 - pnorm(Z_R_2023)
 print(p_value_R_2023)
-
-#-0.4141497
-#P = 0.3393822
+#0.08558674
+#P = 0.5341025
 
 # Z-Score for evenness 
-Z_E_2023 <- ((ABG_mean_evenness) - (PBG_mean_mean_evenness_2023))/(sd(average_evenness_2023$mean_evenness))
+Z_E_2023 <- ((mean_evenness_ABG_2023) - (PBG_mean_mean_evenness_2023))/(sd(average_evenness_2023$mean_evenness))
 Z_E_2023
-
 p_value_E_2023 <- 1 - pnorm(Z_E_2023, lower.tail = FALSE)
-
 print(p_value_E_2023)
-#-2.081953
-#P = 0.01867338
+#-0.4711009
+#P = 0.3091665
 
 # Z-Score for total count 
-Z_C_2023 <- ((ABG_mean_total_count) - (PBG_mean_mean_total_count_2023))/(sd(average_total_count_2023$mean_count))
+Z_C_2023 <- ((ABG_mean_total_count_2023) - (PBG_mean_mean_total_count_2023))/(sd(average_total_count_2023$mean_count))
 Z_C_2023
-
 p_value_C_2023 <- 1 - pnorm(Z_C_2023, lower.tail = FALSE)
-
 print(p_value_C_2023)
-#Z-Score: 15.0405
-#P = 1
-
-
+#Z-Score: 0.171785
+#P = 0.5681967
 
 #### Graphs Bootstrapped Means 2021 ####
 
 #Richness means graph
-ggplot(average_richness_2021, aes(x = mean_richness, color = "PBG")) +
+richness_2021 <- ggplot(average_richness_2021, aes(x = mean_richness, color = "PBG")) +
   geom_density(alpha = 0.5) +
-  geom_vline(aes(xintercept = ABG_mean_richness, color = "ABG Mean Richness"), linetype = "dashed", size = 1) +
-  labs(title = "Density Plot of Mean Richness",
+  geom_vline(aes(xintercept = mean_richness_ABG_2021 , color = "ABG Mean Richness"), linetype = "dashed", size = 1) +
+  labs(title = "2021: Density Plot of Mean Richness",
        x = "Mean Richness",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend")
 
 #Evenness means graph
-ggplot(average_evenness_2021, aes(x = mean_evenness, color = "PBG")) +
+evenness_2021 <- ggplot(average_evenness_2021, aes(x = mean_evenness, color = "PBG")) +
   geom_density(alpha = 0.5) +
-  geom_vline(aes(xintercept = ABG_mean_evenness, color = "ABG Mean Evenness"), linetype = "dashed", size = 1) +
-  labs(title = "Density Plot of Mean Evenness",
+  geom_vline(aes(xintercept = mean_evenness_ABG_2021, color = "ABG Mean Evenness"), linetype = "dashed", size = 1) +
+  labs(title = "2021: Density Plot of Mean Evenness",
        x = "Mean Evenness",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend")
 
 #Total_count means graphs
-ggplot(average_total_count_2021, aes(x = mean_count, color = "PBG")) +
+count_2021 <- ggplot(average_total_count_2021, aes(x = mean_count, color = "PBG")) +
   geom_density(alpha = 0.5) +
-  geom_vline(aes(xintercept = ABG_mean_total_count, color = "ABG Total Count"), linetype = "dashed", size = 1) +
-  labs(title = "Density Plot of Total Count",
+  geom_vline(aes(xintercept = ABG_mean_total_count_2021, color = "ABG Total Count"), linetype = "dashed", size = 1) +
+  labs(title = "2021: Density Plot of Total Count",
        x = "Mean Total Count",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend")
 
+grid.arrange(richness_2021, evenness_2021, count_2021)
 
+#### Graphs Bootstrapped Means 2022 ####
+#Richness means graph
+richness_2022 <- ggplot(average_richness_2022, aes(x = mean_richness, color = "PBG")) +
+  geom_density(alpha = 0.5) +
+  geom_vline(aes(xintercept = mean_richness_ABG_2022 , color = "ABG Mean Richness"), linetype = "dashed", size = 1) +
+  labs(title = "2022: Density Plot of Mean Richness",
+       x = "Mean Richness",
+       y = "Density") +
+  scale_color_manual(values = c("blue", "red"), name = "Legend")
 
+#Evenness means graph
+evenness_2022 <- ggplot(average_evenness_2022, aes(x = mean_evenness, color = "PBG")) +
+  geom_density(alpha = 0.5) +
+  geom_vline(aes(xintercept = mean_evenness_ABG_2022, color = "ABG Mean Evenness"), linetype = "dashed", size = 1) +
+  labs(title = "2022: Density Plot of Mean Evenness",
+       x = "Mean Evenness",
+       y = "Density") +
+  scale_color_manual(values = c("blue", "red"), name = "Legend")
+
+#Total_count means graphs
+count_2022 <- ggplot(average_total_count_2022, aes(x = mean_count, color = "PBG")) +
+  geom_density(alpha = 0.5) +
+  geom_vline(aes(xintercept = ABG_mean_total_count_2022, color = "ABG Total Count"), linetype = "dashed", size = 1) +
+  labs(title = "2022: Density Plot of Total Count",
+       x = "Mean Total Count",
+       y = "Density") +
+  scale_color_manual(values = c("blue", "red"), name = "Legend")
+
+grid.arrange(richness_2022, evenness_2022, count_2022)
+
+#### Graphs Bootstrapped Means 2023 ####
+
+#Richness means graph
+richness_2023 <- ggplot(average_richness_2023, aes(x = mean_richness, color = "PBG")) +
+  geom_density(alpha = 0.5) +
+  geom_vline(aes(xintercept = mean_richness_ABG_2023 , color = "ABG Mean Richness"), linetype = "dashed", size = 1) +
+  labs(title = "2023: Density Plot of Mean Richness",
+       x = "Mean Richness",
+       y = "Density") +
+  scale_color_manual(values = c("blue", "red"), name = "Legend")
+
+#Evenness means graph
+evenness_2023 <- ggplot(average_evenness_2023, aes(x = mean_evenness, color = "PBG")) +
+  geom_density(alpha = 0.5) +
+  geom_vline(aes(xintercept = mean_evenness_ABG_2023, color = "ABG Mean Evenness"), linetype = "dashed", size = 1) +
+  labs(title = "2023: Density Plot of Mean Evenness",
+       x = "Mean Evenness",
+       y = "Density") +
+  scale_color_manual(values = c("blue", "red"), name = "Legend")
+
+#Total_count means graphs
+count_2023 <- ggplot(average_total_count_2023, aes(x = mean_count, color = "PBG")) +
+  geom_density(alpha = 0.5) +
+  geom_vline(aes(xintercept = ABG_mean_total_count_2023, color = "ABG Total Count"), linetype = "dashed", size = 1) +
+  labs(title = "2023: Density Plot of Total Count",
+       x = "Mean Total Count",
+       y = "Density") +
+  scale_color_manual(values = c("blue", "red"), name = "Legend")
+
+grid.arrange(richness_2023, evenness_2023, count_2023)
