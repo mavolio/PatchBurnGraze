@@ -387,17 +387,28 @@ write.csv(Combo_south_count, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writin
 
 
 #create a visual of the distribution
-ggplot(Combo_north_biomass,aes(biomass_PBGNth))+
+ggplot(Combo_north_count,aes(count_PBGNth))+
   geom_density(size=.5)+
   facet_wrap(~RecYear, scales = "free")+
   #facet_grid("RecYear")+
-  geom_vline(aes(xintercept=biomass_ABGNth), linetype=2,size=.5)
-ggplot(Combo_south_biomass,aes(biomass_PBGSth))+
+  geom_vline(aes(xintercept=count_ABGNth), linetype=2,size=.5)
+ggplot(Combo_south_count,aes(count_PBGSth))+
   geom_density(size=.5)+
   facet_wrap(~RecYear, scales = "free")+
   #facet_grid("RecYear")+
-  geom_vline(aes(xintercept=biomass_ABGSth), linetype=2,size=.5)
+  geom_vline(aes(xintercept=count_ABGSth), linetype=2,size=.5)
 
+#create visual for stab
+ggplot(Combo_north_count,aes(stab_PBGNth))+
+  geom_density(size=1)+
+  #facet_grid("RecYear")+
+  geom_vline(aes(xintercept=Stab_ABGNth), linetype=2,size=1)+
+  xlab("Stability North Unit")
+ggplot(Combo_south_count,aes(stab_PBGSth))+
+  geom_density(size=1)+
+  #facet_grid("RecYear")+
+  geom_vline(aes(xintercept=Stab_ABGSth), linetype=2,size=1)+
+  xlab("Stability South Unit")
 
 
 ###Unit Scale
