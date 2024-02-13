@@ -363,7 +363,7 @@ abundanceWide <- abundanceWide %>%
 
 
 print(permanova <- adonis2(formula = abundanceWide[,8:166]~TreatmentSB, data=abundanceWide, permutations=999, method="bray"))
-#F=1.045  , df=3,52, p=0.391
+#F=1.045  , df=3,82, p=0.381
 
 #betadisper
 veg <- vegdist(abundanceWide[,8:167], method = "bray")
@@ -422,7 +422,7 @@ ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = 
         legend.text = element_text(size = 24),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank()
   ) +
-ggtitle("2021 year sense burned")
+ggtitle("2021 year since burned")
 
 #F=1.6053, df=3,52, p=0.016
 #export at 1500x1000
@@ -781,7 +781,8 @@ ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = group, linetype = group, s
 ### Prep for Bootstrapping ####
 
 #2021 Prep
-Abundance2021 <- Abundance_ID_aboveground %>% filter(Date == 2021)
+Abundance2021 <- Abundance_ID_aboveground %>% filter(Date == 2021) %>% 
+  filter(Plot %in% c("2", "4"))
 commMetircs2021 <-  Abundance2021 %>% community_structure(abundance.var='Count', replicate.var='Sample')
 commMetircs2021$Treatment <- ifelse(grepl("C1", commMetircs2021$Sample), "ABG", "PBG") 
 commMetircs2021 <- commMetircs2021 %>% separate(Sample, into = c('WS', 'Trans', 'Plot'), sep = '_')
@@ -830,16 +831,27 @@ Joined2023 <- full_join(BurnInfo2023, commMetircs2023) %>% unite("TreatmentSB",c
 #### 2021 Bootstrapping! ####
 set.seed(123)
 
+Weight_2021 <- Weight_2_combined %>%
+  separate(sample, into = c("Date", "WS", "Trans", "Plot"), sep = "_") %>%
+  filter(Date == "2021") %>% 
+  filter(Treatment == "PBG") %>% 
+  filter(Plot %in% c("2", "4")) %>% 
+  mutate(plot_index=1:length(block))
+  
+
 Joined_New_2021 <- Joined2021 %>%
   filter(Treatment == "PBG") %>%
   group_by(block) %>%
-  mutate(plot_index=1:length(block))
+  mutate(plot_index=1:length(block)) %>% 
+  filter(Plot %in% c("2", "4"))
 
 total_counts_2021 <- total_counts_2021 %>% filter(Treatment == "PBG") %>% group_by(block) %>% 
-  mutate(plot_index=1:length(block)) %>%  filter()
+  mutate(plot_index=1:length(block)) %>%  filter() %>%  
+  filter(Plot %in% c("2", "4"))
 
 Combined_Data_2021 <- left_join(Joined_New_2021, total_counts_2021, by = c("WS", "Trans", "Plot", "block", "plot_index"))
 
+Combined_Data_2021 <- merge(Combined_Data_2021, Weight_2021, by = c("WS", "Trans", "Plot", "block", "plot_index"))
 
 
 num_bootstrap <- 1000
@@ -957,14 +969,22 @@ average_total_count_2021 <- PBG_plot_master_2021 %>%
   group_by(iteration) %>%
   summarize(mean_count = mean(Count, na.rm = TRUE))
 
+#Getting average weight per iteration for bootstrapped dataframe
+average_total_weight_2021 <- PBG_plot_master_2021 %>%
+  group_by(iteration) %>%
+  summarize(mean_weight = mean(combined_weight, na.rm = TRUE))
+
 #Take the mean of the mean for PBG richness
 PBG_mean_mean_richness_2021 <- mean(average_richness_2021$mean_richness, na.rm = TRUE)
 
 #Take the mean of the mean for PBG evenness
 PBG_mean_mean_evenness_2021 <- mean(average_evenness_2021$mean_evenness, na.rm = TRUE)
 
-#Take the mean of the mean for PBG evenness
+#Take the mean of the mean for PBG total count
 PBG_mean_mean_total_count_2021 <- mean(average_total_count_2021$mean_count, na.rm = TRUE)
+
+#Take the mean of the mean for PBG weight
+PBG_mean_mean_total_weight_2021 <- mean(average_total_weight_2021$mean_weight, na.rm = TRUE)
 
 #Take the mean of the mean for PBG total count
 
@@ -975,7 +995,8 @@ PBG_mean_mean_total_count_2021 <- mean(average_total_count_2021$mean_count, na.r
 Z_total_counts_2021 <- Abundance_ID_aboveground %>%
   filter(Date == 2021) %>%
   group_by(WS, Trans, Plot, Treatment) %>%
-  summarise(Count = sum(Count, na.rm = TRUE))
+  summarise(Count = sum(Count, na.rm = TRUE)) %>% 
+  filter(Plot %in% c("2", "4"))
 
 total_counts_ABG_2021 <- Z_total_counts_2021 %>% filter(Treatment == "ABG")
 
@@ -1004,37 +1025,60 @@ Total_evenness_ABG_2021 <- Z_total_evenness_2021 %>% filter(Treatment == "ABG")
 #Take the mean of the mean for ABG total count
 mean_evenness_ABG_2021 <- mean(Total_evenness_ABG_2021$Evar, na.rm = TRUE)
 
-# Z-Score for richness 
+### 2021 ABG Weight
+Z_total_weight_2021 <- Weight_2_combined %>%  
+  separate(sample, into = c("Date", "WS", "Trans", "Plot"), sep = "_") %>% 
+  group_by(WS, Trans, Plot, Treatment) %>%
+  summarise(combined_weight = sum(combined_weight, na.rm = TRUE))
+
+Weight_ABG_2021 <- Z_total_weight_2021 %>% filter(Treatment == "ABG")
+
+#Take the mean of the mean for ABG weight
+mean_weight_ABG_2021 <- mean(Weight_ABG_2021$combined_weight, na.rm = TRUE)
+
+### Z-Score for richness 
 
 Z_R_2021 <- ((mean_richness_ABG_2021) - (PBG_mean_mean_richness_2021))/(sd(average_richness_2021$mean_richness))
 Z_R_2021
 
-p_value_R_2021 <- 1 - pnorm(Z_R_2021)
+p_value_R_2021 <- 2*pnorm(-abs(Z_R_2021))
 
 print(p_value_R_2021)
 
-#0.08558674
-#P = 0.5341025
+#1.275875
+#P = 0.2019997
 
 # Z-Score for evenness 
 Z_E_2021 <- ((mean_evenness_ABG_2021) - (PBG_mean_mean_evenness_2021))/(sd(average_evenness_2021$mean_evenness))
 Z_E_2021
 
-p_value_E_2021 <- 1 - pnorm(Z_E_2021, lower.tail = FALSE)
+p_value_E_2021 <- 2*pnorm(-abs(Z_E_2021))
 
 print(p_value_E_2021)
-#-0.4711009
-#P = 0.3091665
+#-0.1573708
+#P = 0.8749526
 
 # Z-Score for total count 
 Z_C_2021 <- ((ABG_mean_total_count_2021) - (PBG_mean_mean_total_count_2021))/(sd(average_total_count_2021$mean_count))
 Z_C_2021
 
-p_value_C_2021 <- 1 - pnorm(Z_C_2021, lower.tail = FALSE)
+p_value_C_2021 <- 2*pnorm(-abs(Z_C_2021))
 
 print(p_value_C_2021)
-#Z-Score: 0.171785
-#P = 0.5681967
+#Z-Score: 1.077799
+#P = 0.2811236
+
+# Z-Score for Weight
+
+Z_W_2021 <- ((mean_weight_ABG_2021) - (PBG_mean_mean_total_weight_2021))/(sd(average_total_weight_2021$mean_weight))
+Z_W_2021
+
+p_value_W_2021 <- 2*pnorm(-abs(Z_W_2021))
+
+print(p_value_W_2021)
+
+#Z-score = 0.6289778
+# P = 0.5293636
 
 #### 2022 Z-Score Calculations ####
 
@@ -1101,26 +1145,26 @@ mean_evenness_ABG_2022 <- mean(Total_evenness_ABG_2022$Evar, na.rm = TRUE)
 # Z-Score for richness 
 Z_R_2022 <- ((mean_richness_ABG_2022) - (PBG_mean_mean_richness_2022))/(sd(average_richness_2022$mean_richness))
 Z_R_2022
-p_value_R_2022 <- 1 - pnorm(Z_R_2022)
+p_value_R_2022 <- 2*pnorm(-abs(Z_R_2022))
 print(p_value_R_2022)
-#0.08558674
-#P = 0.5341025
+#2.262549
+#P = 0.02366353
 
 # Z-Score for evenness 
 Z_E_2022 <- ((mean_evenness_ABG_2022) - (PBG_mean_mean_evenness_2022))/(sd(average_evenness_2022$mean_evenness))
 Z_E_2022
-p_value_E_2022 <- 1 - pnorm(Z_E_2022, lower.tail = FALSE)
+p_value_E_2022 <- 2*pnorm(-abs(Z_E_2022))
 print(p_value_E_2022)
-#-0.4711009
-#P = 0.3091665
+#-0.4799861
+#P = 0.6312373
 
 # Z-Score for total count 
 Z_C_2022 <- ((ABG_mean_total_count_2022) - (PBG_mean_mean_total_count_2022))/(sd(average_total_count_2022$mean_count))
 Z_C_2022
-p_value_C_2022 <- 1 - pnorm(Z_C_2022, lower.tail = FALSE)
+p_value_C_2022 <- 2*pnorm(-abs(Z_C_2022))
 print(p_value_C_2022)
-#Z-Score: 0.171785
-#P = 0.5681967
+#Z-Score: 1.561692
+#P = 0.1183606
 
 #### 2023 Z-Score Calculations ####
 
@@ -1187,26 +1231,26 @@ mean_evenness_ABG_2023 <- mean(Total_evenness_ABG_2023$Evar, na.rm = TRUE)
 # Z-Score for richness 
 Z_R_2023 <- ((mean_richness_ABG_2023) - (PBG_mean_mean_richness_2023))/(sd(average_richness_2023$mean_richness))
 Z_R_2023
-p_value_R_2023 <- 1 - pnorm(Z_R_2023)
+p_value_R_2023 <- 2*pnorm(-abs(Z_R_2023))
 print(p_value_R_2023)
-#0.08558674
-#P = 0.5341025
+#-0.4446148
+#P =  0.6565981
 
 # Z-Score for evenness 
 Z_E_2023 <- ((mean_evenness_ABG_2023) - (PBG_mean_mean_evenness_2023))/(sd(average_evenness_2023$mean_evenness))
 Z_E_2023
-p_value_E_2023 <- 1 - pnorm(Z_E_2023, lower.tail = FALSE)
+p_value_E_2023 <- 2*pnorm(-abs(Z_E_2023))
 print(p_value_E_2023)
-#-0.4711009
-#P = 0.3091665
+#-3.400096
+#P =0.000673623
 
 # Z-Score for total count 
 Z_C_2023 <- ((ABG_mean_total_count_2023) - (PBG_mean_mean_total_count_2023))/(sd(average_total_count_2023$mean_count))
 Z_C_2023
-p_value_C_2023 <- 1 - pnorm(Z_C_2023, lower.tail = FALSE)
+p_value_C_2023 <- 2*pnorm(-abs(Z_C_2023))
 print(p_value_C_2023)
-#Z-Score: 0.171785
-#P = 0.5681967
+#Z-Score: 0.1427381
+#P = 0.8864971
 
 #### Graphs Bootstrapped Means 2021 ####
 
@@ -1217,7 +1261,9 @@ richness_2021 <- ggplot(average_richness_2021, aes(x = mean_richness, color = "P
   labs(title = "2021: Density Plot of Mean Richness",
        x = "Mean Richness",
        y = "Density") +
-  scale_color_manual(values = c("blue", "red"), name = "Legend")
+  scale_color_manual(values = c("blue", "red"), name = "Legend") +
+  annotate("text", x = 13, y = 0.5, label = "p-value: 0.202", color = "blue", size = 3) +
+  annotate("text", x = 13, y = 0.44, label = "Z-score: 1.276", color = "red", size = 3)
 
 #Evenness means graph
 evenness_2021 <- ggplot(average_evenness_2021, aes(x = mean_evenness, color = "PBG")) +
@@ -1226,7 +1272,10 @@ evenness_2021 <- ggplot(average_evenness_2021, aes(x = mean_evenness, color = "P
   labs(title = "2021: Density Plot of Mean Evenness",
        x = "Mean Evenness",
        y = "Density") +
-  scale_color_manual(values = c("blue", "red"), name = "Legend")
+  scale_color_manual(values = c("blue", "red"), name = "Legend") +
+  annotate("text", x = 0.65, y = 20, label = "p-value: 0.875", color = "blue", size = 3) +
+  annotate("text", x = 0.65, y = 18, label = "Z-score: 0.157", color = "red", size = 3)
+  
 
 #Total_count means graphs
 count_2021 <- ggplot(average_total_count_2021, aes(x = mean_count, color = "PBG")) +
@@ -1235,7 +1284,22 @@ count_2021 <- ggplot(average_total_count_2021, aes(x = mean_count, color = "PBG"
   labs(title = "2021: Density Plot of Total Count",
        x = "Mean Total Count",
        y = "Density") +
-  scale_color_manual(values = c("blue", "red"), name = "Legend")
+  scale_color_manual(values = c("blue", "red"), name = "Legend") +
+  annotate("text", x = 28.5, y = 0.10, label = "p-value: 0.281", color = "blue", size = 3) +
+  annotate("text", x = 28.5, y = 0.09, label = "Z-score: 1.078", color = "red", size = 3)
+
+#Total_weight means graphs
+weight_2021 <- ggplot(average_total_weight_2021, aes(x = mean_weight, color = "PBG")) +
+  geom_density(alpha = 0.5) +
+  geom_vline(aes(xintercept = mean_weight_ABG_2021, color = "ABG Total Count"), linetype = "dashed", size = 1) +
+  labs(title = "2021: Density Plot of Weight",
+       x = "Mean Weight",
+       y = "Density") +
+  scale_color_manual(values = c("blue", "red"), name = "Legend") +
+  annotate("text", x = 28.5, y = 0.011, label = "p-value: 0.529", color = "blue", size = 3) +
+  annotate("text", x = 28.5, y = 0.010, label = "Z-score: 0.629", color = "red", size = 3)
+
+weight_2021
 
 grid.arrange(richness_2021, evenness_2021, count_2021)
 
@@ -1247,7 +1311,9 @@ richness_2022 <- ggplot(average_richness_2022, aes(x = mean_richness, color = "P
   labs(title = "2022: Density Plot of Mean Richness",
        x = "Mean Richness",
        y = "Density") +
-  scale_color_manual(values = c("blue", "red"), name = "Legend")
+  scale_color_manual(values = c("blue", "red"), name = "Legend")  +
+  annotate("text", x = 10.8, y = 0.5, label = "p-value: 0.024", color = "blue", size = 3) +
+  annotate("text", x = 10.8, y = 0.44, label = "Z-score: 2.263", color = "red", size = 3)
 
 #Evenness means graph
 evenness_2022 <- ggplot(average_evenness_2022, aes(x = mean_evenness, color = "PBG")) +
@@ -1256,7 +1322,9 @@ evenness_2022 <- ggplot(average_evenness_2022, aes(x = mean_evenness, color = "P
   labs(title = "2022: Density Plot of Mean Evenness",
        x = "Mean Evenness",
        y = "Density") +
-  scale_color_manual(values = c("blue", "red"), name = "Legend")
+  scale_color_manual(values = c("blue", "red"), name = "Legend") +
+  annotate("text", x = 0.63, y = 20, label = "p-value: 0.631", color = "blue", size = 3) +
+  annotate("text", x = 0.63, y = 18, label = "Z-score: 0.480", color = "red", size = 3)
 
 #Total_count means graphs
 count_2022 <- ggplot(average_total_count_2022, aes(x = mean_count, color = "PBG")) +
@@ -1265,7 +1333,10 @@ count_2022 <- ggplot(average_total_count_2022, aes(x = mean_count, color = "PBG"
   labs(title = "2022: Density Plot of Total Count",
        x = "Mean Total Count",
        y = "Density") +
-  scale_color_manual(values = c("blue", "red"), name = "Legend")
+  scale_color_manual(values = c("blue", "red"), name = "Legend") +
+  annotate("text", x = 29, y = 0.153, label = "p-value: 0.118", color = "blue", size = 3) +
+  annotate("text", x = 29, y = 0.14, label = "Z-score: 1.562", color = "red", size = 3)
+
 
 grid.arrange(richness_2022, evenness_2022, count_2022)
 
@@ -1278,7 +1349,9 @@ richness_2023 <- ggplot(average_richness_2023, aes(x = mean_richness, color = "P
   labs(title = "2023: Density Plot of Mean Richness",
        x = "Mean Richness",
        y = "Density") +
-  scale_color_manual(values = c("blue", "red"), name = "Legend")
+  scale_color_manual(values = c("blue", "red"), name = "Legend") +
+  annotate("text", x = 5.8, y = 0.8, label = "p-value: 0.657", color = "blue", size = 3) +
+  annotate("text", x = 5.8, y = 0.7, label = "Z-score: 0.445", color = "red", size = 3)
 
 #Evenness means graph
 evenness_2023 <- ggplot(average_evenness_2023, aes(x = mean_evenness, color = "PBG")) +
@@ -1287,7 +1360,10 @@ evenness_2023 <- ggplot(average_evenness_2023, aes(x = mean_evenness, color = "P
   labs(title = "2023: Density Plot of Mean Evenness",
        x = "Mean Evenness",
        y = "Density") +
-  scale_color_manual(values = c("blue", "red"), name = "Legend")
+  scale_color_manual(values = c("blue", "red"), name = "Legend") +
+  annotate("text", x = 0.6, y = 20, label = "p-value: <0.001", color = "blue", size = 3) +
+  annotate("text", x = 0.6, y = 18, label = "Z-score:  3.400", color = "red", size = 3)
+
 
 #Total_count means graphs
 count_2023 <- ggplot(average_total_count_2023, aes(x = mean_count, color = "PBG")) +
@@ -1296,6 +1372,19 @@ count_2023 <- ggplot(average_total_count_2023, aes(x = mean_count, color = "PBG"
   labs(title = "2023: Density Plot of Total Count",
        x = "Mean Total Count",
        y = "Density") +
-  scale_color_manual(values = c("blue", "red"), name = "Legend")
+  scale_color_manual(values = c("blue", "red"), name = "Legend") +
+  annotate("text", x = 17, y = 0.2, label = "p-value: 0.886", color = "blue", size = 3) +
+  annotate("text", x = 17, y = 0.18, label = "Z-score: 0.143", color = "red", size = 3)
 
 grid.arrange(richness_2023, evenness_2023, count_2023)
+
+#### Big Graph of Means####
+
+grid.arrange(
+  richness_2021, evenness_2021, count_2021,
+  richness_2022, evenness_2022, count_2022,
+  richness_2023, evenness_2023, count_2023,
+  ncol = 3,
+  top = "Comparison of Richness, Evenness, and Count across Years"
+)
+
