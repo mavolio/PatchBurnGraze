@@ -365,12 +365,6 @@ abundanceWide <- abundanceWide %>%
 print(permanova <- adonis2(formula = abundanceWide[,8:166]~TreatmentSB, data=abundanceWide, permutations=999, method="bray"))
 #F=1.045  , df=3,82, p=0.381
 
-print(permanova <- adonis2(
-  abundanceWide[,8:167]~TreatmentSB,
-  data = abundanceWide,
-  method = "bray",
-  permutations=999,
-  strata = abundanceWide$Sample))
 
 #betadisper
 veg <- vegdist(abundanceWide[,8:167], method = "bray")
@@ -521,6 +515,8 @@ abundanceWide <- abundanceWide %>%
 
 print(permanova <- adonis2(formula = abundanceWide[, 8:118] ~ TreatmentSB, data = abundanceWide, permutations = 999, method = "bray"))
 # F=1.6053, df=3,52, p=0.016
+
+
 
 # Betadisper
 veg <- vegdist(abundanceWide[, 8:117], method = "bray")
@@ -784,6 +780,30 @@ ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = group, linetype = group, s
   ) +
   ggtitle("2023 ABG vs PBG")
 
+
+#### Overall PERMANOVA & NMDS ####
+
+combined_data <- rbind(Abundance_Data2021, Abundance_Data2022, Abundance_Data2023)
+
+combined_data_wide <- combined_data %>% 
+  mutate(block = ifelse(grepl("S", Sample), "North", "South")) %>%
+  select(Sample, block, WS, Trans, Plot, Treatment, TreatmentSB, Count, ID) %>%
+  group_by(Sample, block, WS, Trans, Plot, Treatment, TreatmentSB, ID) %>% 
+  summarise(Count = sum(Count)) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = 'ID', values_from = 'Count', values_fill = list(Count = 0)) 
+
+combined_data_wide <- combined_data_wide %>% 
+  mutate(sum = rowSums(combined_data_wide[, c(8:212)], na.rm = TRUE)) %>% 
+  filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
+
+#Years since burned
+print(permanova <- adonis2(
+  combined_data_wide[,8:213]~TreatmentSB,
+  data = combined_data_wide,
+  method = "bray",
+  permutations=999,
+  strata = combined_data_wide$Sample))
 
 ### Prep for Bootstrapping ####
 
