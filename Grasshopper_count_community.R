@@ -397,7 +397,28 @@ ggplot(Combo_south_count,aes(count_PBGSth))+
   facet_wrap(~RecYear, scales = "free")+
   #facet_grid("RecYear")+
   geom_vline(aes(xintercept=count_ABGSth), linetype=2,size=.5)
+ggplot(Combo_north_count,aes(sd_c_PBGNth))+
+  geom_density(size=.5)+
+  facet_wrap(~RecYear, scales = "free")+
+  #facet_grid("RecYear")+
+  geom_vline(aes(xintercept=count_ABGNth_sd), linetype=2,size=.5)
+ggplot(Combo_south_count,aes(sd_c_PBGSth))+
+  geom_density(size=.5)+
+  facet_wrap(~RecYear, scales = "free")+
+  #facet_grid("RecYear")+
+  geom_vline(aes(xintercept=count_ABGSth_sd), linetype=2,size=.5)
+ggplot(Combo_north_count,aes(cv_c_PBGNth))+
+  geom_density(size=.5)+
+  facet_wrap(~RecYear, scales = "free")+
+  #facet_grid("RecYear")+
+  geom_vline(aes(xintercept=cv_count_ABGNth), linetype=2,size=.5)
+ggplot(Combo_south_count,aes(cv_c_PBGSth))+
+  geom_density(size=.5)+
+  facet_wrap(~RecYear, scales = "free")+
+  #facet_grid("RecYear")+
+  geom_vline(aes(xintercept=cv_count_ABGSth), linetype=2,size=.5)
 
+#
 #create visual for stab
 ggplot(Combo_north_count,aes(stab_PBGNth))+
   geom_density(size=1)+
@@ -410,8 +431,41 @@ ggplot(Combo_south_count,aes(stab_PBGSth))+
   geom_vline(aes(xintercept=Stab_ABGSth), linetype=2,size=1)+
   xlab("Stability South Unit")
 
+#convert density plot for mean, sd and cv count to geompoint####
+#create visual using point
+combo_north_count_geompoint<-Combo_north_count%>%
+  pivot_longer(c(count_PBGNth_m,count_ABGNth),
+               names_to = "treatment", values_to = "count_mean")
+ggplot(combo_north_count_geompoint,aes(RecYear, count_mean, col=treatment))+
+  geom_point()+
+  geom_path(aes(as.numeric(RecYear)))+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"),labels=c("ABG","PBG"))+
+  geom_errorbar(aes(ymax=count_mean+1.96*(count_PBGNth_sd),
+                    ymin=count_mean-1.96*(count_PBGNth_sd)),width=.2)
 
-###Unit Scale
+combo_north_sd_geompoint<-Combo_north_count%>%
+  pivot_longer(c(count_PBGNth_sd_M,count_ABGNth_sd),
+               names_to = "treatment", values_to = "count_sd")
+ggplot(combo_north_sd_geompoint,aes(RecYear, count_sd, col=treatment))+
+  geom_point()+
+  geom_path(aes(as.numeric(RecYear)))+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"),labels=c("ABG","PBG"))+
+  geom_errorbar(aes(ymax=count_sd+1.96*(count_PBGNth_sd_sd),
+                    ymin=count_sd-1.96*(count_PBGNth_sd_sd)),width=.2)
+
+combo_north_cv_geompoint<-Combo_north_count%>%
+  pivot_longer(c(count_PBGNth_cv_M,cv_count_ABGNth),
+               names_to = "treatment", values_to = "count_cv")
+ggplot(combo_north_cv_geompoint,aes(RecYear, count_cv, col=treatment))+
+  geom_point()+
+  geom_path(aes(as.numeric(RecYear)))+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"),labels=c("ABG","PBG"))+
+  geom_errorbar(aes(ymax=count_cv+1.96*(count_PBGNth_cv_sd),
+                    ymin=count_cv-1.96*(count_PBGNth_cv_sd)),width=.2)
+#next step: visuals for South Unit
+
+###Unit Scale####
+#community metrics
 grassh_comm_df <- grasshopperspcomp_df%>%
   full_join(watershed_key, by = "Watershed")%>%
   left_join(Watershed_key2,by="Watershed")%>%
@@ -446,7 +500,7 @@ grassh_comm_metrics_df<-grassh_comm_df%>%
   left_join(richness_evar, by="yr_trt_unit")%>%
   left_join(diversity, by="yr_trt_unit")
 
-
+#message Yang about South PBG transect A C3B
 
 ####bootstrap
 #extract PBG and separate into Unit
