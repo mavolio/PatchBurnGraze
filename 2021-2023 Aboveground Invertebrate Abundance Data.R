@@ -805,6 +805,8 @@ print(permanova <- adonis2(
   permutations=999,
   strata = combined_data_wide$Sample))
 
+#Add NMDS
+
 ### Prep for Bootstrapping ####
 
 #2021 Prep
