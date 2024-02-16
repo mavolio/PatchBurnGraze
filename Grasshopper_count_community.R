@@ -464,7 +464,7 @@ ggplot(combo_north_cv_geompoint,aes(RecYear, count_cv, col=treatment))+
                     ymin=count_cv-1.96*(count_PBGNth_cv_sd)),width=.2)
 #next step: visuals for South Unit
 
-###Unit Scale####
+###Calculate community metrics fror each transect####
 #community metrics
 grassh_comm_df <- grasshopperspcomp_df%>%
   full_join(watershed_key, by = "Watershed")%>%
@@ -502,42 +502,259 @@ grassh_comm_metrics_df<-grassh_comm_df%>%
 
 #message Yang about South PBG transect A C3B
 
-####bootstrap
+####bootstrap for community metrics####
 #extract PBG and separate into Unit
-PBG_south_biomass<-biomass_data%>%
+PBG_south_GH_metrics<-grassh_comm_metrics_df%>%
   filter(FireGrzTrt=="PBG" & Unit=="south")%>%
-  group_by(RecYear, Unit, Watershed, Transect, Plotnum, FireGrzTrt)%>%
-  summarise(biomass=mean(biomass, na.rm=T))%>%
   ungroup()
-PBG_north_biomass<-biomass_data%>%
+PBG_north_GH_metrics<-grassh_comm_metrics_df%>%
   filter(FireGrzTrt=="PBG" & Unit=="north")%>%
-  group_by(RecYear, Unit, Watershed, Transect, Plotnum, FireGrzTrt)%>%
-  summarise(biomass=mean(biomass, na.rm=T))%>%
   ungroup()
 
 #create an index for the plots
-biomass_south_index<-PBG_south_biomass%>%
+GH_metrics_south_index<-PBG_south_GH_metrics%>%
+  group_by(RecYear)%>%
+  mutate(plot_index=1:length(RecYear))
+GH_metrics_north_index<-PBG_north_GH_metrics%>%
   group_by(RecYear)%>%
   mutate(plot_index=1:length(RecYear))
 
 num_bootstrap<-1000
 bootstrap_vector<-1:num_bootstrap
-PBG_south_biomass_master<-{}
+PBG_south_GH_metric_master<-{}
 for(BOOT in 1:length(bootstrap_vector)){
-  south_rand_key<-biomass_south_index%>%
-    dplyr::select(RecYear, Unit, Watershed, FireGrzTrt, Transect, Plotnum, plot_index)%>%
+  south_rand_metric_key<-GH_metrics_south_index%>%
+    dplyr::select(RecYear, Unit, Watershed, FireGrzTrt, Repsite, plot_index)%>%
     unique(.)%>%
-    #filter(RecYear==2012)%>%
     group_by(RecYear)%>%
-    sample_n(200, replace=T)%>%
-    dplyr::select(plot_index)%>%
+    sample_n(4, replace=T)%>%
+    dplyr::select(plot_index,RecYear)%>%
     ungroup()
-  biomass_south_ready<-biomass_south_index%>%
-    right_join(south_rand_key, by= c("RecYear", "plot_index"),
+  metrics_south_ready<-GH_metrics_south_index%>%
+    right_join(south_rand_metric_key, by= c("RecYear", "plot_index"),
                multiple="all")%>%
     mutate(iteration=BOOT)
-  PBG_south_biomass_master<-rbind(PBG_south_biomass_master, biomass_south_ready)
+  PBG_south_GH_metric_master<-rbind(PBG_south_GH_metric_master, metrics_south_ready)
 }
-write.csv(PBG_south_biomass_master, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/PBG_south_biomass.csv")
+write.csv(PBG_south_GH_metric_master, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/PBG_south_GH_metric_master.csv")
+
+PBG_north_GH_metric_master<-{}
+for(BOOT in 1:length(bootstrap_vector)){
+  north_rand_metric_key<-GH_metrics_north_index%>%
+    dplyr::select(RecYear, Unit, Watershed, FireGrzTrt, Repsite, plot_index)%>%
+    unique(.)%>%
+    group_by(RecYear)%>%
+    sample_n(4, replace=T)%>%
+    dplyr::select(plot_index,RecYear)%>%
+    ungroup()
+  metrics_north_ready<-GH_metrics_north_index%>%
+    right_join(north_rand_metric_key, by= c("RecYear", "plot_index"),
+               multiple="all")%>%
+    mutate(iteration=BOOT)
+  PBG_north_GH_metric_master<-rbind(PBG_north_GH_metric_master, metrics_north_ready)
+}
+write.csv(PBG_north_GH_metric_master, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/PBG_north_GH_metric_master.csv")
+
+#calculate sd,cv and stability of community metrics####
+#extract ABG and separate into Unit
+ABG_south_GH_metrics<-grassh_comm_metrics_df%>%
+  filter(FireGrzTrt=="ABG" & Unit=="south")%>%
+  ungroup()%>%
+  group_by(Unit, RecYear)%>%
+  summarise(rich_m_SthABG=mean(richness, na.rm=T),
+            rich_sd_SthABG=sd(richness),
+            rich_cv_SthABG=sd(richness)/mean(richness,na.rm=T),
+            even_m_SthABG=mean(Evar,na.rm=T),
+            even_sd_SthABG=sd(Evar),
+            even_cv_SthABG=sd(Evar)/mean(Evar,na.rm=T),
+            shan_m_SthABG=mean(Shannon,na.rm=T),
+            shan_sd_SthABG=sd(Shannon),
+            shan_cv_SthABG=sd(Shannon)/mean(Shannon,na.rm=T))%>%
+  group_by(Unit)%>%
+  mutate(rich_stab_SthABG=mean(rich_m_SthABG,na.rm=T)/sd(rich_m_SthABG),
+         even_stab_SthABG=mean(even_m_SthABG)/sd(even_m_SthABG),
+         shan_stab_SthABG=mean(shan_m_SthABG,na.rm=T)/sd(shan_m_SthABG))
+ABG_north_GH_metrics<-grassh_comm_metrics_df%>%
+  filter(FireGrzTrt=="ABG" & Unit=="north")%>%
+  ungroup()%>%
+  group_by(Unit, RecYear)%>%
+  summarise(rich_m_NthABG=mean(richness, na.rm=T),
+            rich_sd_NthABG=sd(richness),
+            rich_cv_NthABG=sd(richness)/mean(richness,na.rm=T),
+            even_m_NthABG=mean(Evar,na.rm=T),
+            even_sd_NthABG=sd(Evar),
+            even_cv_NthABG=sd(Evar)/mean(Evar,na.rm=T),
+            shan_m_NthABG=mean(Shannon,na.rm=T),
+            shan_sd_NthABG=sd(Shannon),
+            shan_cv_NthABG=sd(Shannon)/mean(Shannon,na.rm=T))%>%
+  group_by(Unit)%>%
+  mutate(rich_stab_NthABG=mean(rich_m_NthABG,na.rm=T)/sd(rich_m_NthABG),
+         even_stab_NthABG=mean(even_m_NthABG)/sd(even_m_NthABG),
+         shan_stab_NthABG=mean(shan_m_NthABG,na.rm=T)/sd(shan_m_NthABG))
+
+#COMBINE ABG and PBG
+#north unit
+GH_metric_Nth_combo<-PBG_north_GH_metric_master%>%
+  group_by(RecYear,iteration,Unit)%>%
+  summarise(rich_m_NthPBG=mean(richness, na.rm=T),
+            rich_sd_NthPBG=sd(richness),
+            rich_cv_NthPBG=sd(richness)/mean(richness,na.rm=T),
+            even_m_NthPBG=mean(Evar,na.rm=T),
+            even_sd_NthPBG=sd(Evar),
+            even_cv_NthPBG=sd(Evar)/mean(Evar,na.rm=T),
+            shan_m_NthPBG=mean(Shannon,na.rm=T),
+            shan_sd_NthPBG=sd(Shannon),
+            shan_cv_NthPBG=sd(Shannon)/mean(Shannon,na.rm=T))%>%
+  group_by(Unit,iteration)%>%
+  mutate(rich_stab_NthPBG=mean(rich_m_NthPBG,na.rm=T)/sd(rich_m_NthPBG),
+         even_stab_NthPBG=mean(even_m_NthPBG)/sd(even_m_NthPBG),
+         shan_stab_NthPBG=mean(shan_m_NthPBG,na.rm=T)/sd(shan_m_NthPBG))%>%
+  ungroup()%>%
+  left_join(ABG_north_GH_metrics, by=c("RecYear","Unit"))%>%
+  group_by(RecYear)%>%
+  mutate(rich_m_NthPBG_m=mean(rich_m_NthPBG,na.rm=T),
+         rich_m_NthPBG_sd=sd(rich_m_NthPBG),
+         zscore_rich_m_NthPBG=(rich_m_NthABG-rich_m_NthPBG_m)/rich_m_NthPBG_sd,
+         P_rich_m_Nth=2*pnorm(-abs(zscore_rich_m_NthPBG)),
+         rich_sd_NthPBG_m=mean(rich_sd_NthPBG),
+         rich_sd_NthPBG_sd=sd(rich_sd_NthPBG),
+         zscore_rich_sd_NthPBG=(rich_sd_NthABG-rich_sd_NthPBG_m)/rich_sd_NthPBG_sd,
+         P_rich_sd_Nth=2*pnorm(-abs(zscore_rich_sd_NthPBG)),
+         rich_cv_NthPBG_m=mean(rich_cv_NthPBG),
+         rich_cv_NthPBG_sd=sd(rich_cv_NthPBG),
+         zscore_rich_cv_NthPBG=(rich_cv_NthABG-rich_cv_NthPBG_m)/rich_cv_NthPBG_sd,
+         P_rich_cv_Nth=2*pnorm(-abs(zscore_rich_cv_NthPBG)),
+         even_m_NthPBG_m=mean(even_m_NthPBG,na.rm=T),
+         even_m_NthPBG_sd=sd(even_m_NthPBG),
+         zscore_even_m_NthPBG=(even_m_NthABG-even_m_NthPBG_m)/even_m_NthPBG_sd,
+         P_even_m_Nth=2*pnorm(-abs(zscore_even_m_NthPBG)),
+         even_sd_NthPBG_m=mean(even_sd_NthPBG),
+         even_sd_NthPBG_sd=sd(even_sd_NthPBG),
+         zscore_even_sd_NthPBG=(even_sd_NthABG-even_sd_NthPBG_m)/even_sd_NthPBG_sd,
+         P_even_sd_Nth=2*pnorm(-abs(zscore_even_sd_NthPBG)),
+         even_cv_NthPBG_m=mean(even_cv_NthPBG),
+         even_cv_NthPBG_sd=sd(even_cv_NthPBG),
+         zscore_even_cv_NthPBG=(even_cv_NthABG-even_cv_NthPBG_m)/even_cv_NthPBG_sd,
+         P_even_cv_Nth=2*pnorm(-abs(zscore_even_cv_NthPBG)),
+         shan_m_NthPBG_m=mean(shan_m_NthPBG,na.rm=T),
+         shan_m_NthPBG_sd=sd(shan_m_NthPBG),
+         zscore_shan_m_NthPBG=(shan_m_NthABG-shan_m_NthPBG_m)/shan_m_NthPBG_sd,
+         P_shan_m_Nth=2*pnorm(-abs(zscore_shan_m_NthPBG)),
+         shan_sd_NthPBG_m=mean(shan_sd_NthPBG),
+         shan_sd_NthPBG_sd=sd(shan_sd_NthPBG),
+         zscore_shan_sd_NthPBG=(shan_sd_NthABG-shan_sd_NthPBG_m)/shan_sd_NthPBG_sd,
+         P_shan_sd_Nth=2*pnorm(-abs(zscore_shan_sd_NthPBG)),
+         shan_cv_NthPBG_m=mean(shan_cv_NthPBG),
+         shan_cv_NthPBG_sd=sd(shan_cv_NthPBG),
+         zscore_shan_cv_NthPBG=(shan_cv_NthABG-shan_cv_NthPBG_m)/shan_cv_NthPBG_sd,
+         P_rich_cv_Nth=2*pnorm(-abs(zscore_rich_cv_NthPBG)))%>%
+  ungroup()%>%
+  mutate(rich_stab_NthPBG_m=mean(rich_stab_NthPBG),
+         rich_stab_NthPBG_sd=sd(rich_stab_NthPBG),
+         zscore_rich_stab_Nth=(rich_stab_NthABG-rich_stab_NthPBG_m)/rich_stab_NthPBG_sd,
+         P_rich_stab_Nth=2*pnorm(-abs(zscore_rich_stab_Nth)),
+         even_stab_NthPBG_m=mean(even_stab_NthPBG),
+         even_stab_NthPBG_sd=sd(even_stab_NthPBG),
+         zscore_even_stab_Nth=(even_stab_NthABG-even_stab_NthPBG_m)/even_stab_NthPBG_sd,
+         P_even_stab_Nth=2*pnorm(-abs(zscore_even_stab_Nth)),
+         shan_stab_NthPBG_m=mean(shan_stab_NthPBG),
+         shan_stab_NthPBG_sd=sd(shan_stab_NthPBG),
+         zscore_shan_stab_Nth=(shan_stab_NthABG-shan_stab_NthPBG_m)/shan_stab_NthPBG_sd,
+         P_shan_stab_Nth=2*pnorm(-abs(zscore_shan_stab_Nth)))
+#calculate for south unit  
+  
+#figures for community metrics####
+#create visual for stab
+ggplot(GH_metric_Nth_combo,aes(rich_stab_NthPBG))+
+  geom_density(size=1)+
+  #facet_grid("RecYear")+
+  geom_vline(aes(xintercept=rich_stab_NthABG), linetype=2,size=1)+
+  xlab("Richness Stability North Unit")
+ggplot(GH_metric_Nth_combo,aes(even_stab_NthPBG))+
+  geom_density(size=1)+
+  #facet_grid("RecYear")+
+  geom_vline(aes(xintercept=even_stab_NthABG), linetype=2,size=1)+
+  xlab("Evenness Stability North Unit")
+ggplot(GH_metric_Nth_combo,aes(shan_stab_NthPBG))+
+  geom_density(size=1)+
+  #facet_grid("RecYear")+
+  geom_vline(aes(xintercept=shan_stab_NthABG), linetype=2,size=1)+
+  xlab("Diversity Stability North Unit")
+
+#convert density plot for mean, sd and cv count to geompoint####
+#create visual using point
+#richness
+GH_metric_Nth_combo_geompoint<-GH_metric_Nth_combo%>%
+  pivot_longer(c(rich_m_NthPBG_m,rich_m_NthABG),
+               names_to = "treatment", values_to = "rich_mean")
+ggplot(GH_metric_Nth_combo_geompoint,aes(RecYear, rich_mean, col=treatment))+
+  geom_point()+
+  geom_path(aes(as.numeric(RecYear)))+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"),labels=c("ABG","PBG"))+
+  geom_errorbar(aes(ymax=rich_mean+1.96*(rich_m_NthPBG_sd),
+                    ymin=rich_mean-1.96*(rich_m_NthPBG_sd)),width=.2)
+
+GH_metric_Nth_combo_geompoint<-GH_metric_Nth_combo%>%
+  pivot_longer(c(rich_sd_NthPBG_m,rich_sd_NthABG),
+               names_to = "treatment", values_to = "rich_sd")
+ggplot(GH_metric_Nth_combo_geompoint,aes(RecYear, rich_sd, col=treatment))+
+  geom_point()+
+  geom_path(aes(as.numeric(RecYear)))+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"),labels=c("ABG","PBG"))+
+  geom_errorbar(aes(ymax=rich_sd+1.96*(rich_sd_NthPBG_sd),
+                    ymin=rich_sd-1.96*(rich_sd_NthPBG_sd)),width=.2)
+
+GH_metric_Nth_combo_geompoint<-GH_metric_Nth_combo%>%
+  pivot_longer(c(rich_cv_NthPBG_m,rich_cv_NthABG),
+               names_to = "treatment", values_to = "rich_cv")
+ggplot(GH_metric_Nth_combo_geompoint,aes(RecYear, rich_cv, col=treatment))+
+  geom_point()+
+  geom_path(aes(as.numeric(RecYear)))+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"),labels=c("ABG","PBG"))+
+  geom_errorbar(aes(ymax=rich_cv+1.96*(rich_cv_NthPBG_sd),
+                    ymin=rich_cv-1.96*(rich_cv_NthPBG_sd)),width=.2)
+
+
+#evenness
+GH_metric_Nth_combo_geompoint<-GH_metric_Nth_combo%>%
+  pivot_longer(c(even_m_NthPBG_m,even_m_NthABG),
+               names_to = "treatment", values_to = "even_mean")
+ggplot(GH_metric_Nth_combo_geompoint,aes(RecYear, even_mean, col=treatment))+
+  geom_point()+
+  geom_path(aes(as.numeric(RecYear)))+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"),labels=c("ABG","PBG"))+
+  geom_errorbar(aes(ymax=even_mean+1.96*(even_m_NthPBG_sd),
+                    ymin=even_mean-1.96*(even_m_NthPBG_sd)),width=.2)
+
+GH_metric_Nth_combo_geompoint<-GH_metric_Nth_combo%>%
+  pivot_longer(c(even_sd_NthPBG_m,even_sd_NthABG),
+               names_to = "treatment", values_to = "even_sd")
+ggplot(GH_metric_Nth_combo_geompoint,aes(RecYear, even_sd, col=treatment))+
+  geom_point()+
+  geom_path(aes(as.numeric(RecYear)))+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"),labels=c("ABG","PBG"))+
+  geom_errorbar(aes(ymax=even_sd+1.96*(even_sd_NthPBG_sd),
+                    ymin=even_sd-1.96*(even_sd_NthPBG_sd)),width=.2)
+
+#shannon diversity
+GH_metric_Nth_combo_geompoint<-GH_metric_Nth_combo%>%
+  pivot_longer(c(shan_m_NthPBG_m,shan_m_NthABG),
+               names_to = "treatment", values_to = "diver_mean")
+ggplot(GH_metric_Nth_combo_geompoint,aes(RecYear, diver_mean, col=treatment))+
+  geom_point()+
+  geom_path(aes(as.numeric(RecYear)))+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"),labels=c("ABG","PBG"))+
+  geom_errorbar(aes(ymax=diver_mean+1.96*(shan_m_NthPBG_sd),
+                    ymin=diver_mean-1.96*(shan_m_NthPBG_sd)),width=.2)
+
+GH_metric_Nth_combo_geompoint<-GH_metric_Nth_combo%>%
+  pivot_longer(c(shan_sd_NthPBG_m,shan_sd_NthABG),
+               names_to = "treatment", values_to = "diver_sd")
+ggplot(GH_metric_Nth_combo_geompoint,aes(RecYear, diver_sd, col=treatment))+
+  geom_point()+
+  geom_path(aes(as.numeric(RecYear)))+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"),labels=c("ABG","PBG"))+
+  geom_errorbar(aes(ymax=diver_sd+1.96*(shan_sd_NthPBG_sd),
+                    ymin=diver_sd-1.96*(shan_sd_NthPBG_sd)),width=.2)
 
 
