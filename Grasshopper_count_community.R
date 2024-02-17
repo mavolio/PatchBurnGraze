@@ -1,6 +1,6 @@
 #BPBG grasshopper count and community metrics
 #Authors: Joshua Ajowele
-#Started: 26 May 2022 last modified: 09 Feb 2024
+#Started: 26 May 2022 last modified: 16 Feb 2024
 
 #load library
 library(tidyverse)
@@ -700,7 +700,7 @@ GH_metric_Nth_combo_geompoint<-GH_metric_Nth_combo%>%
 ggplot(GH_metric_Nth_combo_geompoint,aes(RecYear, rich_sd, col=treatment))+
   geom_point()+
   geom_path(aes(as.numeric(RecYear)))+
-  scale_colour_manual(values=c( "#F0E442", "#009E73"),labels=c("ABG","PBG"))+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"),labels=c("ABG","PBG"))#+
   geom_errorbar(aes(ymax=rich_sd+1.96*(rich_sd_NthPBG_sd),
                     ymin=rich_sd-1.96*(rich_sd_NthPBG_sd)),width=.2)
 
@@ -710,7 +710,7 @@ GH_metric_Nth_combo_geompoint<-GH_metric_Nth_combo%>%
 ggplot(GH_metric_Nth_combo_geompoint,aes(RecYear, rich_cv, col=treatment))+
   geom_point()+
   geom_path(aes(as.numeric(RecYear)))+
-  scale_colour_manual(values=c( "#F0E442", "#009E73"),labels=c("ABG","PBG"))+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"),labels=c("ABG","PBG"))#+
   geom_errorbar(aes(ymax=rich_cv+1.96*(rich_cv_NthPBG_sd),
                     ymin=rich_cv-1.96*(rich_cv_NthPBG_sd)),width=.2)
 
@@ -753,7 +753,7 @@ GH_metric_Nth_combo_geompoint<-GH_metric_Nth_combo%>%
 ggplot(GH_metric_Nth_combo_geompoint,aes(RecYear, diver_sd, col=treatment))+
   geom_point()+
   geom_path(aes(as.numeric(RecYear)))+
-  scale_colour_manual(values=c( "#F0E442", "#009E73"),labels=c("ABG","PBG"))+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"),labels=c("ABG","PBG"))#+
   geom_errorbar(aes(ymax=diver_sd+1.96*(shan_sd_NthPBG_sd),
                     ymin=diver_sd-1.96*(shan_sd_NthPBG_sd)),width=.2)
 
