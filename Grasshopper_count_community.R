@@ -445,13 +445,30 @@ ggplot(combo_north_count_geompoint,aes(RecYear, count_mean, col=treatment))+
 
 combo_north_sd_geompoint<-Combo_north_count%>%
   pivot_longer(c(count_PBGNth_sd_M,count_ABGNth_sd),
-               names_to = "treatment", values_to = "count_sd")
+               names_to = "treatment", values_to = "count_sd")%>%
+  select(count_sd,treatment, RecYear, count_PBGNth_sd_sd)%>%
+  unique()%>%
+  #round to two decimal places
+  mutate(sdsd=round(count_PBGNth_sd_sd,digits=2))%>%
+  mutate(sdsd=ifelse(sdsd==3.36 & treatment=="count_ABGNth_sd",0,sdsd),
+         sdsd=ifelse(sdsd==6.82 & treatment=="count_ABGNth_sd",0,sdsd),
+         sdsd=ifelse(sdsd==31.33 & treatment=="count_ABGNth_sd",0,sdsd),
+         sdsd=ifelse(sdsd==4.45 & treatment=="count_ABGNth_sd",0,sdsd),
+         sdsd=ifelse(sdsd==8.68 & treatment=="count_ABGNth_sd",0,sdsd),
+         sdsd=ifelse(sdsd==4.27 & treatment=="count_ABGNth_sd",0,sdsd),
+         sdsd=ifelse(sdsd==5.11 & treatment=="count_ABGNth_sd",0,sdsd),
+         sdsd=ifelse(sdsd==6.25 & treatment=="count_ABGNth_sd",0,sdsd),
+         sdsd=ifelse(sdsd==7.31 & treatment=="count_ABGNth_sd",0,sdsd),
+         sdsd=ifelse(sdsd==4.10 & treatment=="count_ABGNth_sd",0,sdsd),
+         sdsd=ifelse(sdsd==6.38 & treatment=="count_ABGNth_sd",0,sdsd))
+
 ggplot(combo_north_sd_geompoint,aes(RecYear, count_sd, col=treatment))+
   geom_point()+
   geom_path(aes(as.numeric(RecYear)))+
   scale_colour_manual(values=c( "#F0E442", "#009E73"),labels=c("ABG","PBG"))+
-  geom_errorbar(aes(ymax=count_sd+1.96*(count_PBGNth_sd_sd),
-                    ymin=count_sd-1.96*(count_PBGNth_sd_sd)),width=.2)
+  geom_errorbar(aes(ymax=count_sd+1.96*(sdsd),
+                    ymin=count_sd-1.96*(sdsd)),width=.2)
+
 
 combo_north_cv_geompoint<-Combo_north_count%>%
   pivot_longer(c(count_PBGNth_cv_M,cv_count_ABGNth),
