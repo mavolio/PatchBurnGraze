@@ -200,17 +200,58 @@ ggplot(Combo_bird_count,aes(count_PBGNth))+
   #facet_grid("RecYear")+
   geom_vline(aes(xintercept=count_ABGNth), linetype=2,size=.5)
 
-#create visual using point
+#create visual using point 
+#total count at unit scale
 combo_bird_count_geompoint<-Combo_bird_count%>%
   pivot_longer(c(count_PBGNth_m,count_ABGNth),
                names_to = "treatment", values_to = "count_mean")%>%
   select(count_mean,treatment, Year, count_PBGNth_sd)%>%
-  unique()
+  unique()%>%
+  #round to two decimal places
+  mutate(sdsd=round(count_PBGNth_sd,digits=2))%>%
+  mutate(sdsd=ifelse(sdsd==5.90 & treatment=="count_ABGNth",0,sdsd),
+         sdsd=ifelse(sdsd==3.34 & treatment=="count_ABGNth",0,sdsd),
+         sdsd=ifelse(sdsd==1.56 & treatment=="count_ABGNth",0,sdsd),
+         sdsd=ifelse(sdsd==2.78 & treatment=="count_ABGNth",0,sdsd),
+         sdsd=ifelse(sdsd==2.58 & treatment=="count_ABGNth",0,sdsd),
+         sdsd=ifelse(sdsd==2.73 & treatment=="count_ABGNth",0,sdsd),
+         sdsd=ifelse(sdsd==7.25 & treatment=="count_ABGNth",0,sdsd),
+         sdsd=ifelse(sdsd==4.45 & treatment=="count_ABGNth",0,sdsd),
+         sdsd=ifelse(sdsd==1.16 & treatment=="count_ABGNth",0,sdsd),
+         sdsd=ifelse(sdsd==3.61 & treatment=="count_ABGNth",0,sdsd))
 
 ggplot(combo_bird_count_geompoint,aes(Year, count_mean, col=treatment))+
   geom_point()+
   geom_path(aes(as.numeric(Year)))+
   scale_colour_manual(values=c( "#F0E442", "#009E73"),labels=c("ABG","PBG"))+
-  geom_errorbar(aes(ymax=count_mean+1.96*(count_PBGNth_sd),
-                    ymin=count_mean-1.96*(count_PBGNth_sd)),width=.2)
+  geom_errorbar(aes(ymax=count_mean+1.96*(sdsd),
+                    ymin=count_mean-1.96*(sdsd)),width=.2)+
+  scale_x_continuous(breaks=2011:2021)
 
+
+#sd unit scale
+combo_bird_sd_geompoint<-Combo_bird_count%>%
+  pivot_longer(c(count_PBGNth_sd_M,count_ABGNth_sd),
+               names_to = "treatment", values_to = "count_sd")%>%
+  select(count_sd,treatment, Year, count_PBGNth_sd_sd)%>%
+  unique()%>%
+  #round to two decimal places
+  mutate(sdsd=round(count_PBGNth_sd_sd,digits=2))%>%
+  mutate(sdsd=ifelse(sdsd==7.27 & treatment=="count_ABGNth_sd",0,sdsd),
+         sdsd=ifelse(sdsd==2.17 & treatment=="count_ABGNth_sd",0,sdsd),
+         sdsd=ifelse(sdsd==2.16 & treatment=="count_ABGNth_sd",0,sdsd),
+         sdsd=ifelse(sdsd==2.25 & treatment=="count_ABGNth_sd",0,sdsd),
+         sdsd=ifelse(sdsd==2.18 & treatment=="count_ABGNth_sd",0,sdsd),
+         sdsd=ifelse(sdsd==2.51 & treatment=="count_ABGNth_sd",0,sdsd),
+         sdsd=ifelse(sdsd==5.99 & treatment=="count_ABGNth_sd",0,sdsd),
+         sdsd=ifelse(sdsd==3.76 & treatment=="count_ABGNth_sd",0,sdsd),
+         sdsd=ifelse(sdsd==0.80 & treatment=="count_ABGNth_sd",0,sdsd),
+         sdsd=ifelse(sdsd==3.17 & treatment=="count_ABGNth_sd",0,sdsd))
+
+ggplot(combo_bird_sd_geompoint,aes(Year, count_sd, col=treatment))+
+  geom_point()+
+  geom_path(aes(as.numeric(Year)))+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"),labels=c("ABG","PBG"))+
+  geom_errorbar(aes(ymax=count_sd+1.96*(sdsd),
+                    ymin=count_sd-1.96*(sdsd)),width=.2)+
+  scale_x_continuous(breaks=2011:2021)
