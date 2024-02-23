@@ -923,3 +923,110 @@ ggplot(PBG_Sth_biomass_ready,aes(PBG_Sstab))+
   geom_vline(aes(xintercept=Stab_ABGSth), linetype=2,size=1)+
   xlab("Stability South Unit")
 
+
+
+#Bootstrap PBG for unit scale with transect as observational units####
+#averaging at transect scale
+biomass_t_scale<-biomass_data%>%
+  group_by(RecYear, Unit, Watershed, FireGrzTrt, Transect)%>%
+  summarise(biomass_t= mean(biomass, na.rm=T))%>%
+  ungroup()
+
+
+#filter for PBG to perform bootstrap
+biomass_PBG_t_index_N<-biomass_t_scale%>%
+  filter(FireGrzTrt=="PBG" & Unit=="north")%>%
+  group_by(RecYear)%>%
+  #number the transect to sample from
+  mutate(biomass_index= 1:length(RecYear))
+
+biomass_PBG_t_index_S<-biomass_t_scale%>%
+  filter(FireGrzTrt=="PBG" & Unit=="south")%>%
+  group_by(RecYear)%>%
+  #number the transect to sample from
+  mutate(biomass_index= 1:length(RecYear))
+
+#extract ABG 
+biomass_t_ABGS<-biomass_t_scale%>%
+  filter(FireGrzTrt=="ABG" & Unit=="north")%>%
+  group_by(RecYear)%>%
+  summarise(biomass_ABGNth=mean(biomass_t, na.rm=T),
+            biomass_ABGNth_sd=sd(biomass_t),
+            cv_biomass_ABGNth=biomass_ABGNth_sd/biomass_ABGNth)
+  
+biomass_t_ABGS<-biomass_t_scale%>%
+  filter(FireGrzTrt=="ABG" & Unit=="south")%>%
+  group_by(RecYear)%>%
+  summarise(biomass_ABGSth=mean(biomass_t, na.rm=T),
+            biomass_ABGSth_sd=sd(biomass_t),
+            cv_biomass_ABGSth=biomass_ABGSth_sd/biomass_ABGSth)
+ 
+#North Unit
+num_bootstrap<-1000
+bootstrap_vector<-1:num_bootstrap
+biomass_t_master_N<-{}
+for(BOOT in 1:length(bootstrap_vector)){
+  biomass_t_rand_N<-biomass_PBG_t_index_N%>%
+    dplyr::select(RecYear, Unit, Watershed, FireGrzTrt, Transect, biomass_index)%>%
+    unique()%>%
+    group_by(RecYear)%>%
+    sample_n(4, replace=T)%>%
+    dplyr::select(RecYear, biomass_index)%>%
+    ungroup()
+  biomass_t_ready<-biomass_PBG_t_index_N%>%
+    right_join(biomass_t_rand_N, by= c("RecYear", "biomass_index"),
+               multiple="all")%>%
+    mutate(iteration=BOOT)
+  biomass_t_master_N<-rbind(biomass_t_master_N, biomass_t_ready)
+  }
+#South Unit
+biomass_t_master_S<-{}
+for(BOOT in 1:length(bootstrap_vector)){
+  biomass_t_rand_S<-biomass_PBG_t_index_S%>%
+    dplyr::select(RecYear, Unit, Watershed, FireGrzTrt, Transect, biomass_index)%>%
+    unique()%>%
+    group_by(RecYear)%>%
+    sample_n(4, replace=T)%>%
+    dplyr::select(RecYear, biomass_index)%>%
+    ungroup()
+  biomass_t_ready_S<-biomass_PBG_t_index_S%>%
+    right_join(biomass_t_rand_S, by= c("RecYear", "biomass_index"),
+               multiple="all")%>%
+    mutate(iteration=BOOT)
+  biomass_t_master_S<-rbind(biomass_t_master_S, biomass_t_ready_S)
+}
+
+#calculate mean for PBG bootstrap####
+PBG_t_north<-biomass_t_master_N%>%
+  group_by(RecYear,iteration)%>%
+  summarise(biomass_PBGNth=mean(biomass_t,na.rm=T),
+            sd_biomass_PBGNth=sd(biomass_t),
+            cv_biomass_PBGNth=sd(biomass_t)/mean(biomass_t, na.rm=T))%>%
+  group_by(iteration)%>%
+  mutate(stab_PBGNth=mean(biomass_PBGNth, na.rm=T)/sd(biomass_PBGNth))
+
+PBG_t_south<-biomass_t_master_S%>%
+  group_by(RecYear,iteration)%>%
+  summarise(biomass_PBGSth=mean(biomass_t,na.rm=T),
+            sd_biomass_PBGSth=sd(biomass_t),
+            cv_biomass_PBGSth=sd(biomass_t)/mean(biomass_t, na.rm=T))%>%
+  group_by(iteration)%>%
+  mutate(stab_PBGSth=mean(biomass_PBGSth, na.rm=T)/sd(biomass_PBGSth))
+
+
+#combine PBG and ABG
+Combo_north_biomass<-PBG_north_mean%>%
+  left_join(ABG_north_biomass, by="RecYear")%>%
+  group_by(RecYear)%>%
+  mutate(biomass_PBGNth_m=mean(biomass_PBGNth, na.rm=T),
+         biomass_PBGNth_sd=sd(biomass_PBGNth),
+         z_score_NthMean=((biomass_ABGNth-biomass_PBGNth_m)/biomass_PBGNth_sd),
+         p_value_NMean=2*pnorm(-abs(z_score_NthMean)),
+         biomass_PBGNth_sd_M=mean(sd_biomass_PBGNth, na.rm=T),
+         biomass_PBGNth_sd_sd=sd(sd_biomass_PBGNth),
+         Z_score_Nsd=((biomass_ABGNth_sd-biomass_PBGNth_sd_M)/biomass_PBGNth_sd_sd),
+         pvalue_Nsd=2*pnorm(-abs(Z_score_Nsd)),
+         biomass_PBGNth_cv_M=mean(cv_biomass_PBGNth, na.rm=T),
+         biomass_PBGNth_cv_sd=sd(cv_biomass_PBGNth),
+         Z_score_Ncv=((cv_biomass_ABGNth-biomass_PBGNth_cv_M)/biomass_PBGNth_cv_sd),
+         pvalue_Ncv=2*pnorm(-abs(Z_score_Ncv)))
