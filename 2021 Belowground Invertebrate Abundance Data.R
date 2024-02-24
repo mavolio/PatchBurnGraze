@@ -452,13 +452,13 @@ abundanceWide <- abundanceWide %>%
 ###IMPORTANT: removing sample from C1A_A_38_ABG, which is a big outlier because of high values of endogenic worms and brown shrimp-like beetles, which no other plots had
 
 print(permanova <- adonis2(formula = abundanceWide[,8:139]~TreatmentSB, data=abundanceWide, permutations=999, method="bray"))
-#F=1.6053, df=3,52, p=0.016
+#F=1.5242, df=3,49, p=0.042 
 
 #betadisper
 veg <- vegdist(abundanceWide[,8:140], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$TreatmentSB)
 permutest(dispersion, pairwise=TRUE, permutations=999) 
-#F=1.5519, df=3,52, p=0.213
+#F=0.773 , df=3,49, p=0.53
 
 BC_Data <- metaMDS(abundanceWide[,8:140])
 sites <- 1:nrow(abundanceWide)
@@ -510,20 +510,24 @@ ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = 
         axis.title.y = element_text(size = 24, color = 'black'),
         legend.text = element_text(size = 24),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank()
-  )
-#F=1.6053, df=3,52, p=0.016
+  ) +
+  annotate("text", x=min(BC_NMDS_Graph$MDS1), y=max(BC_NMDS_Graph$MDS2),
+           label="F=1.52, p=0.0420", size=6, hjust=0, vjust=1)
+
+
+#F=1.5242, df=3,49, p=0.042 
 #export at 1500x1000
 
 ### by watershed
 # PERMANOVA
 print(permanova <- adonis2(formula = abundanceWide[,8:139]~Treatment, data=abundanceWide, permutations=999, method="bray"))
-#F=1.4498, df=1,52, p=0.119
+#F=1.495, df=1,51, p=0.122
 
 #betadisper
 veg <- vegdist(abundanceWide[,8:139], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$Treatment)
 permutest(dispersion, pairwise=TRUE, permutations=999) 
-#F=9e-4, df=1,52, p=0.976
+#F=0.0325, df=1,51, p=0.851
 
 BC_Data <- metaMDS(abundanceWide[,8:139])
 sites <- 1:nrow(abundanceWide)
@@ -558,8 +562,6 @@ ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = 
   scale_shape_manual(values = c(19, 19)) +
   xlab("NMDS1") + 
   ylab("NMDS2") + 
-  annotate('text', x=-0.04, y=0.03, label=expression(paste('F'['3,52'],' = 1.61')), size=8, hjust='left') +
-  annotate('text', x=-0.04, y=0.028, label='p = 0.016', size=8, hjust='left') +
   theme_bw() +
   theme(axis.text.x=element_text(size=24, color = "black"), 
         axis.text.y = element_text(size = 24, color = "black"), 
@@ -567,8 +569,12 @@ ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = 
         axis.title.y = element_text(size = 24, color = 'black'),
         legend.text = element_text(size = 24),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank()
-  )
+  ) +
+  annotate("text", x=min(BC_NMDS_Graph$MDS1), y=max(BC_NMDS_Graph$MDS2),
+           label="F=1.50, p=0.122", size=6, hjust=0, vjust=1)
 
+
+#F=1.495, df=1,51, p=0.122
 
 
 
@@ -664,7 +670,7 @@ p_value_R <- 1 - pnorm(Z_R)
 
 print(p_value_R)
 
-#1.952155
+#Z = 1.952155
 #P = 0.02545992
 
 # Z-Score for evenness 
@@ -698,30 +704,58 @@ print(p_value_C)
 
 #Richness means graph
 ggplot(average_richness, aes(x = mean_richness, color = "PBG")) +
-  geom_density(alpha = 0.5) +
+  geom_density(aes(y = ..scaled..), alpha = 0.5) +
   geom_vline(aes(xintercept = ABG_mean_richness, color = "ABG Mean Richness"), linetype = "dashed", size = 1) +
   labs(title = "Density Plot of Mean Richness",
        x = "Mean Richness",
        y = "Density") +
-  scale_color_manual(values = c("blue", "red"), name = "Legend")
+  scale_color_manual(values = c("blue", "red"), name = "Legend") +
+  annotate("text", x = min(average_richness$mean_richness), y = 1, 
+           label = "z-value = 1.95, p = 0.0255", hjust = 0, vjust = 1, size = 4, color = "black") + 
+  theme_bw() +
+  theme( panel.grid.major=element_blank(), panel.grid.minor=element_blank())
+
+#Z = 1.952155
+#P = 0.02545992
+
 
 #Evenness means graph
+
+
 ggplot(average_evenness, aes(x = mean_evenness, color = "PBG")) +
-  geom_density(alpha = 0.5) +
+  geom_density(aes(y = ..scaled..), alpha = 0.5) +
   geom_vline(aes(xintercept = ABG_mean_evenness, color = "ABG Mean Evenness"), linetype = "dashed", size = 1) +
   labs(title = "Density Plot of Mean Evenness",
        x = "Mean Evenness",
        y = "Density") +
-  scale_color_manual(values = c("blue", "red"), name = "Legend")
+  scale_color_manual(values = c("blue", "red"), name = "Legend") +
+  annotate("text", x = min(average_evenness$mean_evenness), y = 1, 
+           label = "z-value = 1.28, p = 0.100", hjust = 0, vjust = 1, size = 4, color = "black") + 
+  theme_bw() +
+  theme( panel.grid.major=element_blank(), panel.grid.minor=element_blank())
+
+
+
+#1.280609
+#P = 0.1001654
+
 
 #Total_count means graphs
+
 ggplot(average_total_count, aes(x = mean_count, color = "PBG")) +
-  geom_density(alpha = 0.5) +
+  geom_density(aes(y = ..scaled..), alpha = 0.5) +
   geom_vline(aes(xintercept = ABG_mean_total_count, color = "ABG Total Count"), linetype = "dashed", size = 1) +
   labs(title = "Density Plot of Total Count",
        x = "Mean Total Count",
        y = "Density") +
-  scale_color_manual(values = c("blue", "red"), name = "Legend")
+  scale_color_manual(values = c("blue", "red"), name = "Legend") +
+  annotate("text", x = min(average_total_count$mean_count), y = 1, 
+           label = "z-value = -1.13, p = 0.130", hjust = 0, vjust = 1, size = 4, color = "black") +
+  theme_bw() +
+  theme( panel.grid.major=element_blank(), panel.grid.minor=element_blank())
 
 
+
+#Z-Score: -1.125048
+#P = 0.1302844
 

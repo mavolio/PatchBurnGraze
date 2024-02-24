@@ -6,6 +6,8 @@ library(ggplot2)
 library(ggpubr)
 library(gridExtra)
 library(vegan)
+#### Seed Set ####
+set.seed(123)
 
 #### CSV read ####
 
@@ -363,14 +365,14 @@ abundanceWide <- abundanceWide %>%
 
 
 print(permanova <- adonis2(formula = abundanceWide[,8:166]~TreatmentSB, data=abundanceWide, permutations=999, method="bray"))
-#F=1.045  , df=3,82, p=0.381
+#F=1.0128, df=3,85, p=0.45
 
 
 #betadisper
 veg <- vegdist(abundanceWide[,8:167], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$TreatmentSB)
 permutest(dispersion, pairwise=TRUE, permutations=999) 
-#F=1.3302, df=3,52, p=0.247
+#F=1.6171   , df=3,85, p=0.193
 
 BC_Data <- metaMDS(abundanceWide[,8:167])
 sites <- 1:nrow(abundanceWide)
@@ -425,19 +427,18 @@ ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = 
   ) +
 ggtitle("2021 year since burned")
 
-#F=1.6053, df=3,52, p=0.016
 #export at 1500x1000
 
 ### by watershed
 # PERMANOVA
 print(permanova <- adonis2(formula = abundanceWide[,8:167]~Treatment, data=abundanceWide, permutations=999, method="bray"))
-#F=1.4498, df=1,52, p=0.119
+#F=0.6318  , df=1,87, p=0.691
 
 #betadisper
 veg <- vegdist(abundanceWide[,8:167], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$Treatment)
 permutest(dispersion, pairwise=TRUE, permutations=999) 
-#F=9e-4, df=1,52, p=0.976
+#F=0.3884, df=1,87, p=0.545
 
 BC_Data <- metaMDS(abundanceWide[,8:167])
 sites <- 1:nrow(abundanceWide)
@@ -514,7 +515,7 @@ abundanceWide <- abundanceWide %>%
   filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
 
 print(permanova <- adonis2(formula = abundanceWide[, 8:118] ~ TreatmentSB, data = abundanceWide, permutations = 999, method = "bray"))
-# F=1.6053, df=3,52, p=0.016
+# F=2.1065, df=3,60, p=0.001 ***
 
 
 
@@ -522,7 +523,7 @@ print(permanova <- adonis2(formula = abundanceWide[, 8:118] ~ TreatmentSB, data 
 veg <- vegdist(abundanceWide[, 8:117], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$TreatmentSB)
 permutest(dispersion, pairwise = TRUE, permutations = 999) 
-# F=1.5519, df=3,52, p=0.213
+# F=0.0811, df=3,60, p=0.975
 
 BC_Data <- metaMDS(abundanceWide[, 8:117])
 sites <- 1:nrow(abundanceWide)
@@ -579,14 +580,14 @@ ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = 
 ### by watershed
 # PERMANOVA
 print(permanova <- adonis2(formula = abundanceWide[,8:118]~Treatment, data=abundanceWide, permutations=999, method="bray"))
-#F=1.4498, df=1,52, p=0.119
+#F=0.986  , df=1,62, p=0.446
 
 #betadisper
 veg <- vegdist(abundanceWide[,8:117], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$Treatment)
 permutest(dispersion, pairwise=TRUE, permutations=999) 
 
-#F=9e-4, df=1,52, p=0.976
+#F=1.1985, df=1,62, p=0.28
 
 BC_Data <- metaMDS(abundanceWide[,8:117])
 sites <- 1:nrow(abundanceWide)
@@ -663,13 +664,13 @@ abundanceWide <- abundanceWide %>%
   filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
 
 print(permanova <- adonis2(formula = abundanceWide[, 8:75] ~ TreatmentSB, data = abundanceWide, permutations = 999, method = "bray"))
-# F=1.6053, df=3,52, p=0.016
+# F=1.3803, df=3,60, p=0.086
 
 # Betadisper
 veg <- vegdist(abundanceWide[, 8:74], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$TreatmentSB)
 permutest(dispersion, pairwise = TRUE, permutations = 999) 
-# F=1.5519, df=3,52, p=0.213
+# F=0.0039, df=3,60, p=0.999
 
 BC_Data <- metaMDS(abundanceWide[, 8:74])
 sites <- 1:nrow(abundanceWide)
@@ -726,14 +727,14 @@ ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = 
 ### by watershed
 # PERMANOVA
 print(permanova <- adonis2(formula = abundanceWide[,8:75]~Treatment, data=abundanceWide, permutations=999, method="bray"))
-#F=1.4498, df=1,52, p=0.119
+#F=1.1816 , df=1,62, p=0.288 
 
 #betadisper
 veg <- vegdist(abundanceWide[,8:74], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$Treatment)
 permutest(dispersion, pairwise=TRUE, permutations=999) 
 
-#F=9e-4, df=1,52, p=0.976
+#F=0.1224, df=1,62, p=0.721
 
 BC_Data <- metaMDS(abundanceWide[,8:74])
 sites <- 1:nrow(abundanceWide)
@@ -804,6 +805,71 @@ print(permanova <- adonis2(
   method = "bray",
   permutations=999,
   strata = combined_data_wide$Sample))
+
+#F = 2.3383, P = 0.127
+
+#betadisper
+veg <- vegdist(combined_data_wide[,8:213], method = "bray")
+dispersion <- betadisper(veg, combined_data_wide$TreatmentSB)
+permutest(dispersion, pairwise=TRUE, permutations=999) 
+#F=0.4157 , df=3,191, p=0.739
+
+BC_Data <- metaMDS(combined_data_wide[,8:213])
+sites <- 1:nrow(combined_data_wide)
+BC_Meta_Data <- combined_data_wide[,1:7]
+plot(BC_Data$points, col=as.factor(BC_Meta_Data$TreatmentSB))
+ordiellipse(BC_Data, groups = as.factor(BC_Meta_Data$TreatmentSB), kind = "sd", display = "sites", label = T)
+
+veganCovEllipse <- function (cov, center = c(0, 0), scale = 1, npoints = 100)
+{
+  theta <- (0:npoints) * 2 * pi/npoints
+  Circle <- cbind(cos(theta), sin(theta))
+  t(center + scale * t(Circle %*% chol(cov)))
+}
+
+#Generate ellipses
+BC_NMDS = data.frame(MDS1 = BC_Data$points[,1], MDS2 = BC_Data$points[,2], group=BC_Meta_Data$TreatmentSB)
+BC_NMDS_Graph <- cbind(BC_Meta_Data, BC_NMDS)
+BC_Ord_Ellipses<-ordiellipse(BC_Data, BC_Meta_Data$TreatmentSB, display = "sites",
+                             kind = "se", conf = 0.95, label = T)
+
+BC_Ellipses <- data.frame()
+#Generate ellipses points
+for(g in levels(as.factor(BC_NMDS$group))){
+  BC_Ellipses <- rbind(BC_Ellipses,
+                       cbind(as.data.frame(with(BC_NMDS[BC_NMDS$group==g,], 
+                                                veganCovEllipse(BC_Ord_Ellipses[[g]]$cov,
+                                                                BC_Ord_Ellipses[[g]]$center,
+                                                                BC_Ord_Ellipses[[g]]$scale))),
+                             group=g))
+}
+
+#Plot the data from BC_NMDS_Graph, where x=MDS1 and y=MDS2, make an ellipse based on "group"
+ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = group)) +
+  geom_point(size=6) + 
+  geom_path(data = BC_Ellipses, aes(x = NMDS1, y = NMDS2), size = 3) +
+  labs(color="", linetype = "", shape = "") +
+  scale_colour_manual(values=c("blue", "#7A2021", "#C21A09", "#FF0800"), name = "",
+                      labels=c('ABG', 'PBG 0', 'PBG 1', 'PBG 2')) +
+  scale_linetype_manual(values = c("solid", "twodash", "twodash", "twodash"), name = "",
+                        labels=c('ABG', 'PBG 0', 'PBG 1', 'PBG 2')) +
+  scale_shape_manual(values = c(19, 19, 17, 15),
+                     labels=c('ABG', 'PBG 0', 'PBG 1', 'PBG 2')) +
+  xlab("NMDS1") + 
+  ylab("NMDS2") + 
+  theme_bw() +
+  theme(axis.text.x=element_text(size=24, color = "black"), 
+        axis.text.y = element_text(size = 24, color = "black"), 
+        axis.title.x = element_text(size = 24, color = 'black'),
+        axis.title.y = element_text(size = 24, color = 'black'),
+        legend.text = element_text(size = 24),
+        panel.grid.major=element_blank(), panel.grid.minor=element_blank()
+  ) +
+  ggtitle("all years, year since burned")
+
+#F=1.6053, df=3,52, p=0.016
+#export at 1500x1000
+
 
 #Add NMDS
 
