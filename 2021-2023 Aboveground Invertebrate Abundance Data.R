@@ -343,7 +343,9 @@ grid.arrange(richness, evenness, counts, Weight)
 #merge with burn data
 Abundance_Data2021 <- full_join(Abundance_ID_aboveground, BurnInfo2021, by = "WS") %>% 
   unite("TreatmentSB",c("Treatment","SB"), sep="_") %>% 
-  filter(Date == "2021")
+  filter(Date == "2021") %>%   
+  filter(Plot %in% c("2", "4"))
+
 
 #tag abg and pbg
 Abundance_Data2021$Sample <- paste(Abundance_Data2021$WS, Abundance_Data2021$Trans, Abundance_Data2021$Plot, sep = "_")
@@ -360,21 +362,21 @@ abundanceWide <- Abundance_Data2021 %>%
   pivot_wider(names_from = 'ID', values_from = 'Count', values_fill = list(Count = 0)) 
 
 abundanceWide <- abundanceWide %>% 
-  mutate(sum = rowSums(abundanceWide[, c(8:166)], na.rm = TRUE)) %>% 
+  mutate(sum = rowSums(abundanceWide[, c(8:150)], na.rm = TRUE)) %>% 
   filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
 
 
-print(permanova <- adonis2(formula = abundanceWide[,8:166]~TreatmentSB, data=abundanceWide, permutations=999, method="bray"))
-#F=1.0128, df=3,85, p=0.45
+print(permanova <- adonis2(formula = abundanceWide[,8:150]~TreatmentSB, data=abundanceWide, permutations=999, method="bray"))
+#F=1.0128, df=3,60, p=0.864
 
 
 #betadisper
-veg <- vegdist(abundanceWide[,8:167], method = "bray")
+veg <- vegdist(abundanceWide[,8:150], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$TreatmentSB)
 permutest(dispersion, pairwise=TRUE, permutations=999) 
-#F=1.6171   , df=3,85, p=0.193
+#F=0.5209      , df=3,57, p=0.66
 
-BC_Data <- metaMDS(abundanceWide[,8:167])
+BC_Data <- metaMDS(abundanceWide[,8:150])
 sites <- 1:nrow(abundanceWide)
 BC_Meta_Data <- abundanceWide[,1:7]
 plot(BC_Data$points, col=as.factor(BC_Meta_Data$TreatmentSB))
@@ -431,16 +433,16 @@ ggtitle("2021 year since burned")
 
 ### by watershed
 # PERMANOVA
-print(permanova <- adonis2(formula = abundanceWide[,8:167]~Treatment, data=abundanceWide, permutations=999, method="bray"))
-#F=0.6318  , df=1,87, p=0.691
+print(permanova <- adonis2(formula = abundanceWide[,8:150]~Treatment, data=abundanceWide, permutations=999, method="bray"))
+#F=0.5303    , df=1,60, p=0.939
 
 #betadisper
-veg <- vegdist(abundanceWide[,8:167], method = "bray")
+veg <- vegdist(abundanceWide[,8:150], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$Treatment)
 permutest(dispersion, pairwise=TRUE, permutations=999) 
-#F=0.3884, df=1,87, p=0.545
+#F=0.0857    , df=1,59, p=0.797
 
-BC_Data <- metaMDS(abundanceWide[,8:167])
+BC_Data <- metaMDS(abundanceWide[,8:150])
 sites <- 1:nrow(abundanceWide)
 BC_Meta_Data <- abundanceWide[,1:7]
 plot(BC_Data$points, col=as.factor(BC_Meta_Data$Treatment))
@@ -660,14 +662,14 @@ abundanceWide <- Abundance_Data2023 %>%
   pivot_wider(names_from = 'ID', values_from = 'Count', values_fill = list(Count = 0)) 
 
 abundanceWide <- abundanceWide %>% 
-  mutate(sum = rowSums(abundanceWide[, c(8:75)], na.rm = TRUE)) %>% 
+  mutate(sum = rowSums(abundanceWide[, c(8:76)], na.rm = TRUE)) %>% 
   filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
 
 print(permanova <- adonis2(formula = abundanceWide[, 8:75] ~ TreatmentSB, data = abundanceWide, permutations = 999, method = "bray"))
-# F=1.3803, df=3,60, p=0.086
+# F=1.3803, df=3,60, p=0.078 
 
 # Betadisper
-veg <- vegdist(abundanceWide[, 8:74], method = "bray")
+veg <- vegdist(abundanceWide[, 8:75], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$TreatmentSB)
 permutest(dispersion, pairwise = TRUE, permutations = 999) 
 # F=0.0039, df=3,60, p=0.999
