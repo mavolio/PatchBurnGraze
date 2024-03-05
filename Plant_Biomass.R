@@ -2,7 +2,7 @@
 ####Plant Biomass from diskpasture meter
 ###Author: Joshua Ajowele
 ###collaborators: PBG synthesis group
-###last update:2/9/2024
+###last update:2/24/2024
 
 #packages 
 library(tidyverse)
@@ -947,7 +947,7 @@ biomass_PBG_t_index_S<-biomass_t_scale%>%
   mutate(biomass_index= 1:length(RecYear))
 
 #extract ABG 
-biomass_t_ABGS<-biomass_t_scale%>%
+biomass_t_ABGN<-biomass_t_scale%>%
   filter(FireGrzTrt=="ABG" & Unit=="north")%>%
   group_by(RecYear)%>%
   summarise(biomass_ABGNth=mean(biomass_t, na.rm=T),
@@ -996,7 +996,7 @@ for(BOOT in 1:length(bootstrap_vector)){
   biomass_t_master_S<-rbind(biomass_t_master_S, biomass_t_ready_S)
 }
 
-#calculate mean for PBG bootstrap####
+#calculate mean, SD, CV for PBG bootstrap####
 PBG_t_north<-biomass_t_master_N%>%
   group_by(RecYear,iteration)%>%
   summarise(biomass_PBGNth=mean(biomass_t,na.rm=T),
@@ -1015,8 +1015,8 @@ PBG_t_south<-biomass_t_master_S%>%
 
 
 #combine PBG and ABG
-Combo_north_biomass<-PBG_north_mean%>%
-  left_join(ABG_north_biomass, by="RecYear")%>%
+Combo_Nth_biomass<-PBG_t_north%>%
+  left_join(biomass_t_ABGN, by="RecYear")%>%
   group_by(RecYear)%>%
   mutate(biomass_PBGNth_m=mean(biomass_PBGNth, na.rm=T),
          biomass_PBGNth_sd=sd(biomass_PBGNth),
@@ -1030,3 +1030,181 @@ Combo_north_biomass<-PBG_north_mean%>%
          biomass_PBGNth_cv_sd=sd(cv_biomass_PBGNth),
          Z_score_Ncv=((cv_biomass_ABGNth-biomass_PBGNth_cv_M)/biomass_PBGNth_cv_sd),
          pvalue_Ncv=2*pnorm(-abs(Z_score_Ncv)))
+
+Combo_Sth_biomass<-PBG_t_south%>%
+  left_join(biomass_t_ABGS, by="RecYear")%>%
+  group_by(RecYear)%>%
+  mutate(biomass_PBGSth_m=mean(biomass_PBGSth, na.rm=T),
+         biomass_PBGSth_sd=sd(biomass_PBGSth),
+         z_score_SthMean=((biomass_ABGSth-biomass_PBGSth_m)/biomass_PBGSth_sd),
+         p_value_SMean=2*pnorm(-abs(z_score_SthMean)),
+         biomass_PBGSth_sd_M=mean(sd_biomass_PBGSth, na.rm=T),
+         biomass_PBGSth_sd_sd=sd(sd_biomass_PBGSth),
+         Z_score_Ssd=((biomass_ABGSth_sd-biomass_PBGSth_sd_M)/biomass_PBGSth_sd_sd),
+         pvalue_Ssd=2*pnorm(-abs(Z_score_Ssd)),
+         biomass_PBGSth_cv_M=mean(cv_biomass_PBGSth, na.rm=T),
+         biomass_PBGSth_cv_sd=sd(cv_biomass_PBGSth),
+         Z_score_Scv=((cv_biomass_ABGSth-biomass_PBGSth_cv_M)/biomass_PBGSth_cv_sd),
+         pvalue_Scv=2*pnorm(-abs(Z_score_Scv)))
+
+
+#create figures for mean, sd, and cv####
+combo_Nth_geompoint<-Combo_Nth_biomass%>%
+  pivot_longer(c(biomass_PBGNth_m,biomass_ABGNth),
+               names_to = "treatment", values_to = "biom_mean")%>%
+  select(treatment,biom_mean,RecYear, biomass_PBGNth_sd)%>%
+  distinct()%>%
+  mutate(PBG_sd=round(biomass_PBGNth_sd,digits=2))%>%
+  mutate(PBG_sd=ifelse(PBG_sd==29.95 & treatment=="biomass_ABGNth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==39.54 & treatment=="biomass_ABGNth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==50.22 & treatment=="biomass_ABGNth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==86.42 & treatment=="biomass_ABGNth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==77.51 & treatment=="biomass_ABGNth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==51.36 & treatment=="biomass_ABGNth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==47.78 & treatment=="biomass_ABGNth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==48.01 & treatment=="biomass_ABGNth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==89.08 & treatment=="biomass_ABGNth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==40.15 & treatment=="biomass_ABGNth",NA,PBG_sd))
+
+ggplot(combo_Nth_geompoint,aes(RecYear, biom_mean, col=treatment))+
+  geom_point()+
+  geom_path(aes(as.numeric(RecYear)))+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"),labels=c("ABG","PBG"))+
+  geom_errorbar(aes(ymax=biom_mean+1.96*(PBG_sd),
+                    ymin=biom_mean-1.96*(PBG_sd)),width=.2)
+#sd
+combo_Nth_geompoint_sd<-Combo_Nth_biomass%>%
+  pivot_longer(c(biomass_PBGNth_sd_M,biomass_ABGNth_sd),
+               names_to = "treatment", values_to = "biom_sd")%>%
+  select(treatment,biom_sd,RecYear, biomass_PBGNth_sd_sd)%>%
+  distinct()%>%
+  mutate(PBG_sd=round(biomass_PBGNth_sd_sd,digits=2))%>%
+  mutate(PBG_sd=ifelse(PBG_sd==31.24 & treatment=="biomass_ABGNth_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==29.44 & treatment=="biomass_ABGNth_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==47.37 & treatment=="biomass_ABGNth_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==66.38 & treatment=="biomass_ABGNth_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==52.24 & treatment=="biomass_ABGNth_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==37.39 & treatment=="biomass_ABGNth_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==31.68 & treatment=="biomass_ABGNth_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==41.61 & treatment=="biomass_ABGNth_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==89.31 & treatment=="biomass_ABGNth_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==33.09 & treatment=="biomass_ABGNth_sd",NA,PBG_sd))
+
+ggplot(combo_Nth_geompoint_sd,aes(RecYear, biom_sd, col=treatment))+
+  geom_point()+
+  geom_path(aes(as.numeric(RecYear)))+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"),labels=c("ABG","PBG"))+
+  geom_errorbar(aes(ymax=biom_sd+1.96*(PBG_sd),
+                    ymin=biom_sd-1.96*(PBG_sd)),width=.2)
+
+#cv
+combo_Nth_geompoint_cv<-Combo_Nth_biomass%>%
+  rename()
+  pivot_longer(c(biomass_PBGNth_cv_M,cv_biomass_ABGNth),
+               names_to = "treatment", values_to = "biom_cv")%>%
+  select(treatment,biom_cv,RecYear, biomass_PBGNth_cv_sd)%>%
+  distinct()%>%
+  mutate(PBG_sd=round(biomass_PBGNth_cv_sd,digits=2))%>%
+  mutate(PBG_sd=ifelse(PBG_sd==0.13 & treatment=="cv_biomass_ABGNth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.09 & treatment=="cv_biomass_ABGNth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.12 & treatment=="cv_biomass_ABGNth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.13 & treatment=="cv_biomass_ABGNth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.09 & treatment=="cv_biomass_ABGNth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.09 & treatment=="cv_biomass_ABGNth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.10 & treatment=="cv_biomass_ABGNth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.08 & treatment=="cv_biomass_ABGNth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.18 & treatment=="cv_biomass_ABGNth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.08 & treatment=="cv_biomass_ABGNth",NA,PBG_sd))
+
+ggplot(combo_Nth_geompoint_cv,aes(RecYear, biom_cv, col=treatment))+
+  geom_point()+
+  geom_path(aes(as.numeric(RecYear)))+
+  scale_colour_manual(values=c( "#009E73","#F0E442"),labels=c("ABG","PBG"))+
+  geom_errorbar(aes(ymax=biom_cv+1.96*(PBG_sd),
+                    ymin=biom_cv-1.96*(PBG_sd)),width=.2)
+
+#South Unit
+#mean
+ggplot(Combo_Sth_biomass,aes(biomass_PBGNth))+
+  geom_density(size=.5)+
+  facet_wrap(~RecYear, scales = "free")+
+  geom_vline(aes(xintercept=biomass_ABGSth), linetype=2,size=.5)
+
+combo_Sth_geompoint<-Combo_Sth_biomass%>%
+  pivot_longer(c(biomass_PBGSth_m,biomass_ABGSth),
+               names_to = "treatment", values_to = "biom_mean")%>%
+  select(treatment,biom_mean,RecYear, biomass_PBGSth_sd)%>%
+  distinct()%>%
+  mutate(PBG_sd=round(biomass_PBGSth_sd,digits=2))%>%
+  mutate(PBG_sd=ifelse(PBG_sd==41.84 & treatment=="biomass_ABGSth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==83.56 & treatment=="biomass_ABGSth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==97.24 & treatment=="biomass_ABGSth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==48.73 & treatment=="biomass_ABGSth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==131.87 & treatment=="biomass_ABGSth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==87.64 & treatment=="biomass_ABGSth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==101.21 & treatment=="biomass_ABGSth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==80.75 & treatment=="biomass_ABGSth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==188.49 & treatment=="biomass_ABGSth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==150.02 & treatment=="biomass_ABGSth",NA,PBG_sd))
+
+ggplot(combo_Sth_geompoint,aes(RecYear, biom_mean, col=treatment))+
+  geom_point()+
+  geom_path(aes(as.numeric(RecYear)))+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"),labels=c("ABG","PBG"))+
+  geom_errorbar(aes(ymax=biom_mean+1.96*(PBG_sd),
+                    ymin=biom_mean-1.96*(PBG_sd)),width=.2)
+#sd
+combo_Sth_geompoint_sd<-Combo_Sth_biomass%>%
+  pivot_longer(c(biomass_PBGSth_sd_M,biomass_ABGSth_sd),
+               names_to = "treatment", values_to = "biom_sd")%>%
+  select(treatment,biom_sd,RecYear, biomass_PBGSth_sd_sd)%>%
+  distinct()%>%
+  mutate(PBG_sd=round(biomass_PBGSth_sd_sd,digits=2))%>%
+  mutate(PBG_sd=ifelse(PBG_sd==44.06 & treatment=="biomass_ABGSth_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==53.06 & treatment=="biomass_ABGSth_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==101.33 & treatment=="biomass_ABGSth_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==35.77 & treatment=="biomass_ABGSth_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==87.16 & treatment=="biomass_ABGSth_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==74.87 & treatment=="biomass_ABGSth_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==106.34 & treatment=="biomass_ABGSth_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==67.31 & treatment=="biomass_ABGSth_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==144.23 & treatment=="biomass_ABGSth_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==186.18 & treatment=="biomass_ABGSth_sd",NA,PBG_sd))
+
+ggplot(combo_Sth_geompoint_sd,aes(RecYear, biom_sd, col=treatment))+
+  geom_point()+
+  geom_path(aes(as.numeric(RecYear)))+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"),labels=c("ABG","PBG"))+
+  geom_errorbar(aes(ymax=biom_sd+1.96*(PBG_sd),
+                    ymin=biom_sd-1.96*(PBG_sd)),width=.2)
+
+
+#cv
+combo_Sth_geompoint_cv<-Combo_Sth_biomass%>%
+pivot_longer(c(biomass_PBGSth_cv_M,cv_biomass_ABGSth),
+             names_to = "treatment", values_to = "biom_cv")%>%
+  select(treatment,biom_cv,RecYear, biomass_PBGSth_cv_sd)%>%
+  distinct()%>%
+  mutate(PBG_sd=round(biomass_PBGSth_cv_sd,digits=2))%>%
+  mutate(PBG_sd=ifelse(PBG_sd==0.14 & treatment=="cv_biomass_ABGSth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.14 & treatment=="cv_biomass_ABGSth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.15 & treatment=="cv_biomass_ABGSth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.05 & treatment=="cv_biomass_ABGSth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.15 & treatment=="cv_biomass_ABGSth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.15 & treatment=="cv_biomass_ABGSth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.20 & treatment=="cv_biomass_ABGSth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.11 & treatment=="cv_biomass_ABGSth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.20 & treatment=="cv_biomass_ABGSth",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.26 & treatment=="cv_biomass_ABGSth",NA,PBG_sd))
+
+ggplot(combo_Sth_geompoint_cv,aes(RecYear, biom_cv, col=treatment))+
+  geom_point()+
+  geom_path(aes(as.numeric(RecYear)))+
+  scale_colour_manual(values=c( "#009E73","#F0E442"),labels=c("ABG","PBG"))+
+  geom_errorbar(aes(ymax=biom_cv+1.96*(PBG_sd),
+                    ymin=biom_cv-1.96*(PBG_sd)),width=.2)
+
+biomass_watershed_scale<-biomass_mean_transect_scale%>%
+  group_by(RecYear, Unit, Watershed, FireGrzTrt)%>%
+  summarise(biomass_watershed=mean(biomass_transect, na.rm=T))%>%
+  ungroup()
