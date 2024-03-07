@@ -495,7 +495,7 @@ for(g in levels(as.factor(BC_NMDS$group))){
 }
 
 #Plot the data from BC_NMDS_Graph, where x=MDS1 and y=MDS2, make an ellipse based on "group"
-ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = group)) +
+NMDS_Years_Since_Burned <- ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = group)) +
   geom_point(size=6) + 
   geom_path(data = BC_Ellipses, aes(x = NMDS1, y = NMDS2), size = 3) +
   labs(color="", linetype = "", shape = "") +
@@ -557,7 +557,7 @@ for(g in levels(as.factor(BC_NMDS$group))){
 }
 
 #Plot the data from BC_NMDS_Graph, where x=MDS1 and y=MDS2, make an ellipse based on "group"
-ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = group)) +
+NMDS_ABG_VS_PBG <- ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = group)) +
   geom_point(size=6) + 
   geom_path(data = BC_Ellipses, aes(x = NMDS1, y = NMDS2), size = 3) +
   labs(color="", linetype = "", shape = "") +
@@ -707,9 +707,9 @@ print(p_value_C)
 #### Graphs Bootstrapped Means ####
 
 #Richness means graph
-ggplot(average_richness, aes(x = mean_richness, color = "PBG")) +
+avg_richness <- ggplot(average_richness, aes(x = mean_richness, color = "PBG")) +
   geom_density(aes(y = ..scaled..), alpha = 0.5) +
-  geom_vline(aes(xintercept = ABG_mean_richness, color = "ABG Mean Richness"), linetype = "dashed", size = 1) +
+  geom_vline(aes(xintercept = ABG_mean_richness, color = "ABG"), linetype = "dashed", size = 1) +
   labs(title = "Density Plot of Mean Richness",
        x = "Mean Richness",
        y = "Density") +
@@ -726,9 +726,9 @@ ggplot(average_richness, aes(x = mean_richness, color = "PBG")) +
 #Evenness means graph
 
 
-ggplot(average_evenness, aes(x = mean_evenness, color = "PBG")) +
+avg_evenness <- ggplot(average_evenness, aes(x = mean_evenness, color = "PBG")) +
   geom_density(aes(y = ..scaled..), alpha = 0.5) +
-  geom_vline(aes(xintercept = ABG_mean_evenness, color = "ABG Mean Evenness"), linetype = "dashed", size = 1) +
+  geom_vline(aes(xintercept = ABG_mean_evenness, color = "ABG"), linetype = "dashed", size = 1) +
   labs(title = "Density Plot of Mean Evenness",
        x = "Mean Evenness",
        y = "Density") +
@@ -748,9 +748,9 @@ ggplot(average_evenness, aes(x = mean_evenness, color = "PBG")) +
 
 ggplot(average_total_count, aes(x = mean_count, color = "PBG")) +
   geom_density(aes(y = ..scaled..), alpha = 0.5) +
-  geom_vline(aes(xintercept = ABG_mean_total_count, color = "ABG Total Count"), linetype = "dashed", size = 1) +
-  labs(title = "Density Plot of Total Count",
-       x = "Mean Total Count",
+  geom_vline(aes(xintercept = ABG_mean_total_count, color = "ABG"), linetype = "dashed", size = 1) +
+  labs(title = "Density Plot of Abundance",
+       x = "Mean Abundance",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
   annotate("text", x = min(average_total_count$mean_count), y = 1, 
@@ -762,4 +762,17 @@ ggplot(average_total_count, aes(x = mean_count, color = "PBG")) +
 
 #Z-Score: -1.125048
 #P = 0.1302844
+
+
+#### NMDS Two Panel ####
+
+arranged_plots <- grid.arrange(NMDS_ABG_VS_PBG, NMDS_Years_Since_Burned, ncol = 2)
+
+
+ggsave("arranged_plots.png", arranged_plots, width = 25, height = 5)
+
+### Richness and evenness two panel ####
+
+evenness_richness <- grid.arrange(avg_evenness, avg_richness, ncol = 2)
+ggsave("belowground_evenness_richness.png", evenness_richness, width = 20, height = 10)
 

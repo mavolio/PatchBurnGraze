@@ -797,7 +797,7 @@ combined_data_wide <- combined_data %>%
   pivot_wider(names_from = 'ID', values_from = 'Count', values_fill = list(Count = 0)) 
 
 combined_data_wide <- combined_data_wide %>% 
-  mutate(sum = rowSums(combined_data_wide[, c(8:212)], na.rm = TRUE)) %>% 
+  mutate(sum = rowSums(combined_data_wide[, c(8:202)], na.rm = TRUE)) %>% 
   filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
 
 #Years since burned
@@ -1145,7 +1145,7 @@ Z_total_counts_2021 <- Abundance_ID_aboveground %>%
 total_counts_ABG_2021 <- Z_total_counts_2021 %>% filter(Treatment == "ABG")
 
 #Take the mean of the mean for ABG total count
-ABG_mean_total_count_2021 <- mean(Total_counts_ABG_2021$Count, na.rm = TRUE)
+ABG_mean_total_count_2021 <- mean(total_counts_ABG_2021$Count, na.rm = TRUE)
 
 ### 2021 ABG Richness ###
 
@@ -1678,4 +1678,106 @@ grid.arrange(
 )
 
 
+
+
+#### 2021 Total Count Stats ####
+total_counts2 <- full_join(BurnInfo2021, total_counts_2021) %>% 
+  unite("TreatmentSB",c("Treatment","SB"), sep="_") %>%
+  na.omit()
+
+
+TotalcountModel <- #stores the model output into a named list
+  lme(Count ~ TreatmentSB, #relates richness (or any other dependent variable) to treatment (e.g., ABG and PBG or ABG, PBG0, PBG1, PBG2 for years since burning)
+      data = total_counts2, #dataset you are analyzing, this must contain all the data (both treatments and all plots)
+      random = ~1|block) #this would be where you'd say north or south unit (which should be a variable in the data frame)
+anova.lme(TotalcountModel, type='sequential') #this gives you the ANOVA output from the model, where "sequential" tells it to do a type III anova
+emmeans(TotalcountModel, pairwise~TreatmentSB, adjust="tukey") #this gives you contrasts (means and confidence intervals) for each possible pairwise comparison of treatments to know whether they are different or not (overlapping confidence intervals means not different)
+
+#### 2022 Total Count Stats ####
+total_counts2 <- full_join(BurnInfo2022, total_counts_2022) %>% 
+  unite("TreatmentSB",c("Treatment","SB"), sep="_") %>%
+  na.omit()
+
+
+TotalcountModel <- #stores the model output into a named list
+  lme(Count ~ TreatmentSB, #relates richness (or any other dependent variable) to treatment (e.g., ABG and PBG or ABG, PBG0, PBG1, PBG2 for years since burning)
+      data = total_counts2, #dataset you are analyzing, this must contain all the data (both treatments and all plots)
+      random = ~1|block) #this would be where you'd say north or south unit (which should be a variable in the data frame)
+anova.lme(TotalcountModel, type='sequential') #this gives you the ANOVA output from the model, where "sequential" tells it to do a type III anova
+emmeans(TotalcountModel, pairwise~TreatmentSB, adjust="tukey") #this gives you contrasts (means and confidence intervals) for each possible pairwise comparison of treatments to know whether they are different or not (overlapping confidence intervals means not different)
+
+#### 2023 Total Count Stats ####
+total_counts2 <- full_join(BurnInfo2023, total_counts_2023) %>% 
+  unite("TreatmentSB",c("Treatment","SB"), sep="_") %>%
+  na.omit()
+
+
+TotalcountModel <- #stores the model output into a named list
+  lme(Count ~ TreatmentSB, #relates richness (or any other dependent variable) to treatment (e.g., ABG and PBG or ABG, PBG0, PBG1, PBG2 for years since burning)
+      data = total_counts2, #dataset you are analyzing, this must contain all the data (both treatments and all plots)
+      random = ~1|block) #this would be where you'd say north or south unit (which should be a variable in the data frame)
+anova.lme(TotalcountModel, type='sequential') #this gives you the ANOVA output from the model, where "sequential" tells it to do a type III anova
+emmeans(TotalcountModel, pairwise~TreatmentSB, adjust="tukey") #this gives you contrasts (means and confidence intervals) for each possible pairwise comparison of treatments to know whether they are different or not (overlapping confidence intervals means not different)
+
+
+#### 2021 Richness Stats ####
+
+Joined <- full_join(BurnInfo2021, Combined_Data_2021) %>% unite("TreatmentSB",c("Treatment.x","SB"), sep="_") %>% na.omit()
+
+richModel <- #stores the model output into a named list
+  lme(richness ~ TreatmentSB, #relates richness (or any other dependent variable) to treatment (e.g., ABG and PBG or ABG, PBG0, PBG1, PBG2 for years since burnign)
+      data = Joined, #dataset you are analyzing, this must contain all the data (both treatments and all plots)
+      random = ~1|block) #this would be where you'd say north or south unit (which should be a variable in the dataframe)
+anova.lme(richModel, type='sequential') #this gives you the ANOVA output from the model, where "sequential" tells it to do a type III anova
+
+#### 2022 Richness Stats ####
+
+Joined <- full_join(BurnInfo2022, Combined_Data_2022) %>% unite("TreatmentSB",c("Treatment","SB"), sep="_") %>% na.omit()
+
+richModel <- #stores the model output into a named list
+  lme(richness ~ TreatmentSB, #relates richness (or any other dependent variable) to treatment (e.g., ABG and PBG or ABG, PBG0, PBG1, PBG2 for years since burnign)
+      data = Joined, #dataset you are analyzing, this must contain all the data (both treatments and all plots)
+      random = ~1|block) #this would be where you'd say north or south unit (which should be a variable in the dataframe)
+anova.lme(richModel, type='sequential') #this gives you the ANOVA output from the model, where "sequential" tells it to do a type III anova
+
+#### 2023 Richness Stats ####
+
+Joined <- full_join(BurnInfo2023, Combined_Data_2023) %>% unite("TreatmentSB",c("Treatment.x","SB"), sep="_") %>% na.omit()
+
+richModel <- #stores the model output into a named list
+  lme(richness ~ TreatmentSB, #relates richness (or any other dependent variable) to treatment (e.g., ABG and PBG or ABG, PBG0, PBG1, PBG2 for years since burnign)
+      data = Joined, #dataset you are analyzing, this must contain all the data (both treatments and all plots)
+      random = ~1|block) #this would be where you'd say north or south unit (which should be a variable in the dataframe)
+anova.lme(richModel, type='sequential') #this gives you the ANOVA output from the model, where "sequential" tells it to do a type III anova
+
+
+#### 2021 Eveness Stats ####
+
+Joined <- full_join(BurnInfo2021, Combined_Data_2021) %>% unite("TreatmentSB",c("Treatment.x","SB"), sep="_") %>% na.omit()
+
+evarModel <- #stores the model output into a named list
+  lme(Evar ~ TreatmentSB, #relates richness (or any other dependent variable) to treatment (e.g., ABG and PBG or ABG, PBG0, PBG1, PBG2 for years since burnign)
+      data = Joined, #dataset you are analyzing, this must contain all the data (both treatments and all plots)
+      random = ~1|block) #this would be where you'd say north or south unit (which should be a variable in the dataframe)
+anova.lme(evarModel, type='sequential') #this gives you the ANOVA output from the model, where "sequential" tells it to do a type III anova
+
+#### 2022 Eveness Stats ####
+
+Joined <- full_join(BurnInfo2022, Combined_Data_2022) %>% unite("TreatmentSB",c("Treatment","SB"), sep="_") %>% na.omit()
+
+evarModel <- #stores the model output into a named list
+  lme(Evar ~ TreatmentSB, #relates richness (or any other dependent variable) to treatment (e.g., ABG and PBG or ABG, PBG0, PBG1, PBG2 for years since burnign)
+      data = Joined, #dataset you are analyzing, this must contain all the data (both treatments and all plots)
+      random = ~1|block) #this would be where you'd say north or south unit (which should be a variable in the dataframe)
+anova.lme(evarModel, type='sequential') #this gives you the ANOVA output from the model, where "sequential" tells it to do a type III anova
+
+#### 2023 Eveness Stats ####
+
+Joined <- full_join(BurnInfo2023, Combined_Data_2023) %>% unite("TreatmentSB",c("Treatment.x","SB"), sep="_") %>% na.omit()
+
+evarModel <- #stores the model output into a named list
+  lme(Evar ~ TreatmentSB, #relates richness (or any other dependent variable) to treatment (e.g., ABG and PBG or ABG, PBG0, PBG1, PBG2 for years since burnign)
+      data = Joined, #dataset you are analyzing, this must contain all the data (both treatments and all plots)
+      random = ~1|block) #this would be where you'd say north or south unit (which should be a variable in the dataframe)
+anova.lme(evarModel, type='sequential') #this gives you the ANOVA output from the model, where "sequential" tells it to do a type III anova
 
