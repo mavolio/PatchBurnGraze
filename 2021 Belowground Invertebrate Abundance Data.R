@@ -197,12 +197,15 @@ ggplot(combined_cv_count, aes(x = Treatment, y = `Average_CV`, fill = Treatment)
   labs(y = "Count Average CV")
 
 #### Total Count Stats ####
+total_counts2 <- full_join(BurnInfo, total_counts) %>% unite("TreatmentSB",c("Treatment","SB"), sep="_") 
+
+
 TotalcountModel <- #stores the model output into a named list
-  lme(Count ~ Treatment, #relates richness (or any other dependent variable) to treatment (e.g., ABG and PBG or ABG, PBG0, PBG1, PBG2 for years since burning)
-      data = total_counts, #dataset you are analyzing, this must contain all the data (both treatments and all plots)
+  lme(Count ~ TreatmentSB, #relates richness (or any other dependent variable) to treatment (e.g., ABG and PBG or ABG, PBG0, PBG1, PBG2 for years since burning)
+      data = total_counts2, #dataset you are analyzing, this must contain all the data (both treatments and all plots)
       random = ~1|Block) #this would be where you'd say north or south unit (which should be a variable in the data frame)
 anova.lme(TotalcountModel, type='sequential') #this gives you the ANOVA output from the model, where "sequential" tells it to do a type III anova
-emmeans(TotalcountModel, pairwise~Treatment, adjust="tukey") #this gives you contrasts (means and confidence intervals) for each possible pairwise comparison of treatments to know whether they are different or not (overlapping confidence intervals means not different)
+emmeans(TotalcountModel, pairwise~TreatmentSB, adjust="tukey") #this gives you contrasts (means and confidence intervals) for each possible pairwise comparison of treatments to know whether they are different or not (overlapping confidence intervals means not different)
 #### Prep for Richness + Evenness Graphs & Stats ####
 
 #Getting  community data and tagging ABG and PBG
@@ -347,6 +350,7 @@ richModel <- #stores the model output into a named list
       data = Joined, #dataset you are analyzing, this must contain all the data (both treatments and all plots)
       random = ~1|block) #this would be where you'd say north or south unit (which should be a variable in the dataframe)
 anova.lme(richModel, type='sequential') #this gives you the ANOVA output from the model, where "sequential" tells it to do a type III anova
+#
 emmeans(richModel, pairwise~TreatmentSB, adjust="tukey") #this gives you contrasts (means and confidence intervals) for each possible pairwise comparison of treatments to know whether they are different or not (overlapping confidence intervals means not different)
 
 #### Evenness Graphs ####

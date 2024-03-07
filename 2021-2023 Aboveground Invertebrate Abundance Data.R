@@ -2,7 +2,7 @@
 library(readxl)
 library(tidyverse)
 library(codyn)
-library(ggplot2)
+library(ggplot2)  
 library(ggpubr)
 library(gridExtra)
 library(vegan)
@@ -662,7 +662,7 @@ abundanceWide <- Abundance_Data2023 %>%
   pivot_wider(names_from = 'ID', values_from = 'Count', values_fill = list(Count = 0)) 
 
 abundanceWide <- abundanceWide %>% 
-  mutate(sum = rowSums(abundanceWide[, c(8:76)], na.rm = TRUE)) %>% 
+  mutate(sum = rowSums(abundanceWide[, c(8:75)], na.rm = TRUE)) %>% 
   filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
 
 print(permanova <- adonis2(formula = abundanceWide[, 8:75] ~ TreatmentSB, data = abundanceWide, permutations = 999, method = "bray"))
@@ -802,7 +802,7 @@ combined_data_wide <- combined_data_wide %>%
 
 #Years since burned
 print(permanova <- adonis2(
-  combined_data_wide[,8:213]~TreatmentSB,
+  combined_data_wide[,8:202]~TreatmentSB,
   data = combined_data_wide,
   method = "bray",
   permutations=999,
@@ -811,12 +811,12 @@ print(permanova <- adonis2(
 #F = 2.3383, P = 0.127
 
 #betadisper
-veg <- vegdist(combined_data_wide[,8:213], method = "bray")
+veg <- vegdist(combined_data_wide[,8:202], method = "bray")
 dispersion <- betadisper(veg, combined_data_wide$TreatmentSB)
 permutest(dispersion, pairwise=TRUE, permutations=999) 
 #F=0.4157 , df=3,191, p=0.739
 
-BC_Data <- metaMDS(combined_data_wide[,8:213])
+BC_Data <- metaMDS(combined_data_wide[,8:202])
 sites <- 1:nrow(combined_data_wide)
 BC_Meta_Data <- combined_data_wide[,1:7]
 plot(BC_Data$points, col=as.factor(BC_Meta_Data$TreatmentSB))
