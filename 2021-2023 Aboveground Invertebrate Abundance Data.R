@@ -407,7 +407,7 @@ for(g in levels(as.factor(BC_NMDS$group))){
 }
 
 #Plot the data from BC_NMDS_Graph, where x=MDS1 and y=MDS2, make an ellipse based on "group"
-ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = group)) +
+Years_Since_Burned_NMDS_2021<- ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = group)) +
   geom_point(size=6) + 
   geom_path(data = BC_Ellipses, aes(x = NMDS1, y = NMDS2), size = 3) +
   labs(color="", linetype = "", shape = "") +
@@ -425,10 +425,16 @@ ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = 
         axis.title.x = element_text(size = 24, color = 'black'),
         axis.title.y = element_text(size = 24, color = 'black'),
         legend.text = element_text(size = 24),
-        panel.grid.major=element_blank(), panel.grid.minor=element_blank()
+        panel.grid.major=element_blank(), panel.grid.minor=element_blank(), 
+        plot.title = element_text(size = 30)
   ) +
-ggtitle("2021 year since burned")
+ggtitle("2021 year since burned") + 
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = expression(paste('F'['3,60'], ' = 1.0128')), size = 8, hjust = 'left') +
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.04, label = 'p = 0.864', size = 8, hjust = 'left') 
 
+#F=1.0128, df=3,60, p=0.864
+
+Years_Since_Burned_NMDS_2021
 #export at 1500x1000
 
 ### by watershed
@@ -466,7 +472,7 @@ for(g in levels(as.factor(BC_NMDS$group))){
 }
 
 #Plot the data from BC_NMDS_Graph, where x=MDS1 and y=MDS2, make an ellipse based on "group"
-ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = group, linetype = group, shape = group)) +
+ABG_VS_PBG_NMDS_2021 <- ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = group, linetype = group, shape = group)) +
   geom_point(size = 6) + 
   geom_path(data = BC_Ellipses, aes(x = NMDS1, y = NMDS2), size = 3) +
   labs(color = "", linetype = "", shape = "") +
@@ -475,20 +481,22 @@ ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = group, linetype = group, s
   scale_shape_manual(values = c(19, 19)) +
   xlab("NMDS1") + 
   ylab("NMDS2") + 
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = expression(paste('F'['3,52'], ' = 1.61')), size = 8, hjust = 'left') +
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.04, label = 'p = 0.016', size = 8, hjust = 'left') +
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = expression(paste('F'['1,60'], ' = 0.5303')), size = 8, hjust = 'left') +
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.04, label = 'p = 0.939', size = 8, hjust = 'left') +
   theme_classic() +
   theme(axis.text.x = element_text(size = 24, color = "black"), 
         axis.text.y = element_text(size = 24, color = "black"), 
         axis.title.x = element_text(size = 24, color = 'black'),
         axis.title.y = element_text(size = 24, color = 'black'),
         legend.text = element_text(size = 24),
-        panel.grid.major = element_blank(), panel.grid.minor = element_blank()
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+        plot.title = element_text(size = 30)
   ) +
   ggtitle("2021 ABG vs PBG")
 
+#F=0.5303    , df=1,60, p=0.939
 
-
+ABG_VS_PBG_NMDS_2021
 
 
 #### 2022 PERMANOVA & NMDS ####
@@ -555,7 +563,7 @@ for (g in levels(as.factor(BC_NMDS$group))) {
                              group = g))
 }
 
-ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = group)) +
+Years_Since_Burned_NMDS_2022 <- ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = group)) +
   geom_point(size=6) + 
   geom_path(data = BC_Ellipses, aes(x = NMDS1, y = NMDS2), size = 3) +
   labs(color="", linetype = "", shape = "") +
@@ -573,11 +581,15 @@ ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = 
         axis.title.x = element_text(size = 24, color = 'black'),
         axis.title.y = element_text(size = 24, color = 'black'),
         legend.text = element_text(size = 24),
-        panel.grid.major=element_blank(), panel.grid.minor=element_blank()
+        panel.grid.major=element_blank(), panel.grid.minor=element_blank(), 
+        plot.title = element_text(size = 30)
   ) +
-  ggtitle("2022 year sense burned")
+  ggtitle("2022 year since burned") + 
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = expression(paste('F'['3,60'], ' = 2.1065')), size = 8, hjust = 'left') +
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.04, label = 'p = 0.001', size = 8, hjust = 'left')
 
-
+# F=2.1065, df=3,60, p=0.001 ***
+Years_Since_Burned_NMDS_2022
 
 ### by watershed
 # PERMANOVA
@@ -615,7 +627,7 @@ for(g in levels(as.factor(BC_NMDS$group))){
 }
 
 #Plot the data from BC_NMDS_Graph, where x=MDS1 and y=MDS2, make an ellipse based on "group"
-ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = group, linetype = group, shape = group)) +
+ABG_VS_PBG_NMDS_2022  <- ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = group, linetype = group, shape = group)) +
   geom_point(size = 6) + 
   geom_path(data = BC_Ellipses, aes(x = NMDS1, y = NMDS2), size = 3) +
   labs(color = "", linetype = "", shape = "") +
@@ -624,20 +636,23 @@ ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = group, linetype = group, s
   scale_shape_manual(values = c(19, 19)) +
   xlab("NMDS1") + 
   ylab("NMDS2") + 
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = expression(paste('F'['3,52'], ' = 1.61')), size = 8, hjust = 'left') +
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.1, label = 'p = 0.016', size = 8, hjust = 'left') +
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = expression(paste('F'['1,62'], ' = 0.986')), size = 8, hjust = 'left') +
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.1, label = 'p = 0.446', size = 8, hjust = 'left') +
   theme_classic() +
   theme(axis.text.x = element_text(size = 24, color = "black"), 
         axis.text.y = element_text(size = 24, color = "black"), 
         axis.title.x = element_text(size = 24, color = 'black'),
         axis.title.y = element_text(size = 24, color = 'black'),
         legend.text = element_text(size = 24),
-        panel.grid.major = element_blank(), panel.grid.minor = element_blank()
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+        plot.title = element_text(size = 30)
   ) +
   ggtitle("2022 ABG vs PBG")
 
 
+#F=0.986  , df=1,62, p=0.446
 
+ABG_VS_PBG_NMDS_2022
 
 
 #### 2023 PERMANOVA & NMDS ####
@@ -702,7 +717,7 @@ for (g in levels(as.factor(BC_NMDS$group))) {
                              group = g))
 }
 
-ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = group)) +
+Years_Since_Burned_NMDS_2023 <- ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = group)) +
   geom_point(size=6) + 
   geom_path(data = BC_Ellipses, aes(x = NMDS1, y = NMDS2), size = 3) +
   labs(color="", linetype = "", shape = "") +
@@ -720,11 +735,16 @@ ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = 
         axis.title.x = element_text(size = 24, color = 'black'),
         axis.title.y = element_text(size = 24, color = 'black'),
         legend.text = element_text(size = 24),
-        panel.grid.major=element_blank(), panel.grid.minor=element_blank()
+        panel.grid.major=element_blank(), panel.grid.minor=element_blank(), 
+        plot.title = element_text(size = 30)
   ) +
-  ggtitle("2023 year sense burned")
+  ggtitle("2023 year since burned") + 
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = expression(paste('F'['3,60'], ' = 1.3803')), size = 8, hjust = 'left') +
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.1, label = 'p = 0.078 ', size = 8, hjust = 'left')
 
+  # F=1.3803, df=3,60, p=0.078 
 
+Years_Since_Burned_NMDS_2023
 
 ### by watershed
 # PERMANOVA
@@ -762,7 +782,7 @@ for(g in levels(as.factor(BC_NMDS$group))){
 }
 
 #Plot the data from BC_NMDS_Graph, where x=MDS1 and y=MDS2, make an ellipse based on "group"
-ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = group, linetype = group, shape = group)) +
+ABG_VS_PBG_NMDS_2023 <- ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = group, linetype = group, shape = group)) +
   geom_point(size = 6) + 
   geom_path(data = BC_Ellipses, aes(x = NMDS1, y = NMDS2), size = 3) +
   labs(color = "", linetype = "", shape = "") +
@@ -771,18 +791,33 @@ ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = group, linetype = group, s
   scale_shape_manual(values = c(19, 19)) +
   xlab("NMDS1") + 
   ylab("NMDS2") + 
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = expression(paste('F'['3,52'], ' = 1.61')), size = 8, hjust = 'left') +
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.1, label = 'p = 0.016', size = 8, hjust = 'left') +
   theme_classic() +
   theme(axis.text.x = element_text(size = 24, color = "black"), 
         axis.text.y = element_text(size = 24, color = "black"), 
         axis.title.x = element_text(size = 24, color = 'black'),
         axis.title.y = element_text(size = 24, color = 'black'),
         legend.text = element_text(size = 24),
-        panel.grid.major = element_blank(), panel.grid.minor = element_blank()
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+        plot.title = element_text(size = 30)
   ) +
-  ggtitle("2023 ABG vs PBG")
+  ggtitle("2023 ABG vs PBG") + 
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = expression(paste('F'['1,62'], ' = 1.1816')), size = 8, hjust = 'left') +
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.1, label = 'p = 0.288  ', size = 8, hjust = 'left')
 
+#F=1.1816 , df=1,62, p=0.288 
+
+ABG_VS_PBG_NMDS_2023
+
+#### Multipanel NMDS ####
+
+NMMDS_BIG <- grid.arrange(
+  Years_Since_Burned_NMDS_2021, ABG_VS_PBG_NMDS_2021, 
+  Years_Since_Burned_NMDS_2022, ABG_VS_PBG_NMDS_2022, 
+  Years_Since_Burned_NMDS_2023, ABG_VS_PBG_NMDS_2023,
+  ncol = 2
+)
+
+ggsave("2021-2023 NMDS.png", NMMDS_BIG, width = 40, height = 40)
 
 #### Overall PERMANOVA & NMDS ####
 
@@ -875,7 +910,7 @@ ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = 
 
 #Add NMDS
 
-### Prep for Bootstrapping ####
+#### Prep for Bootstrapping ####
 
 #2021 Prep
 Abundance2021 <- Abundance_ID_aboveground %>% filter(Date == 2021) %>% 
@@ -1475,7 +1510,7 @@ richness_2021 <- ggplot(average_richness_2021, aes(x = mean_richness, y = ..scal
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
   annotate("text", x = 20, y = 1, label = "p-value: 0.217", color = "blue", size = 3, hjust = 1, vjust = 1) +
   annotate("text", x = 20, y = 0.90, label = "z-score:  1.24", color = "red", size = 3, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 12)) +
+  theme(legend.position = "none",  plot.title = element_text(size = 11)) +
   scale_x_continuous(limits = c(5, 20)) +
   scale_y_continuous(limits = c(0, 1))
 
@@ -1491,7 +1526,7 @@ evenness_2021 <- ggplot(average_evenness_2021, aes(x = mean_evenness, y = ..scal
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
   annotate("text", x = 0.8, y = 1, label = "p-value: 0.885", color = "blue", size = 3, hjust = 1, vjust = 1) +
   annotate("text", x = 0.8, y = 0.9, label = "Z-score: 0.145", color = "red", size = 3, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 12)) +
+  theme(legend.position = "none",  plot.title = element_text(size = 11)) +
   scale_x_continuous(limits = c(.5, .8)) +
   scale_y_continuous(limits = c(0, 1))
 
@@ -1500,14 +1535,14 @@ evenness_2021 <- ggplot(average_evenness_2021, aes(x = mean_evenness, y = ..scal
 #Total_count means graphs
 count_2021 <- ggplot(average_total_count_2021, aes(x = mean_count, y = ..scaled.., color = "PBG")) +
   geom_density(alpha = 0.5) +
-  geom_vline(aes(xintercept = ABG_mean_total_count_2021, color = "ABG Total Count"), linetype = "dashed", size = 1) +
-  labs(title = "2021: Density Plot of Total Count",
-       x = "Mean Total Count",
+  geom_vline(aes(xintercept = ABG_mean_total_count_2021, color = "ABG Total Abundance"), linetype = "dashed", size = 1) +
+  labs(title = "2021: Density Plot of Total Abundance",
+       x = "Mean Total Abundance",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
   annotate("text", x = 55, y = 1, label = "p-value: 0.252", color = "blue", size = 3, hjust = 1, vjust = 1) +
   annotate("text", x = 55, y = 0.90, label = "Z-score: 1.15", color = "red", size = 3, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 12)) +
+  theme(legend.position = "none",  plot.title = element_text(size = 11)) +
   scale_x_continuous(limits = c(15, 55)) +
   scale_y_continuous(limits = c(0, 1))
 
@@ -1522,7 +1557,7 @@ weight_2021 <- ggplot(average_total_weight_2021, aes(x = mean_weight, y = ..scal
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
   annotate("text", x = 130, y = 1, label = "p-value: 0.408", color = "blue", size = 3, hjust = 1, vjust = 1) +
   annotate("text", x = 130, y = 0.9, label = "Z-score: 0.828", color = "red", size = 3, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 12)) +
+  theme(legend.position = "none",  plot.title = element_text(size = 11)) +
   scale_x_continuous(limits = c(25, 130)) +
   scale_y_continuous(limits = c(0, 1))
 
@@ -1542,7 +1577,7 @@ richness_2022 <- ggplot(average_richness_2022, aes(x = mean_richness, y = ..scal
   scale_color_manual(values = c("blue", "red"), name = "Legend")  +
   annotate("text", x = 20, y = 1, label = "p-value: 0.0425", color = "blue", size = 3, hjust = 1, vjust = 1) +
   annotate("text", x = 20, y = .90, label = "Z-score: 2.03", color = "red", size = 3, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 12)) +
+  theme(legend.position = "none",  plot.title = element_text(size = 11)) +
   scale_x_continuous(limits = c(5, 20)) +
   scale_y_continuous(limits = c(0, 1))
 
@@ -1557,7 +1592,7 @@ evenness_2022 <- ggplot(average_evenness_2022, aes(x = mean_evenness, y = ..scal
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
   annotate("text", x = 0.8, y = 1, label = "p-value: 0.343", color = "blue", size = 3, hjust = 1, vjust = 1) +
   annotate("text", x = 0.8, y = 0.9, label = "Z-score: 0.948", color = "red", size = 3, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 12)) +
+  theme(legend.position = "none",  plot.title = element_text(size = 11)) +
   scale_x_continuous(limits = c(.5, .8)) +
   scale_y_continuous(limits = c(0, 1))
 
@@ -1565,14 +1600,14 @@ evenness_2022 <- ggplot(average_evenness_2022, aes(x = mean_evenness, y = ..scal
 #Total_count means graphs
 count_2022 <- ggplot(average_total_count_2022, aes(x = mean_count, y = ..scaled..,  color = "PBG")) +
   geom_density(alpha = 0.5) +
-  geom_vline(aes(xintercept = ABG_mean_total_count_2022, color = "ABG Total Count"), linetype = "dashed", size = 1) +
-  labs(title = "2022: Density Plot of Total Count",
+  geom_vline(aes(xintercept = ABG_mean_total_count_2022, color = "ABG Total Abundance"), linetype = "dashed", size = 1) +
+  labs(title = "2022: Density Plot of Total Abundance",
        x = "Mean Total Count",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
   annotate("text", x = 55, y = 1, label = "p-value: 0.130", color = "blue", size = 3, hjust = 1, vjust = 1) +
   annotate("text", x = 55, y = .90, label = "Z-score: 1.51", color = "red", size = 3, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 12)) +
+  theme(legend.position = "none",  plot.title = element_text(size = 11)) +
   scale_x_continuous(limits = c(15, 55)) +
   scale_y_continuous(limits = c(0, 1))
 
@@ -1587,7 +1622,7 @@ weight_2022 <- ggplot(average_total_weight_2022, aes(x = mean_weight, y = ..scal
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
   annotate("text", x = 130, y = 1, label = "p-value: 0.0897", color = "blue", size = 3, hjust = 1, vjust = 1) +
   annotate("text", x = 130, y = .90, label = "Z-score: 1.697", color = "red", size = 3, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 12)) +
+  theme(legend.position = "none",  plot.title = element_text(size = 11)) +
   scale_x_continuous(limits = c(25, 130)) +
   scale_y_continuous(limits = c(0, 1))
 
@@ -1607,7 +1642,7 @@ richness_2023 <- ggplot(average_richness_2023, aes(x = mean_richness, y = ..scal
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
   annotate("text", x = 20, y = 1, label = "p-value: 0.657", color = "blue", size = 3, hjust = 1, vjust = 1) +
   annotate("text", x = 20, y = 0.9, label = "Z-score: 0.445", color = "red", size = 3, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 12)) +
+  theme(legend.position = "none",  plot.title = element_text(size = 11)) +
   scale_x_continuous(limits = c(5, 20)) +
   scale_y_continuous(limits = c(0, 1))
 
@@ -1622,7 +1657,7 @@ evenness_2023 <- ggplot(average_evenness_2023, aes(x = mean_evenness, y = ..scal
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
   annotate("text", x = 0.8, y = 1, label = "p-value: <0.001", color = "blue", size = 3, hjust = 1, vjust = 1) +
   annotate("text", x = 0.8, y = 0.9, label = "Z-score:  3.400", color = "red", size = 3, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 12)) +
+  theme(legend.position = "none",  plot.title = element_text(size = 11)) +
   scale_x_continuous(limits = c(.5, .8)) +
   scale_y_continuous(limits = c(0, 1))
 
@@ -1631,14 +1666,14 @@ evenness_2023 <- ggplot(average_evenness_2023, aes(x = mean_evenness, y = ..scal
 #Total_count means graphs
 count_2023 <- ggplot(average_total_count_2023, aes(x = mean_count, y = ..scaled..,  color = "PBG")) +
   geom_density(alpha = 0.5) +
-  geom_vline(aes(xintercept = ABG_mean_total_count_2023, color = "ABG Total Count"), linetype = "dashed", size = 1) +
-  labs(title = "2023: Density Plot of Total Count",
+  geom_vline(aes(xintercept = ABG_mean_total_count_2023, color = "ABG Total Abundance"), linetype = "dashed", size = 1) +
+  labs(title = "2023: Density Plot of Total Abundance",
        x = "Mean Total Count",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
   annotate("text", x = 55, y = 1, label = "p-value: 0.886", color = "blue", size = 3, hjust = 1, vjust = 1) +
   annotate("text", x = 55, y = 0.9, label = "Z-score: 0.143", color = "red", size = 3, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 12)) +
+  theme(legend.position = "none",  plot.title = element_text(size = 11)) +
   scale_x_continuous(limits = c(15, 55)) +
   scale_y_continuous(limits = c(0, 1))
 
@@ -1651,7 +1686,7 @@ weight_2023 <- ggplot(average_total_weight_2023, aes(x = mean_weight, y = ..scal
   scale_color_manual(values = c("blue", "red")) +
   annotate("text", x = 130, y = 1, label = "p-value: 0.268", color = "blue", size = 3, hjust = 1, vjust = 1) +
   annotate("text", x = 130, y = 0.9, label = "Z-score: 1.11", color = "red", size = 3, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 12)) +
+  theme(legend.position = "none",  plot.title = element_text(size = 11)) +
   scale_x_continuous(limits = c(25, 130)) +
   scale_y_continuous(limits = c(0, 1))
 
