@@ -1466,56 +1466,65 @@ print(p_value_W_2023)
 #### Graphs Bootstrapped Means 2021 ####
 
 #Richness means graph
-richness_2021 <- ggplot(average_richness_2021, aes(x = mean_richness, color = "PBG")) +
+richness_2021 <- ggplot(average_richness_2021, aes(x = mean_richness, y = ..scaled.., color = "PBG")) +
   geom_density(alpha = 0.5) +
   geom_vline(aes(xintercept = mean_richness_ABG_2021 , color = "ABG"), linetype = "dashed", size = 1) +
   labs(title = "2021: Density Plot of Mean Richness",
        x = "Mean Richness",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
-  annotate("text", x = 18, y = 0.5, label = "p-value: 0.217", color = "blue", size = 3) +
-  annotate("text", x = 18, y = 0.44, label = "z-score:  1.24", color = "red", size = 3) +
-  theme(legend.position = "none")
+  annotate("text", x = 20, y = 1, label = "p-value: 0.217", color = "blue", size = 3, hjust = 1, vjust = 1) +
+  annotate("text", x = 20, y = 0.90, label = "z-score:  1.24", color = "red", size = 3, hjust = 1, vjust = 1) +
+  theme(legend.position = "none",  plot.title = element_text(size = 12)) +
+  scale_x_continuous(limits = c(5, 20)) +
+  scale_y_continuous(limits = c(0, 1))
+
 
 
 #Evenness means graph
-evenness_2021 <- ggplot(average_evenness_2021, aes(x = mean_evenness, color = "PBG")) +
+evenness_2021 <- ggplot(average_evenness_2021, aes(x = mean_evenness, y = ..scaled.., color = "PBG")) +
   geom_density(alpha = 0.5) +
   geom_vline(aes(xintercept = mean_evenness_ABG_2021, color = "ABG Mean Evenness"), linetype = "dashed", size = 1) +
   labs(title = "2021: Density Plot of Mean Evenness",
        x = "Mean Evenness",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
-  annotate("text", x = 0.73, y = 20, label = "p-value: 0.885", color = "blue", size = 3) +
-  annotate("text", x = 0.73, y = 18, label = "Z-score: 0.145", color = "red", size = 3) +
-  theme(legend.position = "none")
+  annotate("text", x = 0.8, y = 1, label = "p-value: 0.885", color = "blue", size = 3, hjust = 1, vjust = 1) +
+  annotate("text", x = 0.8, y = 0.9, label = "Z-score: 0.145", color = "red", size = 3, hjust = 1, vjust = 1) +
+  theme(legend.position = "none",  plot.title = element_text(size = 12)) +
+  scale_x_continuous(limits = c(.5, .8)) +
+  scale_y_continuous(limits = c(0, 1))
 
   
 
 #Total_count means graphs
-count_2021 <- ggplot(average_total_count_2021, aes(x = mean_count, color = "PBG")) +
+count_2021 <- ggplot(average_total_count_2021, aes(x = mean_count, y = ..scaled.., color = "PBG")) +
   geom_density(alpha = 0.5) +
   geom_vline(aes(xintercept = ABG_mean_total_count_2021, color = "ABG Total Count"), linetype = "dashed", size = 1) +
   labs(title = "2021: Density Plot of Total Count",
        x = "Mean Total Count",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
-  annotate("text", x = 51.5, y = 0.10, label = "p-value: 0.252", color = "blue", size = 3) +
-  annotate("text", x = 51.5, y = 0.09, label = "Z-score: 1.15", color = "red", size = 3) +
-  theme(legend.position = "none")
+  annotate("text", x = 55, y = 1, label = "p-value: 0.252", color = "blue", size = 3, hjust = 1, vjust = 1) +
+  annotate("text", x = 55, y = 0.90, label = "Z-score: 1.15", color = "red", size = 3, hjust = 1, vjust = 1) +
+  theme(legend.position = "none",  plot.title = element_text(size = 12)) +
+  scale_x_continuous(limits = c(15, 55)) +
+  scale_y_continuous(limits = c(0, 1))
 
 
 #Total_weight means graphs
-weight_2021 <- ggplot(average_total_weight_2021, aes(x = mean_weight, color = "PBG")) +
+weight_2021 <- ggplot(average_total_weight_2021, aes(x = mean_weight, y = ..scaled.., color = "PBG")) +
   geom_density(alpha = 0.5) +
   geom_vline(aes(xintercept = mean_weight_ABG_2021, color = "ABG Total Count"), linetype = "dashed", size = 1) +
   labs(title = "2021: Density Plot of Weight",
        x = "Mean Weight",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
-  annotate("text", x = 74, y = 0.065, label = "p-value: 0.408", color = "blue", size = 3) +
-  annotate("text", x = 74, y = 0.057, label = "Z-score: 0.828", color = "red", size = 3) +
-  theme(legend.position = "none")
+  annotate("text", x = 130, y = 1, label = "p-value: 0.408", color = "blue", size = 3, hjust = 1, vjust = 1) +
+  annotate("text", x = 130, y = 0.9, label = "Z-score: 0.828", color = "red", size = 3, hjust = 1, vjust = 1) +
+  theme(legend.position = "none",  plot.title = element_text(size = 12)) +
+  scale_x_continuous(limits = c(25, 130)) +
+  scale_y_continuous(limits = c(0, 1))
 
 
 weight_2021
@@ -1524,56 +1533,63 @@ grid.arrange(richness_2021, evenness_2021, count_2021, weight_2021)
 
 #### Graphs Bootstrapped Means 2022 ####
 #Richness means graph
-richness_2022 <- ggplot(average_richness_2022, aes(x = mean_richness, color = "PBG")) +
+richness_2022 <- ggplot(average_richness_2022, aes(x = mean_richness, y = ..scaled..,  color = "PBG")) +
   geom_density(alpha = 0.5) +
   geom_vline(aes(xintercept = mean_richness_ABG_2022 , color = "ABG Mean Richness"), linetype = "dashed", size = 1) +
   labs(title = "2022: Density Plot of Mean Richness",
        x = "Mean Richness",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend")  +
-  annotate("text", x = 16.3, y = 0.5, label = "p-value: 0.0425", color = "blue", size = 3) +
-  annotate("text", x = 16.3, y = 0.44, label = "Z-score: 2.03", color = "red", size = 3) +
-  theme(legend.position = "none")
+  annotate("text", x = 20, y = 1, label = "p-value: 0.0425", color = "blue", size = 3, hjust = 1, vjust = 1) +
+  annotate("text", x = 20, y = .90, label = "Z-score: 2.03", color = "red", size = 3, hjust = 1, vjust = 1) +
+  theme(legend.position = "none",  plot.title = element_text(size = 12)) +
+  scale_x_continuous(limits = c(5, 20)) +
+  scale_y_continuous(limits = c(0, 1))
 
 
 #Evenness means graph
-evenness_2022 <- ggplot(average_evenness_2022, aes(x = mean_evenness, color = "PBG")) +
+evenness_2022 <- ggplot(average_evenness_2022, aes(x = mean_evenness, y = ..scaled..,  color = "PBG")) +
   geom_density(alpha = 0.5) +
   geom_vline(aes(xintercept = mean_evenness_ABG_2022, color = "ABG Mean Evenness"), linetype = "dashed", size = 1) +
   labs(title = "2022: Density Plot of Mean Evenness",
        x = "Mean Evenness",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
-  annotate("text", x = 0.74, y = 20, label = "p-value: 0.343", color = "blue", size = 3) +
-  annotate("text", x = 0.74, y = 18, label = "Z-score: 0.948", color = "red", size = 3) +
-  theme(legend.position = "none")
+  annotate("text", x = 0.8, y = 1, label = "p-value: 0.343", color = "blue", size = 3, hjust = 1, vjust = 1) +
+  annotate("text", x = 0.8, y = 0.9, label = "Z-score: 0.948", color = "red", size = 3, hjust = 1, vjust = 1) +
+  theme(legend.position = "none",  plot.title = element_text(size = 12)) +
+  scale_x_continuous(limits = c(.5, .8)) +
+  scale_y_continuous(limits = c(0, 1))
 
 
 #Total_count means graphs
-count_2022 <- ggplot(average_total_count_2022, aes(x = mean_count, color = "PBG")) +
+count_2022 <- ggplot(average_total_count_2022, aes(x = mean_count, y = ..scaled..,  color = "PBG")) +
   geom_density(alpha = 0.5) +
   geom_vline(aes(xintercept = ABG_mean_total_count_2022, color = "ABG Total Count"), linetype = "dashed", size = 1) +
   labs(title = "2022: Density Plot of Total Count",
        x = "Mean Total Count",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
-  annotate("text", x = 45, y = 0.153, label = "p-value: 0.130", color = "blue", size = 3) +
-  annotate("text", x = 45, y = 0.138, label = "Z-score: 1.51", color = "red", size = 3) +
-  theme(legend.position = "none")
+  annotate("text", x = 55, y = 1, label = "p-value: 0.130", color = "blue", size = 3, hjust = 1, vjust = 1) +
+  annotate("text", x = 55, y = .90, label = "Z-score: 1.51", color = "red", size = 3, hjust = 1, vjust = 1) +
+  theme(legend.position = "none",  plot.title = element_text(size = 12)) +
+  scale_x_continuous(limits = c(15, 55)) +
+  scale_y_continuous(limits = c(0, 1))
 
 
 #Total_weight means graphs
-weight_2022 <- ggplot(average_total_weight_2022, aes(x = mean_weight, color = "PBG")) +
+weight_2022 <- ggplot(average_total_weight_2022, aes(x = mean_weight, y = ..scaled..,  color = "PBG")) +
   geom_density(alpha = 0.5) +
   geom_vline(aes(xintercept = mean_weight_ABG_2022, color = "ABG Total Count"), linetype = "dashed", size = 1) +
   labs(title = "2022: Density Plot of Weight",
        x = "Mean Weight",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
-  annotate("text", x = 100, y = 0.035, label = "p-value: 0.0897", color = "blue", size = 3) +
-  annotate("text", x = 100, y = 0.032, label = "Z-score: 1.697", color = "red", size = 3) +
-  theme(legend.position = "none")
-
+  annotate("text", x = 130, y = 1, label = "p-value: 0.0897", color = "blue", size = 3, hjust = 1, vjust = 1) +
+  annotate("text", x = 130, y = .90, label = "Z-score: 1.697", color = "red", size = 3, hjust = 1, vjust = 1) +
+  theme(legend.position = "none",  plot.title = element_text(size = 12)) +
+  scale_x_continuous(limits = c(25, 130)) +
+  scale_y_continuous(limits = c(0, 1))
 
 weight_2022
 
@@ -1582,54 +1598,62 @@ grid.arrange(richness_2022, evenness_2022, count_2022)
 #### Graphs Bootstrapped Means 2023 ####
 
 #Richness means graph
-richness_2023 <- ggplot(average_richness_2023, aes(x = mean_richness, color = "PBG")) +
+richness_2023 <- ggplot(average_richness_2023, aes(x = mean_richness, y = ..scaled..,  color = "PBG")) +
   geom_density(alpha = 0.5) +
   geom_vline(aes(xintercept = mean_richness_ABG_2023 , color = "ABG Mean Richness"), linetype = "dashed", size = 1) +
   labs(title = "2023: Density Plot of Mean Richness",
        x = "Mean Richness",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
-  annotate("text", x = 9.1, y = 0.8, label = "p-value: 0.657", color = "blue", size = 3) +
-  annotate("text", x = 9.1, y = 0.7, label = "Z-score: 0.445", color = "red", size = 3) +
-  theme(legend.position = "none")
+  annotate("text", x = 20, y = 1, label = "p-value: 0.657", color = "blue", size = 3, hjust = 1, vjust = 1) +
+  annotate("text", x = 20, y = 0.9, label = "Z-score: 0.445", color = "red", size = 3, hjust = 1, vjust = 1) +
+  theme(legend.position = "none",  plot.title = element_text(size = 12)) +
+  scale_x_continuous(limits = c(5, 20)) +
+  scale_y_continuous(limits = c(0, 1))
 
 
 #Evenness means graph
-evenness_2023 <- ggplot(average_evenness_2023, aes(x = mean_evenness, color = "PBG")) +
+evenness_2023 <- ggplot(average_evenness_2023, aes(x = mean_evenness, y = ..scaled.., color = "PBG")) +
   geom_density(alpha = 0.5) +
   geom_vline(aes(xintercept = mean_evenness_ABG_2023, color = "ABG Mean Evenness"), linetype = "dashed", size = 1) +
   labs(title = "2023: Density Plot of Mean Evenness",
        x = "Mean Evenness",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
-  annotate("text", x = 0.74, y = 20, label = "p-value: <0.001", color = "blue", size = 3) +
-  annotate("text", x = 0.74, y = 18, label = "Z-score:  3.400", color = "red", size = 3) +
-  theme(legend.position = "none")
+  annotate("text", x = 0.8, y = 1, label = "p-value: <0.001", color = "blue", size = 3, hjust = 1, vjust = 1) +
+  annotate("text", x = 0.8, y = 0.9, label = "Z-score:  3.400", color = "red", size = 3, hjust = 1, vjust = 1) +
+  theme(legend.position = "none",  plot.title = element_text(size = 12)) +
+  scale_x_continuous(limits = c(.5, .8)) +
+  scale_y_continuous(limits = c(0, 1))
 
 
 
 #Total_count means graphs
-count_2023 <- ggplot(average_total_count_2023, aes(x = mean_count, color = "PBG")) +
+count_2023 <- ggplot(average_total_count_2023, aes(x = mean_count, y = ..scaled..,  color = "PBG")) +
   geom_density(alpha = 0.5) +
   geom_vline(aes(xintercept = ABG_mean_total_count_2023, color = "ABG Total Count"), linetype = "dashed", size = 1) +
   labs(title = "2023: Density Plot of Total Count",
        x = "Mean Total Count",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
-  annotate("text", x = 31, y = 0.2, label = "p-value: 0.886", color = "blue", size = 3) +
-  annotate("text", x = 31, y = 0.18, label = "Z-score: 0.143", color = "red", size = 3) +
-  theme(legend.position = "none")
+  annotate("text", x = 55, y = 1, label = "p-value: 0.886", color = "blue", size = 3, hjust = 1, vjust = 1) +
+  annotate("text", x = 55, y = 0.9, label = "Z-score: 0.143", color = "red", size = 3, hjust = 1, vjust = 1) +
+  theme(legend.position = "none",  plot.title = element_text(size = 12)) +
+  scale_x_continuous(limits = c(15, 55)) +
+  scale_y_continuous(limits = c(0, 1))
 
-weight_2023 <- ggplot(average_total_weight_2023, aes(x = mean_weight, color = "PBG")) +
+weight_2023 <- ggplot(average_total_weight_2023, aes(x = mean_weight, y = ..scaled..,  color = "PBG")) +
   geom_density(alpha = 0.5) +
   geom_vline(aes(xintercept = mean_weight_ABG_2023, color = "ABG Total Count"), linetype = "dashed", size = 1) +
   labs(title = "2023: Density Plot of Weight",
        x = "Mean Weight",
        y = "Density") +
   scale_color_manual(values = c("blue", "red")) +
-  annotate("text", x = 135, y = 0.035, label = "p-value: 0.268", color = "blue", size = 3) +
-  annotate("text", x = 135, y = 0.031, label = "Z-score: 1.11", color = "red", size = 3) +
-  theme(legend.position = "none")
+  annotate("text", x = 130, y = 1, label = "p-value: 0.268", color = "blue", size = 3, hjust = 1, vjust = 1) +
+  annotate("text", x = 130, y = 0.9, label = "Z-score: 1.11", color = "red", size = 3, hjust = 1, vjust = 1) +
+  theme(legend.position = "none",  plot.title = element_text(size = 12)) +
+  scale_x_continuous(limits = c(25, 130)) +
+  scale_y_continuous(limits = c(0, 1))
 
 weight_2023
 
