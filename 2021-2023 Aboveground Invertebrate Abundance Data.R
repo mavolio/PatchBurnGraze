@@ -347,11 +347,14 @@ Abundance_Data2021 <- full_join(Abundance_ID_aboveground, BurnInfo2021, by = "WS
   filter(Plot %in% c("2", "4"))
 
 
+
+
 #tag abg and pbg
 Abundance_Data2021$Sample <- paste(Abundance_Data2021$WS, Abundance_Data2021$Trans, Abundance_Data2021$Plot, sep = "_")
 Abundance_Data2021$Treatment <- ifelse(grepl("C1", Abundance_Data2021$Sample), "ABG", "PBG") 
 
 # PERMANOVA
+
 
 abundanceWide <- Abundance_Data2021 %>% 
   mutate(block = ifelse(grepl("S", Sample), "North", "South")) %>%
@@ -367,14 +370,14 @@ abundanceWide <- abundanceWide %>%
 
 
 print(permanova <- adonis2(formula = abundanceWide[,8:150]~TreatmentSB, data=abundanceWide, permutations=999, method="bray"))
-#F=1.0128, df=3,60, p=0.864
+#F=0.7814, df=3,57, p=0.86
 
 
 #betadisper
 veg <- vegdist(abundanceWide[,8:150], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$TreatmentSB)
 permutest(dispersion, pairwise=TRUE, permutations=999) 
-#F=0.5209      , df=3,57, p=0.66
+#F=1.0195, df=3,57, p=0.378 
 
 BC_Data <- metaMDS(abundanceWide[,8:150])
 sites <- 1:nrow(abundanceWide)
@@ -432,23 +435,77 @@ ggtitle("2021 year since burned") +
   annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = expression(paste('F'['3,60'], ' = 1.0128')), size = 8, hjust = 'left') +
   annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.04, label = 'p = 0.864', size = 8, hjust = 'left') 
 
-#F=1.0128, df=3,60, p=0.864
-
 Years_Since_Burned_NMDS_2021
 #export at 1500x1000
 
 ### by watershed
+
+Abundance_Data2021 <- full_join(Abundance_ID_aboveground, BurnInfo2021, by = "WS") %>% 
+  unite("TreatmentSB",c("Treatment","SB"), sep="_") %>% 
+  filter(Date == "2021") %>%   
+  filter(Plot %in% c("2", "4"))
+
+#Filter ABG 
+ABG_Test <- full_join(Abundance_ID_aboveground, BurnInfo2021, by = "WS") %>% 
+  unite("TreatmentSB",c("Treatment","SB"), sep="_") %>% 
+  filter(Date == "2021") %>%   
+  filter(Plot %in% c("2", "4")) %>% 
+  filter(TreatmentSB == "ABG_0")
+
+#Filter PBG
+PBG_Test <- full_join(Abundance_ID_aboveground, BurnInfo2021, by = "WS") %>% 
+  unite("TreatmentSB",c("Treatment","SB"), sep="_") %>% 
+  filter(Date == "2021") %>%   
+  filter(Plot %in% c("2", "4")) %>% 
+  filter(TreatmentSB == c("PBG_0", "PBG_1", "PBG_2"))
+
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Get unique samples
+unique_samples <- unique(PBG_Test$Sample)
+
+# Randomly select 16 unique samples
+subsamples <- sample(unique_samples, 16, replace = FALSE)
+
+# Filter the data frame based on the selected samples
+subsampled_data <- PBG_Test %>% filter(Sample %in% subsamples)
+
+#New Abundance_Data2021 with subsamples
+Abundance_Data2021 <- full_join(subsampled_data, ABG_Test)
+
+#tag abg and pbg
+Abundance_Data2021$Sample <- paste(Abundance_Data2021$WS, Abundance_Data2021$Trans, Abundance_Data2021$Plot, sep = "_")
+Abundance_Data2021$Treatment <- ifelse(grepl("C1", Abundance_Data2021$Sample), "ABG", "PBG") 
+
 # PERMANOVA
-print(permanova <- adonis2(formula = abundanceWide[,8:150]~Treatment, data=abundanceWide, permutations=999, method="bray"))
-#F=0.5303    , df=1,60, p=0.939
+
+
+abundanceWide <- Abundance_Data2021 %>% 
+  mutate(block = ifelse(grepl("S", Sample), "North", "South")) %>%
+  select(Sample, block, WS, Trans, Plot, Treatment, TreatmentSB, Count, ID) %>%
+  group_by(Sample, block, WS, Trans, Plot, Treatment, TreatmentSB, ID) %>% 
+  summarise(Count = sum(Count)) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = 'ID', values_from = 'Count', values_fill = list(Count = 0)) 
+
+abundanceWide <- abundanceWide %>% 
+  mutate(sum = rowSums(abundanceWide[, c(8:91)], na.rm = TRUE)) %>% 
+  filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
+
+
+# PERMANOVA
+print(permanova <- adonis2(formula = abundanceWide[,8:91]~Treatment, data=abundanceWide, permutations=999, method="bray"))
+#F=1.9529 , df=1,28, p=0.013 *
 
 #betadisper
-veg <- vegdist(abundanceWide[,8:150], method = "bray")
+veg <- vegdist(abundanceWide[,8:91], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$Treatment)
 permutest(dispersion, pairwise=TRUE, permutations=999) 
-#F=0.0857    , df=1,59, p=0.797
+#F=23.434       , df=1,28, p=0.001 ***
 
-BC_Data <- metaMDS(abundanceWide[,8:150])
+BC_Data <- metaMDS(abundanceWide[,8:91])
 sites <- 1:nrow(abundanceWide)
 BC_Meta_Data <- abundanceWide[,1:7]
 plot(BC_Data$points, col=as.factor(BC_Meta_Data$Treatment))
@@ -481,8 +538,8 @@ ABG_VS_PBG_NMDS_2021 <- ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = gr
   scale_shape_manual(values = c(19, 19)) +
   xlab("NMDS1") + 
   ylab("NMDS2") + 
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = expression(paste('F'['1,60'], ' = 0.5303')), size = 8, hjust = 'left') +
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.04, label = 'p = 0.939', size = 8, hjust = 'left') +
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = expression(paste('F'['1,28'], ' = 0.013')), size = 8, hjust = 'left') +
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.04, label = 'p = 0.013', size = 8, hjust = 'left') +
   theme_classic() +
   theme(axis.text.x = element_text(size = 24, color = "black"), 
         axis.text.y = element_text(size = 24, color = "black"), 
@@ -494,7 +551,7 @@ ABG_VS_PBG_NMDS_2021 <- ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = gr
   ) +
   ggtitle("2021 ABG vs PBG")
 
-#F=0.5303    , df=1,60, p=0.939
+#F=1.9529 , df=1,28, p=0.013 *
 
 ABG_VS_PBG_NMDS_2021
 
@@ -502,10 +559,12 @@ ABG_VS_PBG_NMDS_2021
 #### 2022 PERMANOVA & NMDS ####
 # Combine count with burn info
 
+
 # Merge with burn data
 Abundance_Data2022 <- full_join(Abundance_ID_aboveground, BurnInfo2022, by = "WS") %>% 
   unite("TreatmentSB", c("Treatment", "SB"), sep = "_") %>% 
   filter(Date == "2022")
+
 
 # Tag ABG and PBG
 Abundance_Data2022$Sample <- paste(Abundance_Data2022$WS, Abundance_Data2022$Trans, Abundance_Data2022$Plot, sep = "_")
@@ -521,21 +580,21 @@ abundanceWide <- Abundance_Data2022 %>%
   pivot_wider(names_from = 'ID', values_from = 'Count', values_fill = list(Count = 0)) 
 
 abundanceWide <- abundanceWide %>% 
-  mutate(sum = rowSums(abundanceWide[, c(8:118)], na.rm = TRUE)) %>% 
+  mutate(sum = rowSums(abundanceWide[, c(8:79)], na.rm = TRUE)) %>% 
   filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
 
-print(permanova <- adonis2(formula = abundanceWide[, 8:118] ~ TreatmentSB, data = abundanceWide, permutations = 999, method = "bray"))
+print(permanova <- adonis2(formula = abundanceWide[, 8:121] ~ TreatmentSB, data = abundanceWide, permutations = 999, method = "bray"))
 # F=2.1065, df=3,60, p=0.001 ***
 
 
 
 # Betadisper
-veg <- vegdist(abundanceWide[, 8:117], method = "bray")
+veg <- vegdist(abundanceWide[, 8:121], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$TreatmentSB)
 permutest(dispersion, pairwise = TRUE, permutations = 999) 
 # F=0.0811, df=3,60, p=0.975
 
-BC_Data <- metaMDS(abundanceWide[, 8:117])
+BC_Data <- metaMDS(abundanceWide[, 8:121])
 sites <- 1:nrow(abundanceWide)
 BC_Meta_Data <- abundanceWide[, 1:7]
 plot(BC_Data$points, col = as.factor(BC_Meta_Data$TreatmentSB))
@@ -592,18 +651,77 @@ Years_Since_Burned_NMDS_2022 <- ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=
 Years_Since_Burned_NMDS_2022
 
 ### by watershed
+#Filter ABG 
+ABG_Test <- full_join(Abundance_ID_aboveground, BurnInfo2022, by = "WS") %>% 
+  unite("TreatmentSB",c("Treatment","SB"), sep="_") %>% 
+  filter(Date == "2022") %>%   
+  filter(TreatmentSB == "ABG_0")
+
+#Filter PBG
+PBG_Test <- full_join(Abundance_ID_aboveground, BurnInfo2022, by = "WS") %>% 
+  unite("TreatmentSB",c("Treatment","SB"), sep="_") %>% 
+  filter(Date == "2022") %>%   
+  filter(TreatmentSB == c("PBG_0", "PBG_1", "PBG_2"))
+
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Get unique samples
+unique_samples <- unique(PBG_Test$Sample)
+
+# Randomly select 16 unique samples
+subsamples <- sample(unique_samples, 16, replace = FALSE)
+
+# Filter the data frame based on the selected samples
+subsampled_data <- PBG_Test %>% filter(Sample %in% subsamples)
+
+#New Abundance_Data2021 with subsamples
+Abundance_Data2022 <- full_join(subsampled_data, ABG_Test)
+
+
+# Tag ABG and PBG
+Abundance_Data2022$Sample <- paste(Abundance_Data2022$WS, Abundance_Data2022$Trans, Abundance_Data2022$Plot, sep = "_")
+Abundance_Data2022$Treatment <- ifelse(grepl("C1", Abundance_Data2022$Sample), "ABG", "PBG") 
+
+abundanceWide <- Abundance_Data2022 %>% 
+  mutate(block = ifelse(grepl("S", Sample), "North", "South")) %>%
+  select(Sample, block, WS, Trans, Plot, Treatment, TreatmentSB, Count, ID) %>%
+  group_by(Sample, block, WS, Trans, Plot, Treatment, TreatmentSB, ID) %>% 
+  summarise(Count = sum(Count)) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = 'ID', values_from = 'Count', values_fill = list(Count = 0)) 
+
+abundanceWide <- abundanceWide %>% 
+  mutate(sum = rowSums(abundanceWide[, c(8:79)], na.rm = TRUE)) %>% 
+  filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
+
+
 # PERMANOVA
-print(permanova <- adonis2(formula = abundanceWide[,8:118]~Treatment, data=abundanceWide, permutations=999, method="bray"))
-#F=0.986  , df=1,62, p=0.446
+abundanceWide <- Abundance_Data2022 %>% 
+  mutate(block = ifelse(grepl("S", Sample), "North", "South")) %>%
+  select(Sample, block, WS, Trans, Plot, Treatment, TreatmentSB, Count, ID) %>%
+  group_by(Sample, block, WS, Trans, Plot, Treatment, TreatmentSB, ID) %>% 
+  summarise(Count = sum(Count)) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = 'ID', values_from = 'Count', values_fill = list(Count = 0)) 
+
+abundanceWide <- abundanceWide %>% 
+  mutate(sum = rowSums(abundanceWide[, c(8:79)], na.rm = TRUE)) %>% 
+  filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
+
+
+print(permanova <- adonis2(formula = abundanceWide[,8:79]~Treatment, data=abundanceWide, permutations=999, method="bray"))
+#F=4.5219, df=1,30, p=0.001 ***
 
 #betadisper
-veg <- vegdist(abundanceWide[,8:117], method = "bray")
+veg <- vegdist(abundanceWide[,8:79], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$Treatment)
 permutest(dispersion, pairwise=TRUE, permutations=999) 
 
-#F=1.1985, df=1,62, p=0.28
+#F=59.943 , df=1,30, p=0.001 ***
 
-BC_Data <- metaMDS(abundanceWide[,8:117])
+BC_Data <- metaMDS(abundanceWide[,8:79])
 sites <- 1:nrow(abundanceWide)
 BC_Meta_Data <- abundanceWide[,1:7]
 plot(BC_Data$points, col=as.factor(BC_Meta_Data$Treatment))
@@ -636,8 +754,8 @@ ABG_VS_PBG_NMDS_2022  <- ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = g
   scale_shape_manual(values = c(19, 19)) +
   xlab("NMDS1") + 
   ylab("NMDS2") + 
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = expression(paste('F'['1,62'], ' = 0.986')), size = 8, hjust = 'left') +
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.1, label = 'p = 0.446', size = 8, hjust = 'left') +
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = expression(paste('F'['1,30'], ' = 4.5219')), size = 8, hjust = 'left') +
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.02, label = 'p = 0.001', size = 8, hjust = 'left') +
   theme_classic() +
   theme(axis.text.x = element_text(size = 24, color = "black"), 
         axis.text.y = element_text(size = 24, color = "black"), 
@@ -650,7 +768,7 @@ ABG_VS_PBG_NMDS_2022  <- ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = g
   ggtitle("2022 ABG vs PBG")
 
 
-#F=0.986  , df=1,62, p=0.446
+#F=4.5219, df=1,30, p=0.001 ***
 
 ABG_VS_PBG_NMDS_2022
 
@@ -681,7 +799,7 @@ abundanceWide <- abundanceWide %>%
   filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
 
 print(permanova <- adonis2(formula = abundanceWide[, 8:75] ~ TreatmentSB, data = abundanceWide, permutations = 999, method = "bray"))
-# F=1.3803, df=3,60, p=0.078 
+# F=0.8535, df=3,60, p=0.54
 
 # Betadisper
 veg <- vegdist(abundanceWide[, 8:75], method = "bray")
@@ -689,7 +807,7 @@ dispersion <- betadisper(veg, abundanceWide$TreatmentSB)
 permutest(dispersion, pairwise = TRUE, permutations = 999) 
 # F=0.0039, df=3,60, p=0.999
 
-BC_Data <- metaMDS(abundanceWide[, 8:74])
+BC_Data <- metaMDS(abundanceWide[, 8:75])
 sites <- 1:nrow(abundanceWide)
 BC_Meta_Data <- abundanceWide[, 1:7]
 plot(BC_Data$points, col = as.factor(BC_Meta_Data$TreatmentSB))
@@ -747,18 +865,64 @@ Years_Since_Burned_NMDS_2023 <- ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=
 Years_Since_Burned_NMDS_2023
 
 ### by watershed
+
+#Filter ABG 
+ABG_Test <- full_join(Abundance_ID_aboveground, BurnInfo2023, by = "WS") %>% 
+  unite("TreatmentSB",c("Treatment","SB"), sep="_") %>% 
+  filter(Date == "2023") %>%   
+  filter(TreatmentSB == "ABG_0")
+
+#Filter PBG
+PBG_Test <- full_join(Abundance_ID_aboveground, BurnInfo2023, by = "WS") %>% 
+  unite("TreatmentSB",c("Treatment","SB"), sep="_") %>% 
+  filter(Date == "2023") %>%   
+  filter(TreatmentSB == c("PBG_0", "PBG_1", "PBG_2"))
+
+
+# Set seed for reproducibility
+set.seed(234)
+
+# Get unique samples
+unique_samples <- unique(PBG_Test$Sample)
+
+# Randomly select 16 unique samples
+subsamples <- sample(unique_samples, 16, replace = FALSE)
+
+# Filter the data frame based on the selected samples
+subsampled_data <- PBG_Test %>% filter(Sample %in% subsamples)
+
+#New Abundance_Data2021 with subsamples
+Abundance_Data2023 <- full_join(subsampled_data, ABG_Test)
+
+# Tag ABG and PBG
+Abundance_Data2023$Sample <- paste(Abundance_Data2023$WS, Abundance_Data2023$Trans, Abundance_Data2023$Plot, sep = "_")
+Abundance_Data2023$Treatment <- ifelse(grepl("C1", Abundance_Data2023$Sample), "ABG", "PBG") 
+
 # PERMANOVA
-print(permanova <- adonis2(formula = abundanceWide[,8:75]~Treatment, data=abundanceWide, permutations=999, method="bray"))
-#F=1.1816 , df=1,62, p=0.288 
+abundanceWide <- Abundance_Data2023 %>% 
+  mutate(block = ifelse(grepl("S", Sample), "North", "South")) %>%
+  select(Sample, block, WS, Trans, Plot, Treatment, TreatmentSB, Count, ID) %>%
+  group_by(Sample, block, WS, Trans, Plot, Treatment, TreatmentSB, ID) %>% 
+  summarise(Count = sum(Count)) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = 'ID', values_from = 'Count', values_fill = list(Count = 0)) 
+
+abundanceWide <- abundanceWide %>% 
+  mutate(sum = rowSums(abundanceWide[, c(8:42)], na.rm = TRUE)) %>% 
+  filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
+
+
+print(permanova <- adonis2(formula = abundanceWide[,8:42]~Treatment, data=abundanceWide, permutations=999, method="bray"))
+#F=2.3372   , df=1,30, p=0.016 * 
 
 #betadisper
-veg <- vegdist(abundanceWide[,8:74], method = "bray")
+veg <- vegdist(abundanceWide[,8:42], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$Treatment)
 permutest(dispersion, pairwise=TRUE, permutations=999) 
 
-#F=0.1224, df=1,62, p=0.721
+#F=2.0478   , df=1,30, p=0.159
 
-BC_Data <- metaMDS(abundanceWide[,8:74])
+BC_Data <- metaMDS(abundanceWide[,8:42])
 sites <- 1:nrow(abundanceWide)
 BC_Meta_Data <- abundanceWide[,1:7]
 plot(BC_Data$points, col=as.factor(BC_Meta_Data$Treatment))
@@ -801,10 +965,10 @@ ABG_VS_PBG_NMDS_2023 <- ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = gr
         plot.title = element_text(size = 30)
   ) +
   ggtitle("2023 ABG vs PBG") + 
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = expression(paste('F'['1,62'], ' = 1.1816')), size = 8, hjust = 'left') +
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.1, label = 'p = 0.288  ', size = 8, hjust = 'left')
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = expression(paste('F'['1,30'], ' = 2.3372')), size = 8, hjust = 'left') +
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.1, label = 'p = 0.016  ', size = 8, hjust = 'left')
 
-#F=1.1816 , df=1,62, p=0.288 
+#F=2.3372   , df=1,30, p=0.016 * 
 
 ABG_VS_PBG_NMDS_2023
 
@@ -816,6 +980,8 @@ NMMDS_BIG <- grid.arrange(
   Years_Since_Burned_NMDS_2023, ABG_VS_PBG_NMDS_2023,
   ncol = 2
 )
+
+
 
 ggsave("2021-2023 NMDS.png", NMMDS_BIG, width = 40, height = 40)
 
