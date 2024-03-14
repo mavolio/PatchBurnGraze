@@ -2063,76 +2063,218 @@ weightModel <- #stores the model output into a named list
 anova.lme(weightModel, type='sequential') #this gives you the ANOVA output from the model, where "sequential" tells it to do a type III anova
 
 
-#### CV Richness Calculation ####
+#### CV Richness Calculation 2021 ####
+# Getting coefficient of variation (CV) per iteration for richness in 2021
 
-# Combine the data frames
-combined_data <- rbind(Combined_Data_2021, Combined_Data_2022, Combined_Data_2023)
-
-# Fill the Treatment column with 'PBG'
-combined_data$Treatment <- "PBG"
-
-#PBG CV
-PBG_CV_richness <- combined_data %>%
-  group_by(WS) %>%
-  summarise(cv_richness = (sd(richness) / mean(richness)) * 100)
-
-commMetrics_New <- separate(commMetrics, Sample, into = c("WS", "Trans", "Plot", "Treatment2"), sep = "_")
+commMetrics2021 <- Abundance_Data2021 %>%  community_structure(abundance.var='Count', replicate.var='Sample')
 
 
-ABG_CV_richness <- commMetrics_New %>% 
-  filter(Treatment == "ABG") %>% 
-  group_by(WS) %>% 
-  summarise(cv_richness = (sd(richness) / mean(richness)) * 100)
 
-P_R_CV <- (mean(ABG_CV_richness$cv_richness) - mean(PBG_CV_richness$cv_richness))/(sd(PBG_CV_richness$cv_richness))
-P_R_CV
+PBG_average_cv_2021 <- PBG_plot_master_2021 %>%
+  group_by(iteration) %>%
+  summarize(CV_richness = sd(richness) / mean(richness, na.rm = TRUE))
 
-p_value_R_CV <- 2*pnorm(-abs(P_R_CV))
+#Take the mean of the mean for CV PBG richness
+PBG_mean_mean_richness_CV_2021 <- mean(PBG_average_cv_2021$CV_richness, na.rm = TRUE)
 
-print(p_value_R_CV)
-
-#### CV Evenness Calculation ####
-
-# Combine the data frames
-combined_data <- rbind(Combined_Data_2021, Combined_Data_2022, Combined_Data_2023)
-
-# Fill the Treatment column with 'PBG'
-combined_data$Treatment <- "PBG"
-
-#PBG CV
-PBG_CV_Evar <- combined_data %>%
-  group_by(WS) %>%
-  summarise(cv_Evar = (sd(Evar) / mean(Evar)) * 100)
-
-commMetrics_New <- separate(commMetrics, Sample, into = c("WS", "Trans", "Plot", "Treatment2"), sep = "_")
+#ABG Mean
+ABG_mean_CV_richness_2021 <- commMetrics2021 %>% 
+  summarize(CV_richness = sd(richness) / mean(richness, na.rm = TRUE))
 
 
-ABG_CV_Evar <- commMetrics_New %>% 
-  filter(Treatment == "ABG") %>% 
-  group_by(WS) %>% 
-  summarise(cv_Evar = (sd(Evar) / mean(Evar)) * 100)
+Z_R_CV_2021 <- ((ABG_mean_CV_richness_2021$CV_richness) - (PBG_mean_mean_richness_CV_2021))/(sd(PBG_average_cv_2021$CV_richness))
+Z_R_CV_2021
+#6.931774
 
-P_E_CV <- (mean(ABG_CV_Evar$cv_Evar) - mean(PBG_CV_Evar$cv_Evar))/(sd(PBG_CV_Evar$cv_Evar))
-P_E_CV
+p_value_R_CV_2021 <- 2*pnorm(-abs(Z_R_CV_2021))
 
-p_value_E_CV <- 2*pnorm(-abs(P_R_CV))
+print(p_value_R_CV_2021)
+#4.155968e-12
 
-print(p_value_E_CV)
+#### CV Richness Calculation 2022 ####
+commMetrics2022 <- Abundance_Data2022 %>%  community_structure(abundance.var='Count', replicate.var='Sample')
 
-#### CV Total Count ####
+PBG_average_cv_2022 <- PBG_plot_master_2022 %>%
+  group_by(iteration) %>%
+  summarize(CV_richness = sd(richness) / mean(richness, na.rm = TRUE))
 
-ABG_cv_count <- Abundance_ID_aboveground %>%
-  filter(WS %in% c("C1A", "C1SB")) %>%
-  group_by(WS) %>%
-  summarize(cv_count = sd(Count) / mean(Count) * 100)
+# Take the mean of the mean for CV PBG richness
+PBG_mean_mean_richness_CV_2022 <- mean(PBG_average_cv_2022$CV_richness, na.rm = TRUE)
 
-PBG_cv_count <- combined_data %>%
-  group_by(WS) %>%
-  summarize(cv_count = sd(Count) / mean(Count) * 100)
+# ABG Mean
+ABG_mean_CV_richness_2022 <- commMetrics2022 %>% 
+  summarize(CV_richness = sd(richness) / mean(richness, na.rm = TRUE))
 
-P_C_CV <- (mean(ABG_cv_count$cv_count) - mean(PBG_cv_count$cv_count))/(sd(PBG_cv_count$cv_count))
-P_C_CV
+Z_R_CV_2022 <- ((ABG_mean_CV_richness_2022$CV_richness) - (PBG_mean_mean_richness_CV_2022))/(sd(PBG_average_cv_2022$CV_richness))
+Z_R_CV_2022
+#3.561743
 
-p_value_C_CV <- 2*pnorm(-abs(P_C_CV))
+p_value_R_CV_2022 <- 2*pnorm(-abs(Z_R_CV_2022))
 
-print(p_value_C_CV)
+print(p_value_R_CV_2022)
+#0.0003684009
+
+#### CV Richness Calculation 2023 ####
+commMetrics2023 <- Abundance_Data2023 %>%  community_structure(abundance.var='Count', replicate.var='Sample')
+
+PBG_average_cv_2023 <- PBG_plot_master_2023 %>%
+  group_by(iteration) %>%
+  summarize(CV_richness = sd(richness) / mean(richness, na.rm = TRUE))
+
+# Take the mean of the mean for CV PBG richness
+PBG_mean_mean_richness_CV_2023 <- mean(PBG_average_cv_2023$CV_richness, na.rm = TRUE)
+
+# ABG Mean
+ABG_mean_CV_richness_2023 <- commMetrics2023 %>% 
+  summarize(CV_richness = sd(richness) / mean(richness, na.rm = TRUE))
+
+Z_R_CV_2023 <- ((ABG_mean_CV_richness_2023$CV_richness) - (PBG_mean_mean_richness_CV_2023))/(sd(PBG_average_cv_2023$CV_richness))
+Z_R_CV_2023
+#4.081377
+
+p_value_R_CV_2023 <- 2*pnorm(-abs(Z_R_CV_2023))
+
+print(p_value_R_CV_2023)
+#4.476971e-05
+
+#### CV Evar Calculation 2021 ####
+commMetrics2021 <- Abundance_Data2021 %>%  community_structure(abundance.var='Count', replicate.var='Sample')
+
+PBG_average_cv_2021 <- PBG_plot_master_2021 %>%
+  group_by(iteration) %>%
+  summarize(CV_Evar = sd(Evar) / mean(Evar, na.rm = TRUE))
+
+# Take the mean of the mean for CV PBG Evar
+PBG_mean_mean_Evar_CV_2021 <- mean(PBG_average_cv_2021$CV_Evar, na.rm = TRUE)
+
+# ABG Mean
+ABG_mean_CV_Evar_2021 <- commMetrics2021 %>% 
+  summarize(CV_Evar = sd(Evar) / mean(Evar, na.rm = TRUE))
+
+Z_E_CV_2021 <- ((ABG_mean_CV_Evar_2021$CV_Evar) - (PBG_mean_mean_Evar_CV_2021))/(sd(PBG_average_cv_2021$CV_Evar))
+Z_E_CV_2021
+#2.382834
+
+p_value_E_CV_2021 <- 2*pnorm(-abs(Z_E_CV_2021))
+
+print(p_value_R_CV_2021)
+#0.01717995
+
+#### CV Evar Calculation 2022 ####
+commMetrics2022 <- Abundance_Data2022 %>%  community_structure(abundance.var='Count', replicate.var='Sample')
+
+PBG_average_cv_2022 <- PBG_plot_master_2022 %>%
+  group_by(iteration) %>%
+  summarize(CV_Evar = sd(Evar) / mean(Evar, na.rm = TRUE))
+
+# Take the mean of the mean for CV PBG Evar
+PBG_mean_mean_Evar_CV_2022 <- mean(PBG_average_cv_2022$CV_Evar, na.rm = TRUE)
+
+# ABG Mean
+ABG_mean_CV_Evar_2022 <- commMetrics2022 %>% 
+  summarize(CV_Evar = sd(Evar, na.rm = T) / mean(Evar, na.rm = TRUE))
+
+Z_E_CV_2022 <- ((ABG_mean_CV_Evar_2022$CV_Evar) - (PBG_mean_mean_Evar_CV_2022))/(sd(PBG_average_cv_2022$CV_Evar))
+Z_E_CV_2022
+#1.60053
+
+p_value_E_CV_2022 <- 2*pnorm(-abs(Z_E_CV_2022))
+
+print(p_value_E_CV_2022)
+#0.1094812
+
+
+#### CV Evar Calculation 2023 ####
+
+commMetrics2023 <- Abundance_Data2023 %>%  community_structure(abundance.var='Count', replicate.var='Sample')
+
+PBG_average_cv_2023 <- PBG_plot_master_2023 %>%
+  group_by(iteration) %>%
+  summarize(CV_Evar = sd(Evar) / mean(Evar, na.rm = TRUE))
+
+# Take the mean of the mean for CV PBG Evar
+PBG_mean_mean_Evar_CV_2023 <- mean(PBG_average_cv_2023$CV_Evar, na.rm = TRUE)
+
+# ABG Mean
+ABG_mean_CV_Evar_2023 <- commMetrics2023 %>% 
+  summarize(CV_Evar = sd(Evar, na.rm = TRUE) / mean(Evar, na.rm = TRUE))
+
+Z_E_CV_2023 <- ((ABG_mean_CV_Evar_2023$CV_Evar) - (PBG_mean_mean_Evar_CV_2023))/(sd(PBG_average_cv_2023$CV_Evar))
+Z_E_CV_2023
+#5.158495
+
+p_value_E_CV_2023 <- 2*pnorm(-abs(Z_E_CV_2023))
+
+print(p_value_E_CV_2023)
+#2.489424e-07
+
+#### CV Count Calculation 2021 ####
+countMetrics2021 <- Abundance_Data2021 
+
+
+
+PBG_average_cv_2021 <- PBG_plot_master_2021 %>%
+  group_by(iteration) %>%
+  summarize(CV_count = sd(Count, na.rm = T) / mean(Count, na.rm = TRUE))
+
+#Take the mean of the mean for CV PBG count
+PBG_mean_mean_count_CV_2021 <- mean(PBG_average_cv_2021$CV_count, na.rm = TRUE)
+
+#ABG Mean
+ABG_mean_CV_count_2021 <- countMetrics2021 %>% 
+  summarize(CV_count = sd(Count) / mean(Count, na.rm = TRUE))
+
+
+Z_C_CV_2021 <- ((ABG_mean_CV_count_2021$CV_count) - (PBG_mean_mean_count_CV_2021))/(sd(PBG_average_cv_2021$CV_count))
+Z_C_CV_2021
+#13.90662
+
+p_value_C_CV_2021 <- 2*pnorm(-abs(Z_C_CV_2021))
+
+print(p_value_C_CV_2021)
+# 5.77467e-44
+#### CV Count Calculation 2022 ####
+countMetrics2022 <- Abundance_Data2022 
+
+PBG_average_cv_2022 <- PBG_plot_master_2022 %>%
+  group_by(iteration) %>%
+  summarize(CV_count = sd(Count, na.rm = TRUE) / mean(Count, na.rm = TRUE))
+
+# Take the mean of the mean for CV PBG count
+PBG_mean_mean_count_CV_2022 <- mean(PBG_average_cv_2022$CV_count, na.rm = TRUE)
+
+# ABG Mean
+ABG_mean_CV_count_2022 <- countMetrics2022 %>% 
+  summarize(CV_count = sd(Count) / mean(Count, na.rm = TRUE))
+
+Z_C_CV_2022 <- ((ABG_mean_CV_count_2022$CV_count) - (PBG_mean_mean_count_CV_2022))/(sd(PBG_average_cv_2022$CV_count))
+Z_C_CV_2022
+#5.700147
+
+p_value_C_CV_2022 <- 2*pnorm(-abs(Z_C_CV_2022))
+
+print(p_value_C_CV_2022)
+#1.197039e-08
+
+#### CV Count Calculation 2023 ####
+countMetrics2023 <- Abundance_Data2023 
+
+PBG_average_cv_2023 <- PBG_plot_master_2023 %>%
+  group_by(iteration) %>%
+  summarize(CV_count = sd(Count, na.rm = TRUE) / mean(Count, na.rm = TRUE))
+
+# Take the mean of the mean for CV PBG count
+PBG_mean_mean_count_CV_2023 <- mean(PBG_average_cv_2023$CV_count, na.rm = TRUE)
+
+# ABG Mean
+ABG_mean_CV_count_2023 <- countMetrics2023 %>% 
+  summarize(CV_count = sd(Count) / mean(Count, na.rm = TRUE))
+
+Z_C_CV_2023 <- ((ABG_mean_CV_count_2023$CV_count) - (PBG_mean_mean_count_CV_2023))/(sd(PBG_average_cv_2023$CV_count))
+Z_C_CV_2023
+#6.076153
+
+p_value_C_CV_2023 <- 2*pnorm(-abs(Z_C_CV_2023))
+
+print(p_value_C_CV_2023)
+#1.230996e-09
