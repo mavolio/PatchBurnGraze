@@ -377,7 +377,7 @@ print(permanova <- adonis2(formula = abundanceWide[,8:150]~TreatmentSB, data=abu
 veg <- vegdist(abundanceWide[,8:150], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$TreatmentSB)
 permutest(dispersion, pairwise=TRUE, permutations=999) 
-#F=1.0195, df=3,57, p=0.378 
+#F=0.5209, df=3,57, p=0.663 
 
 BC_Data <- metaMDS(abundanceWide[,8:150])
 sites <- 1:nrow(abundanceWide)
@@ -429,13 +429,18 @@ Years_Since_Burned_NMDS_2021<- ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=g
         axis.title.y = element_text(size = 24, color = 'black'),
         legend.text = element_text(size = 24),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(), 
-        plot.title = element_text(size = 30)
+        plot.title = element_text(size = 50)
   ) +
 ggtitle("2021 year since burned") + 
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = expression(paste('F'['3,60'], ' = 1.0128')), size = 8, hjust = 'left') +
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.04, label = 'p = 0.864', size = 8, hjust = 'left') 
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = 'Mean p = 0.864', size = 15, hjust = 'left') +
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.1, label = 'Variance p = 0.663', size = 15, hjust = 'left') 
 
 Years_Since_Burned_NMDS_2021
+
+#PERMANOVA: F=0.7814, df=3,57, p=0.86
+#Betadisperion: #F=0.5209, df=3,57, p=0.663 
+
+
 #export at 1500x1000
 
 ### by watershed
@@ -538,8 +543,8 @@ ABG_VS_PBG_NMDS_2021 <- ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = gr
   scale_shape_manual(values = c(19, 19)) +
   xlab("NMDS1") + 
   ylab("NMDS2") + 
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = expression(paste('F'['1,28'], ' = 0.013')), size = 8, hjust = 'left') +
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.04, label = 'p = 0.013', size = 8, hjust = 'left') +
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = 'Mean p = 0.013', size = 15, hjust = 'left') +
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.1, label = 'Variance p = 0.001', size = 15, hjust = 'left') +
   theme_classic() +
   theme(axis.text.x = element_text(size = 24, color = "black"), 
         axis.text.y = element_text(size = 24, color = "black"), 
@@ -547,11 +552,12 @@ ABG_VS_PBG_NMDS_2021 <- ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = gr
         axis.title.y = element_text(size = 24, color = 'black'),
         legend.text = element_text(size = 24),
         panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
-        plot.title = element_text(size = 30)
+        plot.title = element_text(size = 50)
   ) +
   ggtitle("2021 ABG vs PBG")
 
-#F=1.9529 , df=1,28, p=0.013 *
+#PERMANOVA: F=1.9529 , df=1,28, p=0.013 *
+#PERMUTEST: F=23.434       , df=1,28, p=0.001 ***
 
 ABG_VS_PBG_NMDS_2021
 
@@ -641,13 +647,15 @@ Years_Since_Burned_NMDS_2022 <- ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=
         axis.title.y = element_text(size = 24, color = 'black'),
         legend.text = element_text(size = 24),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(), 
-        plot.title = element_text(size = 30)
+        plot.title = element_text(size = 50)
   ) +
   ggtitle("2022 year since burned") + 
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = expression(paste('F'['3,60'], ' = 2.1065')), size = 8, hjust = 'left') +
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.04, label = 'p = 0.001', size = 8, hjust = 'left')
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = 'Mean p = 0.001', size = 15, hjust = 'left') +
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.1, label = 'Variance p = 0.975', size = 15, hjust = 'left')
 
-# F=2.1065, df=3,60, p=0.001 ***
+# Mean F=2.1065, df=3,60, p=0.001 ***
+# Variance F=0.0811, df=3,60, p=0.975
+
 Years_Since_Burned_NMDS_2022
 
 ### by watershed
@@ -754,8 +762,8 @@ ABG_VS_PBG_NMDS_2022  <- ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = g
   scale_shape_manual(values = c(19, 19)) +
   xlab("NMDS1") + 
   ylab("NMDS2") + 
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = expression(paste('F'['1,30'], ' = 4.5219')), size = 8, hjust = 'left') +
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.02, label = 'p = 0.001', size = 8, hjust = 'left') +
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = 'Mean p=0.001', size = 15, hjust = 'left') +
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.1, label = 'Variance p = 0.001', size = 15, hjust = 'left') +
   theme_classic() +
   theme(axis.text.x = element_text(size = 24, color = "black"), 
         axis.text.y = element_text(size = 24, color = "black"), 
@@ -763,12 +771,13 @@ ABG_VS_PBG_NMDS_2022  <- ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = g
         axis.title.y = element_text(size = 24, color = 'black'),
         legend.text = element_text(size = 24),
         panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
-        plot.title = element_text(size = 30)
+        plot.title = element_text(size = 50)
   ) +
   ggtitle("2022 ABG vs PBG")
 
 
-#F=4.5219, df=1,30, p=0.001 ***
+#Mean F=4.5219, df=1,30, p=0.001 ***
+#Variance F=59.943 , df=1,30, p=0.001 ***
 
 ABG_VS_PBG_NMDS_2022
 
@@ -799,7 +808,7 @@ abundanceWide <- abundanceWide %>%
   filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
 
 print(permanova <- adonis2(formula = abundanceWide[, 8:75] ~ TreatmentSB, data = abundanceWide, permutations = 999, method = "bray"))
-# F=0.8535, df=3,60, p=0.54
+# F=1.3803, df=3,60, p=0.094 
 
 # Betadisper
 veg <- vegdist(abundanceWide[, 8:75], method = "bray")
@@ -854,13 +863,14 @@ Years_Since_Burned_NMDS_2023 <- ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=
         axis.title.y = element_text(size = 24, color = 'black'),
         legend.text = element_text(size = 24),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(), 
-        plot.title = element_text(size = 30)
+        plot.title = element_text(size = 50)
   ) +
   ggtitle("2023 year since burned") + 
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = expression(paste('F'['3,60'], ' = 1.3803')), size = 8, hjust = 'left') +
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.1, label = 'p = 0.078 ', size = 8, hjust = 'left')
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = 'Mean p = 0.094' , size = 15, hjust = 'left') +
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.1, label = 'Variance p = 0.999', size = 15, hjust = 'left')
 
-  # F=1.3803, df=3,60, p=0.078 
+# mean F=1.3803, df=3,60, p=0.094 
+# variance F=0.0039, df=3,60, p=0.999
 
 Years_Since_Burned_NMDS_2023
 
@@ -962,13 +972,14 @@ ABG_VS_PBG_NMDS_2023 <- ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = gr
         axis.title.y = element_text(size = 24, color = 'black'),
         legend.text = element_text(size = 24),
         panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
-        plot.title = element_text(size = 30)
+        plot.title = element_text(size = 50)
   ) +
   ggtitle("2023 ABG vs PBG") + 
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = expression(paste('F'['1,30'], ' = 2.3372')), size = 8, hjust = 'left') +
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.1, label = 'p = 0.016  ', size = 8, hjust = 'left')
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = 'Mean p = 0.159', size = 15, hjust = 'left') +
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.1, label = 'Variance p = 0.159  ', size = 15, hjust = 'left')
 
-#F=2.3372   , df=1,30, p=0.016 * 
+#mean F=2.3372   , df=1,30, p=0.016 * 
+#variance F=2.0478   , df=1,30, p=0.159
 
 ABG_VS_PBG_NMDS_2023
 
@@ -2051,3 +2062,77 @@ weightModel <- #stores the model output into a named list
       random = ~1|block) #this would be where you'd say north or south unit (which should be a variable in the dataframe)
 anova.lme(weightModel, type='sequential') #this gives you the ANOVA output from the model, where "sequential" tells it to do a type III anova
 
+
+#### CV Richness Calculation ####
+
+# Combine the data frames
+combined_data <- rbind(Combined_Data_2021, Combined_Data_2022, Combined_Data_2023)
+
+# Fill the Treatment column with 'PBG'
+combined_data$Treatment <- "PBG"
+
+#PBG CV
+PBG_CV_richness <- combined_data %>%
+  group_by(WS) %>%
+  summarise(cv_richness = (sd(richness) / mean(richness)) * 100)
+
+commMetrics_New <- separate(commMetrics, Sample, into = c("WS", "Trans", "Plot", "Treatment2"), sep = "_")
+
+
+ABG_CV_richness <- commMetrics_New %>% 
+  filter(Treatment == "ABG") %>% 
+  group_by(WS) %>% 
+  summarise(cv_richness = (sd(richness) / mean(richness)) * 100)
+
+P_R_CV <- (mean(ABG_CV_richness$cv_richness) - mean(PBG_CV_richness$cv_richness))/(sd(PBG_CV_richness$cv_richness))
+P_R_CV
+
+p_value_R_CV <- 2*pnorm(-abs(P_R_CV))
+
+print(p_value_R_CV)
+
+#### CV Evenness Calculation ####
+
+# Combine the data frames
+combined_data <- rbind(Combined_Data_2021, Combined_Data_2022, Combined_Data_2023)
+
+# Fill the Treatment column with 'PBG'
+combined_data$Treatment <- "PBG"
+
+#PBG CV
+PBG_CV_Evar <- combined_data %>%
+  group_by(WS) %>%
+  summarise(cv_Evar = (sd(Evar) / mean(Evar)) * 100)
+
+commMetrics_New <- separate(commMetrics, Sample, into = c("WS", "Trans", "Plot", "Treatment2"), sep = "_")
+
+
+ABG_CV_Evar <- commMetrics_New %>% 
+  filter(Treatment == "ABG") %>% 
+  group_by(WS) %>% 
+  summarise(cv_Evar = (sd(Evar) / mean(Evar)) * 100)
+
+P_E_CV <- (mean(ABG_CV_Evar$cv_Evar) - mean(PBG_CV_Evar$cv_Evar))/(sd(PBG_CV_Evar$cv_Evar))
+P_E_CV
+
+p_value_E_CV <- 2*pnorm(-abs(P_R_CV))
+
+print(p_value_E_CV)
+
+#### CV Total Count ####
+
+ABG_cv_count <- Abundance_ID_aboveground %>%
+  filter(WS %in% c("C1A", "C1SB")) %>%
+  group_by(WS) %>%
+  summarize(cv_count = sd(Count) / mean(Count) * 100)
+
+PBG_cv_count <- combined_data %>%
+  group_by(WS) %>%
+  summarize(cv_count = sd(Count) / mean(Count) * 100)
+
+P_C_CV <- (mean(ABG_cv_count$cv_count) - mean(PBG_cv_count$cv_count))/(sd(PBG_cv_count$cv_count))
+P_C_CV
+
+p_value_C_CV <- 2*pnorm(-abs(P_C_CV))
+
+print(p_value_C_CV)
