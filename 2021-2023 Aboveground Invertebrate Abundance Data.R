@@ -2278,3 +2278,347 @@ p_value_C_CV_2023 <- 2*pnorm(-abs(Z_C_CV_2023))
 
 print(p_value_C_CV_2023)
 #1.230996e-09
+#### Richness CV Graph 2021 ####
+# Create a data frame for PBG mean CV richness and Z-score
+pbg_data <- data.frame(
+  metric = "CV_richness",
+  CV_richness = PBG_mean_mean_richness_CV_2021,
+  treatment = "PBG"
+)
+
+# Create a data frame for ABG mean CV richness
+abg_data <- data.frame(
+  metric = "CV_richness",
+  CV_richness = ABG_mean_CV_richness_2021$CV_richness,
+  treatment = "ABG"
+)
+
+# Combine the data frames
+combined_data <- rbind(pbg_data, abg_data)
+
+# Print the combined data frame
+print(combined_data)
+
+
+#CV Count Graph 
+ggplot(combined_data, aes(x = treatment, y = `CV_richness`, fill = treatment)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red")) +
+  guides(fill = FALSE) +
+  theme_bw() +
+  theme(panel.background = element_rect(fill = "white"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 20),
+        axis.title = element_text(size = 40),
+        axis.text.y = element_text(size = 20),
+        axis.title.y = element_text(size = 40),
+        axis.ticks.y = element_line(size = 1),
+        plot.title = element_text(size = 50)) +  # Adjust title size here
+  labs(y = "Count Average CV", x = "Treatment", title = "CV Richness 2021")
+
+
+
+
+#### Richness CV Graph 2022 ####
+# Create a data frame for PBG mean CV richness and Z-score
+pbg_data <- data.frame(
+  metric = "CV_richness",
+  CV_richness = PBG_mean_mean_richness_CV_2022,
+  treatment = "PBG"
+)
+
+# Create a data frame for ABG mean CV richness
+abg_data <- data.frame(
+  metric = "CV_richness",
+  CV_richness = ABG_mean_CV_richness_2022$CV_richness,
+  treatment = "ABG"
+)
+
+# Combine the data frames
+combined_data <- rbind(pbg_data, abg_data)
+
+# Print the combined data frame
+print(combined_data)
+
+# CV Count Graph 
+ggplot(combined_data, aes(x = treatment, y = CV_richness, fill = treatment)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red")) +
+  guides(fill = FALSE) +
+  theme_bw() +
+  theme(panel.background = element_rect(fill = "white"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 20),
+        axis.title = element_text(size = 40),
+        axis.text.y = element_text(size = 20),
+        axis.title.y = element_text(size = 40),
+        axis.ticks.y = element_line(size = 1),
+        plot.title = element_text(size = 50)) +  
+  labs(y = "Count Average CV", x = "Treatment", title = "CV Richness 2022")
+
+#### Richness CV Graph 2023 ####
+# Create a data frame for PBG mean CV richness and Z-score
+pbg_data <- data.frame(
+  metric = "CV_richness",
+  CV_richness = PBG_mean_mean_richness_CV_2023,
+  treatment = "PBG"
+)
+
+# Create a data frame for ABG mean CV richness
+abg_data <- data.frame(
+  metric = "CV_richness",
+  CV_richness = ABG_mean_CV_richness_2023$CV_richness,
+  treatment = "ABG"
+)
+
+# Combine the data frames
+combined_data <- rbind(pbg_data, abg_data)
+
+# Print the combined data frame
+print(combined_data)
+
+# CV Count Graph 
+ggplot(combined_data, aes(x = treatment, y = CV_richness, fill = treatment)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red")) +
+  guides(fill = FALSE) +
+  theme_bw() +
+  theme(panel.background = element_rect(fill = "white"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 20),
+        axis.title = element_text(size = 40),
+        axis.text.y = element_text(size = 20),
+        axis.title.y = element_text(size = 40),
+        axis.ticks.y = element_line(size = 1),
+        plot.title = element_text(size = 50)) +  
+  labs(y = "Count Average CV", x = "Treatment", title = "CV Richness 2023")
+
+#### Evar CV Graph 2021 ####
+# Create a data frame for PBG mean CV Evar and Z-score
+pbg_data <- data.frame(
+  metric = "CV_Evar",
+  CV_Evar = PBG_mean_mean_Evar_CV_2021,
+  treatment = "PBG"
+)
+
+# Create a data frame for ABG mean CV Evar
+abg_data <- data.frame(
+  metric = "CV_Evar",
+  CV_Evar = ABG_mean_CV_Evar_2021$CV_Evar,
+  treatment = "ABG"
+)
+
+# Combine the data frames
+combined_data <- rbind(pbg_data, abg_data)
+
+# Print the combined data frame
+print(combined_data)
+
+# CV Evar Graph 
+ggplot(combined_data, aes(x = treatment, y = CV_Evar, fill = treatment)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red")) +
+  guides(fill = FALSE) +
+  theme_bw() +
+  theme(panel.background = element_rect(fill = "white"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 20),
+        axis.title = element_text(size = 40),
+        axis.text.y = element_text(size = 20),
+        axis.title.y = element_text(size = 40),
+        axis.ticks.y = element_line(size = 1),
+        plot.title = element_text(size = 50)) +  
+  labs(y = "Evar Average CV", x = "Treatment", title = "CV Evar 2021")
+
+#### Evar CV Graph 2022 ####
+# Create a data frame for PBG mean CV Evar and Z-score
+pbg_data <- data.frame(
+  metric = "CV_Evar",
+  CV_Evar = PBG_mean_mean_Evar_CV_2022,
+  treatment = "PBG"
+)
+
+# Create a data frame for ABG mean CV Evar
+abg_data <- data.frame(
+  metric = "CV_Evar",
+  CV_Evar = ABG_mean_CV_Evar_2022$CV_Evar,
+  treatment = "ABG"
+)
+
+# Combine the data frames
+combined_data <- rbind(pbg_data, abg_data)
+
+# Print the combined data frame
+print(combined_data)
+
+# CV Evar Graph 
+ggplot(combined_data, aes(x = treatment, y = CV_Evar, fill = treatment)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red")) +
+  guides(fill = FALSE) +
+  theme_bw() +
+  theme(panel.background = element_rect(fill = "white"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 20),
+        axis.title = element_text(size = 40),
+        axis.text.y = element_text(size = 20),
+        axis.title.y = element_text(size = 40),
+        axis.ticks.y = element_line(size = 1),
+        plot.title = element_text(size = 50)) +  
+  labs(y = "Evar Average CV", x = "Treatment", title = "CV Evar 2022")
+
+#### Evar CV Graph 2023 ####
+# Create a data frame for PBG mean CV Evar and Z-score
+pbg_data <- data.frame(
+  metric = "CV_Evar",
+  CV_Evar = PBG_mean_mean_Evar_CV_2023,
+  treatment = "PBG"
+)
+
+# Create a data frame for ABG mean CV Evar
+abg_data <- data.frame(
+  metric = "CV_Evar",
+  CV_Evar = ABG_mean_CV_Evar_2023$CV_Evar,
+  treatment = "ABG"
+)
+
+# Combine the data frames
+combined_data <- rbind(pbg_data, abg_data)
+
+# Print the combined data frame
+print(combined_data)
+
+# CV Evar Graph 
+ggplot(combined_data, aes(x = treatment, y = CV_Evar, fill = treatment)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red")) +
+  guides(fill = FALSE) +
+  theme_bw() +
+  theme(panel.background = element_rect(fill = "white"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 20),
+        axis.title = element_text(size = 40),
+        axis.text.y = element_text(size = 20),
+        axis.title.y = element_text(size = 40),
+        axis.ticks.y = element_line(size = 1),
+        plot.title = element_text(size = 50)) +  
+  labs(y = "Evar Average CV", x = "Treatment", title = "CV Evar 2023")
+
+#### Count CV Graph 2021 ####
+# Create a data frame for PBG mean CV Count and Z-score
+pbg_data <- data.frame(
+  metric = "CV_Count",
+  CV_Count = PBG_mean_mean_count_CV_2021,
+  treatment = "PBG"
+)
+
+# Create a data frame for ABG mean CV Count
+abg_data <- data.frame(
+  metric = "CV_Count",
+  CV_Count = ABG_mean_CV_count_2021$CV_count,
+  treatment = "ABG"
+)
+
+# Combine the data frames
+combined_data <- rbind(pbg_data, abg_data)
+
+# Print the combined data frame
+print(combined_data)
+
+# CV Count Graph 
+ggplot(combined_data, aes(x = treatment, y = CV_Count, fill = treatment)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red")) +
+  guides(fill = FALSE) +
+  theme_bw() +
+  theme(panel.background = element_rect(fill = "white"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 20),
+        axis.title = element_text(size = 40),
+        axis.text.y = element_text(size = 20),
+        axis.title.y = element_text(size = 40),
+        axis.ticks.y = element_line(size = 1),
+        plot.title = element_text(size = 50)) +  
+  labs(y = "Count Average CV", x = "Treatment", title = "CV Count 2021")
+#### Count CV Graph 2022 ####
+# Create a data frame for PBG mean CV Count and Z-score
+pbg_data <- data.frame(
+  metric = "CV_Count",
+  CV_Count = PBG_mean_mean_count_CV_2022,
+  treatment = "PBG"
+)
+
+# Create a data frame for ABG mean CV Count
+abg_data <- data.frame(
+  metric = "CV_Count",
+  CV_Count = ABG_mean_CV_count_2022$CV_count,
+  treatment = "ABG"
+)
+
+# Combine the data frames
+combined_data <- rbind(pbg_data, abg_data)
+
+# Print the combined data frame
+print(combined_data)
+
+# CV Count Graph 
+ggplot(combined_data, aes(x = treatment, y = CV_Count, fill = treatment)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red")) +
+  guides(fill = FALSE) +
+  theme_bw() +
+  theme(panel.background = element_rect(fill = "white"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 20),
+        axis.title = element_text(size = 40),
+        axis.text.y = element_text(size = 20),
+        axis.title.y = element_text(size = 40),
+        axis.ticks.y = element_line(size = 1),
+        plot.title = element_text(size = 50)) +  
+  labs(y = "Count Average CV", x = "Treatment", title = "CV Count 2022")
+#### Count CV Graph 2023 ####
+# Create a data frame for PBG mean CV Count and Z-score
+pbg_data <- data.frame(
+  metric = "CV_Count",
+  CV_Count = PBG_mean_mean_count_CV_2023,
+  treatment = "PBG"
+)
+
+# Create a data frame for ABG mean CV Count
+abg_data <- data.frame(
+  metric = "CV_Count",
+  CV_Count = ABG_mean_CV_count_2023$CV_count,
+  treatment = "ABG"
+)
+
+# Combine the data frames
+combined_data <- rbind(pbg_data, abg_data)
+
+# Print the combined data frame
+print(combined_data)
+
+# CV Count Graph 
+ggplot(combined_data, aes(x = treatment, y = CV_Count, fill = treatment)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red")) +
+  guides(fill = FALSE) +
+  theme_bw() +
+  theme(panel.background = element_rect(fill = "white"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 20),
+        axis.title = element_text(size = 40),
+        axis.text.y = element_text(size = 20),
+        axis.title.y = element_text(size = 40),
+        axis.ticks.y = element_line(size = 1),
+        plot.title = element_text(size = 50)) +  
+  labs(y = "Count Average CV", x = "Treatment", title = "CV Count 2023")
+
