@@ -761,9 +761,7 @@ ABG_VS_PBG_NMDS_2022  <- ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = g
   scale_linetype_manual(values = c("solid", "twodash"), name = "") +
   scale_shape_manual(values = c(19, 19)) +
   xlab("NMDS1") + 
-  ylab("NMDS2") + 
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = 'Mean p=0.001', size = 15, hjust = 'left') +
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.1, label = 'Variance p = 0.001', size = 15, hjust = 'left') +
+  ylab("NMDS2") +
   theme_classic() +
   theme(axis.text.x = element_text(size = 24, color = "black"), 
         axis.text.y = element_text(size = 24, color = "black"), 
@@ -773,7 +771,9 @@ ABG_VS_PBG_NMDS_2022  <- ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = g
         panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
         plot.title = element_text(size = 50)
   ) +
-  ggtitle("2022 ABG vs PBG")
+  ggtitle("2022 ABG vs PBG") +
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0, label = 'Variance p = 0.001', size = 15, hjust = 'left') +
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.015, label = 'Mean p=0.001', size = 15, hjust = 'left')
 
 
 #Mean F=4.5219, df=1,30, p=0.001 ***
@@ -975,8 +975,8 @@ ABG_VS_PBG_NMDS_2023 <- ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = gr
         plot.title = element_text(size = 50)
   ) +
   ggtitle("2023 ABG vs PBG") + 
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = 'Mean p = 0.159', size = 15, hjust = 'left') +
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.1, label = 'Variance p = 0.159  ', size = 15, hjust = 'left')
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) + 0.03, label = 'Mean p = 0.016', size = 15, hjust = 'left') +
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = max(BC_NMDS_Graph$MDS2) - 0.2, label = 'Variance p = 0.159  ', size = 15, hjust = 'left')
 
 #mean F=2.3372   , df=1,30, p=0.016 * 
 #variance F=2.0478   , df=1,30, p=0.159
@@ -992,7 +992,14 @@ NMMDS_BIG <- grid.arrange(
   ncol = 2
 )
 
+NMMDS_ABG_VS_PBG <- grid.arrange(
+ ABG_VS_PBG_NMDS_2021, 
+ ABG_VS_PBG_NMDS_2022, 
+ ABG_VS_PBG_NMDS_2023,
+  ncol = 1
+)
 
+ggsave("NMMDS_ABG_VS_PBG.png", NMMDS_ABG_VS_PBG, width = 40, height = 40)
 
 ggsave("2021-2023 NMDS.png", NMMDS_BIG, width = 40, height = 40)
 
@@ -1009,12 +1016,12 @@ combined_data_wide <- combined_data %>%
   pivot_wider(names_from = 'ID', values_from = 'Count', values_fill = list(Count = 0)) 
 
 combined_data_wide <- combined_data_wide %>% 
-  mutate(sum = rowSums(combined_data_wide[, c(8:202)], na.rm = TRUE)) %>% 
+  mutate(sum = rowSums(combined_data_wide[, c(8:124)], na.rm = TRUE)) %>% 
   filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
 
 #Years since burned
 print(permanova <- adonis2(
-  combined_data_wide[,8:202]~TreatmentSB,
+  combined_data_wide[,8:124]~TreatmentSB,
   data = combined_data_wide,
   method = "bray",
   permutations=999,
@@ -1023,12 +1030,12 @@ print(permanova <- adonis2(
 #F = 2.3383, P = 0.127
 
 #betadisper
-veg <- vegdist(combined_data_wide[,8:202], method = "bray")
+veg <- vegdist(combined_data_wide[,8:124], method = "bray")
 dispersion <- betadisper(veg, combined_data_wide$TreatmentSB)
 permutest(dispersion, pairwise=TRUE, permutations=999) 
 #F=0.4157 , df=3,191, p=0.739
 
-BC_Data <- metaMDS(combined_data_wide[,8:202])
+BC_Data <- metaMDS(combined_data_wide[,8:124])
 sites <- 1:nrow(combined_data_wide)
 BC_Meta_Data <- combined_data_wide[,1:7]
 plot(BC_Data$points, col=as.factor(BC_Meta_Data$TreatmentSB))
@@ -1779,7 +1786,7 @@ count_2022 <- ggplot(average_total_count_2022, aes(x = mean_count, y = ..scaled.
   geom_density(alpha = 0.5) +
   geom_vline(aes(xintercept = ABG_mean_total_count_2022, color = "ABG Total Abundance"), linetype = "dashed", size = 1) +
   labs(title = "2022: Density Plot of Total Abundance",
-       x = "Mean Total Count",
+       x = "Mean Total Abundance",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
   annotate("text", x = 55, y = 1, label = "p-value: 0.130", color = "blue", size = 3, hjust = 1, vjust = 1) +
@@ -1845,7 +1852,7 @@ count_2023 <- ggplot(average_total_count_2023, aes(x = mean_count, y = ..scaled.
   geom_density(alpha = 0.5) +
   geom_vline(aes(xintercept = ABG_mean_total_count_2023, color = "ABG Total Abundance"), linetype = "dashed", size = 1) +
   labs(title = "2023: Density Plot of Total Abundance",
-       x = "Mean Total Count",
+       x = "Mean Total Abundance",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
   annotate("text", x = 55, y = 1, label = "p-value: 0.886", color = "blue", size = 3, hjust = 1, vjust = 1) +
@@ -1905,10 +1912,10 @@ legend <- get_legend(legend_2021)
 
 # Arrange all plots with a single legend
 grid.arrange(
-  richness_2021, evenness_2021, count_2021, weight_2021,
-  richness_2022, evenness_2022, count_2022, weight_2022,
-  richness_2023, evenness_2023, count_2023, weight_2023,
-  ncol = 4,
+  richness_2021, evenness_2021, count_2021, 
+  richness_2022, evenness_2022, count_2022, 
+  richness_2023, evenness_2023, count_2023, 
+  ncol = 3,
   top = "Comparison of Richness, Evenness, and Count across Years",
   bottom = legend
 )
@@ -1930,6 +1937,10 @@ TotalcountModel <- #stores the model output into a named list
       random = ~1|block) #this would be where you'd say north or south unit (which should be a variable in the data frame)
 anova.lme(TotalcountModel, type='sequential') #this gives you the ANOVA output from the model, where "sequential" tells it to do a type III anova
 emmeans(TotalcountModel, pairwise~TreatmentSB, adjust="tukey") #this gives you contrasts (means and confidence intervals) for each possible pairwise comparison of treatments to know whether they are different or not (overlapping confidence intervals means not different)
+
+# numDF denDF  F-value p-value
+# (Intercept)     1    25 49.89525  <.0001
+# TreatmentSB     3    25  4.76838  0.0092
 
 #### 2022 Total Count Stats ####
 total_counts2 <- full_join(BurnInfo2022, Abundance_Data2022) %>% 
@@ -1973,6 +1984,10 @@ richModel <- #stores the model output into a named list
       random = ~1|block) #this would be where you'd say north or south unit (which should be a variable in the dataframe)
 anova.lme(richModel, type='sequential') #this gives you the ANOVA output from the model, where "sequential" tells it to do a type III anova
 
+# numDF denDF  F-value p-value
+# (Intercept)     1    56 52.75320  <.0001
+# TreatmentSB     3    56  0.43999  0.7253
+
 #### 2022 Richness Stats ####
 
 Joined <- full_join(BurnInfo2022, Joined2022) %>% unite("TreatmentSB",c("Treatment","SB"), sep="_") %>% na.omit()
@@ -1982,6 +1997,10 @@ richModel <- #stores the model output into a named list
       data = Joined, #dataset you are analyzing, this must contain all the data (both treatments and all plots)
       random = ~1|block) #this would be where you'd say north or south unit (which should be a variable in the dataframe)
 anova.lme(richModel, type='sequential') #this gives you the ANOVA output from the model, where "sequential" tells it to do a type III anova
+
+# numDF denDF  F-value p-value
+# (Intercept)     1    59 57.72626  <.0001
+# TreatmentSB     3    59  2.57631  0.0623
 
 #### 2023 Richness Stats ####
 
@@ -1993,6 +2012,9 @@ richModel <- #stores the model output into a named list
       random = ~1|block) #this would be where you'd say north or south unit (which should be a variable in the dataframe)
 anova.lme(richModel, type='sequential') #this gives you the ANOVA output from the model, where "sequential" tells it to do a type III anova
 
+# numDF denDF          F-value      p-value
+# (Intercept)     1    58 7.863416  0.0069
+# TreatmentSB     3    58 4.376781  0.0076
 
 #### 2021 Evenness Stats ####
 
@@ -2622,3 +2644,169 @@ ggplot(combined_data, aes(x = treatment, y = CV_Count, fill = treatment)) +
         plot.title = element_text(size = 50)) +  
   labs(y = "Count Average CV", x = "Treatment", title = "CV Count 2023")
 
+
+#### 2021 Years Since Burned, Count Evenness Graphs ####
+# Box plot for count
+count_boxplot <- ggplot(Abundance_Data2021, aes(x=TreatmentSB, y=Count, fill=TreatmentSB)) +
+  geom_boxplot() +
+  labs(title="Abundance Comparison for Treatments with Years Since Burned", x="Treatment", y="Abundance") +
+  scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red", "ABG_0" = "blue")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
+  theme_minimal() +
+  annotate("text", x = -Inf, y = Inf, label = "P value: 0.05", vjust = 1, hjust = 0, size = 3.5, color = "black")
+
+# Display the plot
+count_boxplot
+
+# numDF denDF  F-value p-value
+# (Intercept)     1    25 49.89525  <.0001
+# TreatmentSB     3    25  4.76838  0.0092
+
+# Violin plot for count
+count_violin <- ggplot(Abundance_Data2021, aes(x=TreatmentSB, y=Count, fill=TreatmentSB)) +
+  geom_violin() +
+  labs(title="Abundance Comparison for Treatments with Years Since Burned", x="TreatmentSB", y="Abundance") +
+  scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red", "ABG_0" = "blue")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
+  theme_minimal() +
+  annotate("text", x = -Inf, y = Inf, label = "P value: 0.05", vjust = 1, hjust = 0, size = 3.5, color = "black")
+
+# Display the plot
+count_violin
+
+# Boxplot for Richness
+richness_boxplot <- ggplot(Joined2021, aes(x=TreatmentSB, y=richness, fill=TreatmentSB)) +
+  geom_boxplot() +
+  labs(title="Richness Comparison for Treatments with Years Since Burned", x="Treatment", y="Richness") +
+  scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
+  theme_minimal() +
+  annotate("text", x = -Inf, y = Inf, label = "P value: 0.05", vjust = 1, hjust = 0, size = 3.5, color = "black")
+
+# Display the plot
+richness_boxplot
+
+ # numDF denDF  F-value p-value
+# (Intercept)     1    56 52.75320  <.0001
+# TreatmentSB     3    56  0.43999  0.7253
+
+
+# Boxplot for Evenness
+evenness_boxplot <- ggplot(Joined2021, aes(x=TreatmentSB, y=Evar, fill=TreatmentSB)) +
+  geom_boxplot() +
+  labs(title="Evenness Comparison for Treatments with Years Since Burned", x="Treatment", y="Evenness") +
+  scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
+  theme_minimal() +
+  annotate("text", x = -Inf, y = Inf, label = "P value: 0.05", vjust = 1, hjust = 0, size = 3.5, color = "black")
+
+# Display the plot
+evenness_boxplot
+
+#### 2022 Years Since Burned, Count Evenness Graphs ####
+# Box plot for count
+count_boxplot_2022 <- ggplot(Abundance_Data2022, aes(x=TreatmentSB, y=Count, fill=TreatmentSB)) +
+  geom_boxplot() +
+  labs(title="Abundance Comparison for Treatments with Years Since Burned (2022)", x="Treatment", y="Abundance") +
+  scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red", "ABG_0" = "blue")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
+  theme_minimal() +
+  annotate("text", x = -Inf, y = Inf, label = "P value: 0.05", vjust = 1, hjust = 0, size = 3.5, color = "black")
+
+# Display the plot
+count_boxplot_2022
+
+# Violin plot for count
+count_violin_2022 <- ggplot(Abundance_Data2022, aes(x=TreatmentSB, y=Count, fill=TreatmentSB)) +
+  geom_violin() +
+  labs(title="Abundance Comparison for Treatments with Years Since Burned (2022)", x="TreatmentSB", y="Abundance") +
+  scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red", "ABG_0" = "blue")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
+  theme_minimal() +
+  annotate("text", x = -Inf, y = Inf, label = "P value: 0.05", vjust = 1, hjust = 0, size = 3.5, color = "black")
+
+# Display the plot
+count_violin_2022
+
+# Boxplot for Richness
+richness_boxplot_2022 <- ggplot(Joined2022, aes(x=TreatmentSB, y=richness, fill=TreatmentSB)) +
+  geom_boxplot() +
+  labs(title="Richness Comparison for Treatments with Years Since Burned (2022)", x="Treatment", y="Richness") +
+  scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
+  theme_minimal() +
+  annotate("text", x = -Inf, y = Inf, label = "P value: 0.05", vjust = 1, hjust = 0, size = 3.5, color = "black")
+
+# numDF denDF  F-value p-value
+# (Intercept)     1    59 57.72626  <.0001
+# TreatmentSB     3    59  2.57631  0.0623
+
+# Display the plot
+richness_boxplot_2022
+
+# Boxplot for Evenness
+evenness_boxplot_2022 <- ggplot(Joined2022, aes(x=TreatmentSB, y=Evar, fill=TreatmentSB)) +
+  geom_boxplot() +
+  labs(title="Evenness Comparison for Treatments with Years Since Burned (2022)", x="Treatment", y="Evenness") +
+  scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
+  theme_minimal() +
+  annotate("text", x = -Inf, y = Inf, label = "P value: 0.05", vjust = 1, hjust = 0, size = 3.5, color = "black")
+
+# Display the plot
+evenness_boxplot_2022
+
+
+#### 2023 Years Since Burned, Count Evenness Graphs ####
+# Box plot for count
+count_boxplot_2023 <- ggplot(Abundance_Data2023, aes(x=TreatmentSB, y=Count, fill=TreatmentSB)) +
+  geom_boxplot() +
+  labs(title="Abundance Comparison for Treatments with Years Since Burned (2023)", x="Treatment", y="Abundance") +
+  scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red", "ABG_0" = "blue")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
+  theme_minimal() +
+  annotate("text", x = -Inf, y = Inf, label = "P value: 0.05", vjust = 1, hjust = 0, size = 3.5, color = "black")
+
+# Display the plot
+count_boxplot_2023
+
+# Violin plot for count
+count_violin_2023 <- ggplot(Abundance_Data2023, aes(x=TreatmentSB, y=Count, fill=TreatmentSB)) +
+  geom_violin() +
+  labs(title="Abundance Comparison for Treatments with Years Since Burned (2023)", x="TreatmentSB", y="Abundance") +
+  scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red", "ABG_0" = "blue")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
+  theme_minimal() +
+  annotate("text", x = -Inf, y = Inf, label = "P value: 0.05", vjust = 1, hjust = 0, size = 3.5, color = "black")
+
+# Display the plot
+count_violin_2023
+
+# Boxplot for Richness
+richness_boxplot_2023 <- ggplot(Joined2023, aes(x=TreatmentSB, y=richness, fill=TreatmentSB)) +
+  geom_boxplot() +
+  labs(title="Richness Comparison for Treatments with Years Since Burned (2023)", x="Treatment", y="Richness") +
+  scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
+  theme_minimal() +
+  annotate("text", x = -Inf, y = Inf, label = "P value: 0.05", vjust = 1, hjust = 0, size = 3.5, color = "black")
+
+# Display the plot
+richness_boxplot_2023
+
+# numDF denDF          F-value      p-value
+# (Intercept)     1    58 7.863416  0.0069
+# TreatmentSB     3    58 4.376781  0.0076
+
+# Boxplot for Evenness
+evenness_boxplot_2023 <- ggplot(Joined2023, aes(x=TreatmentSB, y=Evar, fill=TreatmentSB)) +
+  geom_boxplot() +
+  labs(title="Evenness Comparison for Treatments with Years Since Burned (2023)", x="Treatment", y="Evenness") +
+  scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
+  theme_minimal() +
+  annotate("text", x = -Inf, y = Inf, label = "P value: 0.05", vjust = 1, hjust = 0, size = 3.5, color = "black")
+
+# Display the plot
+evenness_boxplot_2023
+
+                            
+#### 2021-2023 Multipanel Years Since Burned ####
+# Arrange plots into a multipanel graph
+multi_panel_graph <- grid.arrange(
+  count_boxplot, richness_boxplot, evenness_boxplot,
+  count_boxplot_2022, richness_boxplot_2022, evenness_boxplot_2022,
+  count_boxplot_2023, richness_boxplot_2023, evenness_boxplot_2023,
+  nrow = 3, ncol = 3
+)
+
+# Display the multipanel graph
+multi_panel_graph
