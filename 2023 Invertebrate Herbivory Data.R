@@ -50,7 +50,8 @@ for (BOOT in bootstrap_vector) {
     group_by(Block) %>%
     sample_n(24, replace = TRUE) %>%
     dplyr::select(plot_index) %>%
-    ungroup() 
+    ungroup()
+  
   # Join the sampled rows back to the original dataframe
   PBG_plot_ready_2023 <- Invertebrate_Herbivory_2023 %>%
     right_join(Joined_New_2023, by = c("Block", "plot_index")) %>%
@@ -69,7 +70,8 @@ for (BOOT in bootstrap_vector) {
 #### Condensing down ####
 PBG_rep_master_2023_new <- PBG_rep_master_2023 %>% 
   group_by(iteration, Plant) %>% 
-  mutate(Seq = row_number())
+  mutate(Seq = row_number()) %>% 
+  ungroup()
 
 PBG_rep_master_2023_new_2 <- PBG_rep_master_2023_new %>%
   group_by(Plant, Seq) %>%
