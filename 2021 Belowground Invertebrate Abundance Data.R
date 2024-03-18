@@ -213,7 +213,7 @@ commMetrics <- Abundance_Stats %>%  community_structure(abundance.var='Count', r
 commMetrics$Treatment <- ifelse(grepl("C1", commMetrics$Sample), "ABG", "PBG") 
 
 #Adding Blocks
-commMetrics2 <- commMetrics % >% mutate(block = ifelse(grepl("S", Sample), "North", "South")) %>% 
+commMetrics2 <- commMetrics %>% mutate(block = ifelse(grepl("S", Sample), "North", "South")) %>% 
   separate(col = "Sample", into = c("WS","Trans","Dist.","Trea"), sep="_")
 
 #Joining Burn information with Treatment
