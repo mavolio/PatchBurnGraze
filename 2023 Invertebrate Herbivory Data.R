@@ -16,7 +16,6 @@ library(car)
 #### CSV read ####
 Invertebrate_Herbivory_2023 <- read_excel("HerbivoryDataSheetPBG.xlsx")
 BurnInfo2023 <- read_excel("YearsSenseBurned2023.xlsx")
-
 #### BurnInfo Add In ####
 
 Invertebrate_Herbivory_2023 <- left_join(Invertebrate_Herbivory_2023, BurnInfo2023, by = "WS")
@@ -24,14 +23,57 @@ Invertebrate_Herbivory_2023 <- left_join(Invertebrate_Herbivory_2023, BurnInfo20
 #### Data Cleanup ####
 
 Invertebrate_Herbivory_2023 <- Invertebrate_Herbivory_2023 %>% mutate(Treatment = ifelse(grepl("C1", WS), "ABG", "PBG"),
-       Block = ifelse(grepl("S", WS), "North", "South")) %>% 
+                                                                      Block = ifelse(grepl("S", WS), "North", "South")) %>% 
   unite("Sample", c("WS", "Trans", "Rep"), sep = "_", remove = FALSE) %>% 
   unite("Plant", c("Gensus", "Species"), sep = "_", remove = FALSE) %>% 
   rename(Herbivory = 'Herbivory (%)' ) %>% 
   unite("TreatmentSB",c("Treatment","SB"), sep="_") %>% 
-  mutate(Treatment = ifelse(grepl("C1", WS), "ABG", "PBG"))
-  
+  mutate(Treatment = ifelse(grepl("C1", WS), "ABG", "PBG")) 
 
+Invertebrate_Herbivory_2023 <- Invertebrate_Herbivory_2023 %>%  
+  mutate(Treatment = ifelse(grepl("C1", Sample), "ABG", "PBG"),
+         block = ifelse(grepl("S", Sample), "North", "South"))
+
+#### Bootstrapping ####
+num_bootstrap <- 1000
+
+Invertebrate_Herbivory_2023 <- Invertebrate_Herbivory_2023 %>% mutate(plot_index=1:length(block)) %>% 
+  filter(Treatment == "PBG")
+
+bootstrap_vector <- 1:num_bootstrap
+PBG_rep_master_2023 <- data.frame()  # Initialize an empty dataframe
+
+for (BOOT in bootstrap_vector) {
+  Joined_New_2023 <- Invertebrate_Herbivory_2023 %>%
+    dplyr::select(1:14) %>%
+    unique() %>%
+    group_by(Block) %>%
+    sample_n(24, replace = TRUE) %>%
+    dplyr::select(plot_index) %>%
+    ungroup() 
+  # Join the sampled rows back to the original dataframe
+  PBG_plot_ready_2023 <- Invertebrate_Herbivory_2023 %>%
+    right_join(Joined_New_2023, by = c("Block", "plot_index")) %>%
+    mutate(iteration = BOOT)
+  
+  # Append the results to the master dataframe
+  PBG_rep_master_2023 <- rbind(PBG_rep_master_2023, PBG_plot_ready_2023)
+}
+
+
+
+
+
+
+
+#### Condensing down ####
+PBG_rep_master_2023_new <- PBG_rep_master_2023 %>% 
+  group_by(iteration, Plant) %>% 
+  mutate(Seq = row_number())
+
+PBG_rep_master_2023_new_2 <- PBG_rep_master_2023_new %>%
+  group_by(Plant, Seq) %>%
+  summarise(Herbivory = mean(Herbivory))
 
 
 ############################################################
