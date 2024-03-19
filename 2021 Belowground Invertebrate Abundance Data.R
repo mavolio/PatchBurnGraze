@@ -203,9 +203,14 @@ total_counts2 <- full_join(BurnInfo, total_counts) %>% unite("TreatmentSB",c("Tr
 TotalcountModel <- #stores the model output into a named list
   lme(Count ~ TreatmentSB, #relates richness (or any other dependent variable) to treatment (e.g., ABG and PBG or ABG, PBG0, PBG1, PBG2 for years since burning)
       data = total_counts2, #dataset you are analyzing, this must contain all the data (both treatments and all plots)
-      random = ~1|Block) #this would be where you'd say north or south unit (which should be a variable in the data frame)
+      random = ~1|block) #this would be where you'd say north or south unit (which should be a variable in the data frame)
 anova.lme(TotalcountModel, type='sequential') #this gives you the ANOVA output from the model, where "sequential" tells it to do a type III anova
 emmeans(TotalcountModel, pairwise~TreatmentSB, adjust="tukey") #this gives you contrasts (means and confidence intervals) for each possible pairwise comparison of treatments to know whether they are different or not (overlapping confidence intervals means not different)
+
+# numDF denDF   F-value p-value
+# (Intercept)     1   129 307.18784  <.0001
+# TreatmentSB     4   129   0.36859  0.8307
+
 #### Prep for Richness + Evenness Graphs & Stats ####
 
 #Getting  community data and tagging ABG and PBG
@@ -353,6 +358,10 @@ anova.lme(richModel, type='sequential') #this gives you the ANOVA output from th
 #
 emmeans(richModel, pairwise~TreatmentSB, adjust="tukey") #this gives you contrasts (means and confidence intervals) for each possible pairwise comparison of treatments to know whether they are different or not (overlapping confidence intervals means not different)
 
+# numDF denDF  F-value p-value
+# (Intercept)     1    58 7.863416  0.0069
+# TreatmentSB     3    58 4.376781  0.0076
+
 #### Evenness Graphs ####
 ggplot(Joined, aes(x = TreatmentSB, y = Evar, fill= Trea)) +
   geom_boxplot() +
@@ -381,6 +390,9 @@ EvenModel <- #stores the model output into a named list
 anova.lme(EvenModel, type='sequential') #this gives you the ANOVA output from the model, where "sequential" tells it to do a type III anova
 emmeans(EvenModel, pairwise~TreatmentSB, adjust="tukey") #this gives you contrasts (means and confid
 
+# numDF denDF   F-value p-value
+# (Intercept)     1    58 158.02196  <.0001
+# TreatmentSB     3    58   2.46117  0.0716
 
 #### Density Plots ####
 
@@ -771,8 +783,54 @@ arranged_plots <- grid.arrange(NMDS_ABG_VS_PBG, NMDS_Years_Since_Burned, ncol = 
 
 ggsave("arranged_plots.png", arranged_plots, width = 25, height = 5)
 
-### Richness and evenness two panel ####
+#### Richness and evenness two panel ####
 
 evenness_richness <- grid.arrange(avg_evenness, avg_richness, ncol = 2)
 ggsave("belowground_evenness_richness.png", evenness_richness, width = 20, height = 10)
 
+
+#### Richness, Count and Evenness Years Since Burn ####
+# Boxplot for Richness
+richness_below <- ggplot(Joined, aes(x=TreatmentSB, y=richness, fill=TreatmentSB)) +
+  geom_boxplot() +
+  labs(title="Richness Comparison for Treatments with Years Since Burned (2021)", x="Treatment", y="Richness") +
+  scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
+  theme_minimal() +
+  annotate("text", x = -Inf, y = Inf, label = "P value: 0.008", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
+  theme(legend.position = "none",  plot.title = element_text(size = 9)) # Adjust size as needed
+
+# Display the plot
+richness_below
+
+# numDF denDF  F-value p-value
+# (Intercept)     1    58 7.863416  0.0069
+# TreatmentSB     3    58 4.376781  0.0076
+
+Evar_below <- ggplot(Joined, aes(x=TreatmentSB, y=Evar, fill=TreatmentSB)) +
+  geom_boxplot() +
+  labs(title="Richness Comparison for Treatments with Years Since Burned (2021)", x="Treatment", y="Richness") +
+  scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
+  theme_minimal() +
+  annotate("text", x = -Inf, y = Inf, label = "P value: 0.072", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
+  theme(legend.position = "none",  plot.title = element_text(size = 9)) # Adjust size as needed
+
+# Display the plot
+Evar_below
+
+# numDF denDF   F-value p-value
+# (Intercept)     1    58 158.02196  <.0001
+# TreatmentSB     3    58   2.46117  0.0716
+
+# Count graph here
+Count_below <- ggplot(total_counts2, aes(x=TreatmentSB, y=Count, fill=TreatmentSB)) +
+  geom_boxplot() +
+  labs(title="Richness Comparison for Treatments with Years Since Burned (2021)", x="Treatment", y="Richness") +
+  scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
+  theme_minimal() +
+  annotate("text", x = -Inf, y = Inf, label = "P value: 0.8307", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
+  theme(legend.position = "none",  plot.title = element_text(size = 9)) # Adjust size as needed
+
+Count_below
+# numDF denDF   F-value p-value
+# (Intercept)     1   129 307.18784  <.0001
+# TreatmentSB     4   129   0.36859  0.8307
