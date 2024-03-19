@@ -1700,9 +1700,9 @@ richness_2021 <- ggplot(average_richness_2021, aes(x = mean_richness, y = ..scal
        x = "Mean Richness",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
-  annotate("text", x = 20, y = 1, label = "p-value: 0.217", color = "blue", size = 3, hjust = 1, vjust = 1) +
-  annotate("text", x = 20, y = 0.90, label = "z-score:  1.24", color = "red", size = 3, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 11)) +
+  annotate("text", x = 20, y = 1, label = "p-value: 0.217", color = "blue", size = 4, hjust = 1, vjust = 1) +
+  annotate("text", x = 20, y = 0.80, label = "z-score:  1.24", color = "red", size = 4, hjust = 1, vjust = 1) +
+  theme(legend.position = "none",  plot.title = element_text(size = 15)) +
   scale_x_continuous(limits = c(5, 20)) +
   scale_y_continuous(limits = c(0, 1)) 
 
@@ -1716,9 +1716,9 @@ evenness_2021 <- ggplot(average_evenness_2021, aes(x = mean_evenness, y = ..scal
        x = "Mean Evenness",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
-  annotate("text", x = 0.8, y = 1, label = "p-value: 0.885", color = "blue", size = 3, hjust = 1, vjust = 1) +
-  annotate("text", x = 0.8, y = 0.9, label = "Z-score: 0.145", color = "red", size = 3, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 11)) +
+  annotate("text", x = 0.8, y = 1, label = "p-value: 0.885", color = "blue", size = 4, hjust = 1, vjust = 1) +
+  annotate("text", x = 0.8, y = 0.8, label = "Z-score: 0.145", color = "red", size = 4, hjust = 1, vjust = 1) +
+  theme(legend.position = "none",  plot.title = element_text(size = 15)) +
   scale_x_continuous(limits = c(.5, .8)) +
   scale_y_continuous(limits = c(0, 1)) 
   
@@ -1731,9 +1731,9 @@ count_2021 <- ggplot(average_total_count_2021, aes(x = mean_count, y = ..scaled.
        x = "Mean Total Abundance",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
-  annotate("text", x = 55, y = 1, label = "p-value: 0.252", color = "blue", size = 3, hjust = 1, vjust = 1) +
-  annotate("text", x = 55, y = 0.90, label = "Z-score: 1.15", color = "red", size = 3, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 11)) +
+  annotate("text", x = 55, y = 1, label = "p-value: 0.252", color = "blue", size = 4, hjust = 1, vjust = 1) +
+  annotate("text", x = 55, y = 0.80, label = "Z-score: 1.15", color = "red", size = 4, hjust = 1, vjust = 1) +
+  theme(legend.position = "none",  plot.title = element_text(size = 15)) +
   scale_x_continuous(limits = c(15, 55)) +
   scale_y_continuous(limits = c(0, 1)) 
 
@@ -1745,9 +1745,9 @@ weight_2021 <- ggplot(average_total_weight_2021, aes(x = mean_weight, y = ..scal
        x = "Mean Weight",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
-  annotate("text", x = 130, y = 1, label = "p-value: 0.408", color = "blue", size = 3, hjust = 1, vjust = 1) +
-  annotate("text", x = 130, y = 0.9, label = "Z-score: 0.828", color = "red", size = 3, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 11)) +
+  annotate("text", x = 130, y = 1, label = "p-value: 0.408", color = "blue", size = 4, hjust = 1, vjust = 1) +
+  annotate("text", x = 130, y = 0.8, label = "Z-score: 0.828", color = "red", size = 4, hjust = 1, vjust = 1) +
+  theme(legend.position = "none",  plot.title = element_text(size = 15)) +
   scale_x_continuous(limits = c(25, 130)) +
   scale_y_continuous(limits = c(0, 1)) 
 
@@ -1764,9 +1764,9 @@ richness_2022 <- ggplot(average_richness_2022, aes(x = mean_richness, y = ..scal
        x = "Mean Richness",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend")  +
-  annotate("text", x = 20, y = 1, label = "p-value: 0.0425", color = "blue", size = 3, hjust = 1, vjust = 1) +
-  annotate("text", x = 20, y = .90, label = "Z-score: 2.03", color = "red", size = 3, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 11)) +
+  annotate("text", x = 20, y = 1, label = "p-value: 0.0425", color = "blue", size = 4, hjust = 1, vjust = 1) +
+  annotate("text", x = 20, y = .80, label = "Z-score: 2.03", color = "red", size = 4, hjust = 1, vjust = 1) +
+  theme(legend.position = "none",  plot.title = element_text(size = 15)) +
   scale_x_continuous(limits = c(5, 20)) +
   scale_y_continuous(limits = c(0, 1)) 
 
@@ -1779,9 +1779,9 @@ evenness_2022 <- ggplot(average_evenness_2022, aes(x = mean_evenness, y = ..scal
        x = "Mean Evenness",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
-  annotate("text", x = 0.8, y = 1, label = "p-value: 0.343", color = "blue", size = 3, hjust = 1, vjust = 1) +
-  annotate("text", x = 0.8, y = 0.9, label = "Z-score: 0.948", color = "red", size = 3, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 11)) +
+  annotate("text", x = 0.8, y = 1, label = "p-value: 0.343", color = "blue", size = 4, hjust = 1, vjust = 1) +
+  annotate("text", x = 0.8, y = 0.8, label = "Z-score: 0.948", color = "red", size = 4, hjust = 1, vjust = 1) +
+  theme(legend.position = "none",  plot.title = element_text(size = 15)) +
   scale_x_continuous(limits = c(.5, .8)) +
   scale_y_continuous(limits = c(0, 1)) 
 
@@ -1794,9 +1794,9 @@ count_2022 <- ggplot(average_total_count_2022, aes(x = mean_count, y = ..scaled.
        x = "Mean Total Abundance",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
-  annotate("text", x = 55, y = 1, label = "p-value: 0.130", color = "blue", size = 3, hjust = 1, vjust = 1) +
-  annotate("text", x = 55, y = .90, label = "Z-score: 1.51", color = "red", size = 3, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 11)) +
+  annotate("text", x = 55, y = 1, label = "p-value: 0.130", color = "blue", size = 4, hjust = 1, vjust = 1) +
+  annotate("text", x = 55, y = .80, label = "Z-score: 1.51", color = "red", size = 4, hjust = 1, vjust = 1) +
+  theme(legend.position = "none",  plot.title = element_text(size = 15)) +
   scale_x_continuous(limits = c(15, 55)) +
   scale_y_continuous(limits = c(0, 1)) 
 
@@ -1809,9 +1809,9 @@ weight_2022 <- ggplot(average_total_weight_2022, aes(x = mean_weight, y = ..scal
        x = "Mean Weight",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
-  annotate("text", x = 130, y = 1, label = "p-value: 0.0897", color = "blue", size = 3, hjust = 1, vjust = 1) +
-  annotate("text", x = 130, y = .90, label = "Z-score: 1.697", color = "red", size = 3, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 11)) +
+  annotate("text", x = 130, y = 1, label = "p-value: 0.0897", color = "blue", size = 4, hjust = 1, vjust = 1) +
+  annotate("text", x = 130, y = .80, label = "Z-score: 1.697", color = "red", size = 4, hjust = 1, vjust = 1) +
+  theme(legend.position = "none",  plot.title = element_text(size = 15)) +
   scale_x_continuous(limits = c(25, 130)) +
   scale_y_continuous(limits = c(0, 1)) 
 
@@ -1829,9 +1829,9 @@ richness_2023 <- ggplot(average_richness_2023, aes(x = mean_richness, y = ..scal
        x = "Mean Richness",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
-  annotate("text", x = 20, y = 1, label = "p-value: 0.657", color = "blue", size = 3, hjust = 1, vjust = 1) +
-  annotate("text", x = 20, y = 0.9, label = "Z-score: 0.445", color = "red", size = 3, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 11)) +
+  annotate("text", x = 20, y = 1, label = "p-value: 0.657", color = "blue", size = 4, hjust = 1, vjust = 1) +
+  annotate("text", x = 20, y = 0.8, label = "Z-score: 0.445", color = "red", size = 4, hjust = 1, vjust = 1) +
+  theme(legend.position = "none",  plot.title = element_text(size = 15)) +
   scale_x_continuous(limits = c(5, 20)) +
   scale_y_continuous(limits = c(0, 1)) 
 
@@ -1843,9 +1843,9 @@ evenness_2023 <- ggplot(average_evenness_2023, aes(x = mean_evenness, y = ..scal
        x = "Mean Evenness",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
-  annotate("text", x = 0.8, y = 1, label = "p-value: <0.001", color = "blue", size = 3, hjust = 1, vjust = 1) +
-  annotate("text", x = 0.8, y = 0.9, label = "Z-score:  3.400", color = "red", size = 3, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 11)) +
+  annotate("text", x = 0.8, y = 1, label = "p-value: <0.001", color = "blue", size = 4, hjust = 1, vjust = 1) +
+  annotate("text", x = 0.8, y = 0.8, label = "Z-score:  3.400", color = "red", size = 4, hjust = 1, vjust = 1) +
+  theme(legend.position = "none",  plot.title = element_text(size = 15)) +
   scale_x_continuous(limits = c(.5, .8)) +
   scale_y_continuous(limits = c(0, 1)) 
 
@@ -1859,9 +1859,9 @@ count_2023 <- ggplot(average_total_count_2023, aes(x = mean_count, y = ..scaled.
        x = "Mean Total Abundance",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
-  annotate("text", x = 55, y = 1, label = "p-value: 0.886", color = "blue", size = 3, hjust = 1, vjust = 1) +
-  annotate("text", x = 55, y = 0.9, label = "Z-score: 0.143", color = "red", size = 3, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 11)) +
+  annotate("text", x = 55, y = 1, label = "p-value: 0.886", color = "blue", size = 4, hjust = 1, vjust = 1) +
+  annotate("text", x = 55, y = 0.8, label = "Z-score: 0.143", color = "red", size = 4, hjust = 1, vjust = 1) +
+  theme(legend.position = "none",  plot.title = element_text(size = 15)) +
   scale_x_continuous(limits = c(15, 55)) +
   scale_y_continuous(limits = c(0, 1)) 
 
@@ -1872,9 +1872,9 @@ weight_2023 <- ggplot(average_total_weight_2023, aes(x = mean_weight, y = ..scal
        x = "Mean Weight",
        y = "Density") +
   scale_color_manual(values = c("blue", "red")) +
-  annotate("text", x = 130, y = 1, label = "p-value: 0.268", color = "blue", size = 3, hjust = 1, vjust = 1) +
-  annotate("text", x = 130, y = 0.9, label = "Z-score: 1.11", color = "red", size = 3, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 11)) +
+  annotate("text", x = 130, y = 1, label = "p-value: 0.268", color = "blue", size = 4, hjust = 1, vjust = 1) +
+  annotate("text", x = 130, y = 0.8, label = "Z-score: 1.11", color = "red", size = 4, hjust = 1, vjust = 1) +
+  theme(legend.position = "none",  plot.title = element_text(size = 15)) +
   scale_x_continuous(limits = c(25, 130)) +
   scale_y_continuous(limits = c(0, 1)) 
 
@@ -2081,9 +2081,9 @@ evarModel <- #stores the model output into a named list
       random = ~1|block) #this would be where you'd say north or south unit (which should be a variable in the dataframe)
 anova.lme(evarModel, type='sequential') #this gives you the ANOVA output from the model, where "sequential" tells it to do a type III anova
 
-# numDF denDF  F-value p-value
-# (Intercept)     1    59 2016.432  <.0001
-# TreatmentSB     3    59    0.901  0.4462
+# numDF denDF   F-value p-value
+# (Intercept)     1    58 158.02196  <.0001
+# TreatmentSB     3    58   2.46117  0.0716
 
 
 #### 2021 Weight Stats ####
@@ -2362,7 +2362,8 @@ print(combined_data)
 
 
 #CV Count Graph 
-ggplot(combined_data, aes(x = treatment, y = `CV_richness`, fill = treatment)) +
+
+CV_Richness_2021 <- ggplot(combined_data, aes(x = treatment, y = `CV_richness`, fill = treatment)) +
   geom_bar(stat = "identity", position = "dodge") +
   scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red")) +
   guides(fill = FALSE) +
@@ -2376,9 +2377,11 @@ ggplot(combined_data, aes(x = treatment, y = `CV_richness`, fill = treatment)) +
         axis.title.y = element_text(size = 40),
         axis.ticks.y = element_line(size = 1),
         plot.title = element_text(size = 50)) +  # Adjust title size here
-  labs(y = "Count Average CV", x = "Treatment", title = "CV Richness 2021")
-
-
+  labs(y = "Count Average CV", x = "Treatment", title = "CV Richness 2021") +
+  annotate("text", x = 0.5, y = max(combined_data$CV_richness), 
+           label = paste("p =", round(p_value_R_CV_2021, 3)), 
+           size = 6, color = "black", hjust = 0, vjust = -2) +
+  scale_y_continuous(limits = c(0, 0.5))
 
 
 #### Richness CV Graph 2022 ####
@@ -2403,7 +2406,7 @@ combined_data <- rbind(pbg_data, abg_data)
 print(combined_data)
 
 # CV Count Graph 
-ggplot(combined_data, aes(x = treatment, y = CV_richness, fill = treatment)) +
+CV_Richness_2022 <- ggplot(combined_data, aes(x = treatment, y = `CV_richness`, fill = treatment)) +
   geom_bar(stat = "identity", position = "dodge") +
   scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red")) +
   guides(fill = FALSE) +
@@ -2416,8 +2419,12 @@ ggplot(combined_data, aes(x = treatment, y = CV_richness, fill = treatment)) +
         axis.text.y = element_text(size = 20),
         axis.title.y = element_text(size = 40),
         axis.ticks.y = element_line(size = 1),
-        plot.title = element_text(size = 50)) +  
-  labs(y = "Count Average CV", x = "Treatment", title = "CV Richness 2022")
+        plot.title = element_text(size = 50)) +  # Adjust title size here
+  labs(y = "Count Average CV", x = "Treatment", title = "CV Richness 2022") +  # Update the title
+  annotate("text", x = 0.5, y = max(combined_data$CV_richness), 
+           label = paste("p =", round(p_value_R_CV_2022, 3)),  # Update p-value variable name
+           size = 6, color = "black", hjust = 0, vjust = -2) +  # Update p-value variable name
+  scale_y_continuous(limits = c(0, 0.5))
 
 #### Richness CV Graph 2023 ####
 # Create a data frame for PBG mean CV richness and Z-score
@@ -2441,7 +2448,7 @@ combined_data <- rbind(pbg_data, abg_data)
 print(combined_data)
 
 # CV Count Graph 
-ggplot(combined_data, aes(x = treatment, y = CV_richness, fill = treatment)) +
+CV_Richness_2023 <- ggplot(combined_data, aes(x = treatment, y = `CV_richness`, fill = treatment)) +
   geom_bar(stat = "identity", position = "dodge") +
   scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red")) +
   guides(fill = FALSE) +
@@ -2454,9 +2461,14 @@ ggplot(combined_data, aes(x = treatment, y = CV_richness, fill = treatment)) +
         axis.text.y = element_text(size = 20),
         axis.title.y = element_text(size = 40),
         axis.ticks.y = element_line(size = 1),
-        plot.title = element_text(size = 50)) +  
-  labs(y = "Count Average CV", x = "Treatment", title = "CV Richness 2023")
+        plot.title = element_text(size = 50)) +  # Adjust title size here
+  labs(y = "Count Average CV", x = "Treatment", title = "CV Richness 2023") +  # Update the title
+  annotate("text", x = 0.5, y = max(combined_data$CV_richness), 
+           label = paste("p =", round(p_value_R_CV_2023, 3)),  # Update p-value variable name
+           size = 6, color = "black", hjust = 0, vjust = -2) +  # Update p-value variable name
+  scale_y_continuous(limits = c(0, 0.5))
 
+CV_Richness_2023
 #### Evar CV Graph 2021 ####
 # Create a data frame for PBG mean CV Evar and Z-score
 pbg_data <- data.frame(
@@ -2479,7 +2491,7 @@ combined_data <- rbind(pbg_data, abg_data)
 print(combined_data)
 
 # CV Evar Graph 
-ggplot(combined_data, aes(x = treatment, y = CV_Evar, fill = treatment)) +
+CV_Evar_2021 <- ggplot(combined_data, aes(x = treatment, y = CV_Evar, fill = treatment)) +
   geom_bar(stat = "identity", position = "dodge") +
   scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red")) +
   guides(fill = FALSE) +
@@ -2493,7 +2505,13 @@ ggplot(combined_data, aes(x = treatment, y = CV_Evar, fill = treatment)) +
         axis.title.y = element_text(size = 40),
         axis.ticks.y = element_line(size = 1),
         plot.title = element_text(size = 50)) +  
-  labs(y = "Evar Average CV", x = "Treatment", title = "CV Evar 2021")
+  labs(y = "Evar Average CV", x = "Treatment", title = "CV Evar 2021") +  # Update the title
+  annotate("text", x = 0.5, y = max(combined_data$CV_Evar), 
+           label = paste("p =", round(p_value_E_CV_2021, 3)),  # Update p-value variable name
+           size = 6, color = "black", hjust = 0, vjust = -2) +  # Update p-value variable name
+  scale_y_continuous(limits = c(0, 0.25))
+
+CV_Evar_2021
 
 #### Evar CV Graph 2022 ####
 # Create a data frame for PBG mean CV Evar and Z-score
@@ -2517,7 +2535,7 @@ combined_data <- rbind(pbg_data, abg_data)
 print(combined_data)
 
 # CV Evar Graph 
-ggplot(combined_data, aes(x = treatment, y = CV_Evar, fill = treatment)) +
+CV_Evar_2022 <- ggplot(combined_data, aes(x = treatment, y = CV_Evar, fill = treatment)) +
   geom_bar(stat = "identity", position = "dodge") +
   scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red")) +
   guides(fill = FALSE) +
@@ -2531,7 +2549,13 @@ ggplot(combined_data, aes(x = treatment, y = CV_Evar, fill = treatment)) +
         axis.title.y = element_text(size = 40),
         axis.ticks.y = element_line(size = 1),
         plot.title = element_text(size = 50)) +  
-  labs(y = "Evar Average CV", x = "Treatment", title = "CV Evar 2022")
+  labs(y = "Evar Average CV", x = "Treatment", title = "CV Evar 2022") +  # Update the title
+  annotate("text", x = 0.5, y = max(combined_data$CV_Evar), 
+           label = paste("p =", round(p_value_E_CV_2022, 3)),  # Update p-value variable name
+           size = 6, color = "black", hjust = 0, vjust = -2) +  # Update p-value variable name
+  scale_y_continuous(limits = c(0, 0.25))
+
+CV_Evar_2022
 
 #### Evar CV Graph 2023 ####
 # Create a data frame for PBG mean CV Evar and Z-score
@@ -2555,7 +2579,7 @@ combined_data <- rbind(pbg_data, abg_data)
 print(combined_data)
 
 # CV Evar Graph 
-ggplot(combined_data, aes(x = treatment, y = CV_Evar, fill = treatment)) +
+CV_Evar_2023 <- ggplot(combined_data, aes(x = treatment, y = CV_Evar, fill = treatment)) +
   geom_bar(stat = "identity", position = "dodge") +
   scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red")) +
   guides(fill = FALSE) +
@@ -2569,7 +2593,14 @@ ggplot(combined_data, aes(x = treatment, y = CV_Evar, fill = treatment)) +
         axis.title.y = element_text(size = 40),
         axis.ticks.y = element_line(size = 1),
         plot.title = element_text(size = 50)) +  
-  labs(y = "Evar Average CV", x = "Treatment", title = "CV Evar 2023")
+  labs(y = "Evar Average CV", x = "Treatment", title = "CV Evar 2023") +  # Update the title
+  annotate("text", x = 0.5, y = max(combined_data$CV_Evar), 
+           label = paste("p =", round(p_value_E_CV_2023, 3)),  # Update p-value variable name
+           size = 6, color = "black", hjust = 0, vjust = -2) +  # Update p-value variable name
+  scale_y_continuous(limits = c(0, 0.25))
+
+CV_Evar_2023
+
 
 #### Count CV Graph 2021 ####
 # Create a data frame for PBG mean CV Count and Z-score
@@ -2593,7 +2624,7 @@ combined_data <- rbind(pbg_data, abg_data)
 print(combined_data)
 
 # CV Count Graph 
-ggplot(combined_data, aes(x = treatment, y = CV_Count, fill = treatment)) +
+CV_Count_2021 <- ggplot(combined_data, aes(x = treatment, y = CV_Count, fill = treatment)) +
   geom_bar(stat = "identity", position = "dodge") +
   scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red")) +
   guides(fill = FALSE) +
@@ -2607,7 +2638,14 @@ ggplot(combined_data, aes(x = treatment, y = CV_Count, fill = treatment)) +
         axis.title.y = element_text(size = 40),
         axis.ticks.y = element_line(size = 1),
         plot.title = element_text(size = 50)) +  
-  labs(y = "Count Average CV", x = "Treatment", title = "CV Count 2021")
+  labs(y = "Count Average CV", x = "Treatment", title = "CV Count 2021") +  # Update the title
+  annotate("text", x = 0.5, y = max(combined_data$CV_Count), 
+           label = paste("p = >0.001"),  # Update p-value variable name
+           size = 6, color = "black", hjust = 0, vjust = -0.5) +  # Update p-value variable name
+  scale_y_continuous(limits = c(0, 1.30))
+
+CV_Count_2021
+
 #### Count CV Graph 2022 ####
 # Create a data frame for PBG mean CV Count and Z-score
 pbg_data <- data.frame(
@@ -2630,7 +2668,7 @@ combined_data <- rbind(pbg_data, abg_data)
 print(combined_data)
 
 # CV Count Graph 
-ggplot(combined_data, aes(x = treatment, y = CV_Count, fill = treatment)) +
+CV_Count_2022 <- ggplot(combined_data, aes(x = treatment, y = CV_Count, fill = treatment)) +
   geom_bar(stat = "identity", position = "dodge") +
   scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red")) +
   guides(fill = FALSE) +
@@ -2644,7 +2682,14 @@ ggplot(combined_data, aes(x = treatment, y = CV_Count, fill = treatment)) +
         axis.title.y = element_text(size = 40),
         axis.ticks.y = element_line(size = 1),
         plot.title = element_text(size = 50)) +  
-  labs(y = "Count Average CV", x = "Treatment", title = "CV Count 2022")
+  labs(y = "Count Average CV", x = "Treatment", title = "CV Count 2022") +  # Update the title
+  annotate("text", x = 0.5, y = max(combined_data$CV_Count), 
+           label = paste("p = >0.001"),  # Update p-value variable name
+           size = 6, color = "black", hjust = 0, vjust = -0.5) +  # Update p-value variable name
+  scale_y_continuous(limits = c(0, 1.60))
+
+CV_Count_2022
+
 #### Count CV Graph 2023 ####
 # Create a data frame for PBG mean CV Count and Z-score
 pbg_data <- data.frame(
@@ -2667,7 +2712,7 @@ combined_data <- rbind(pbg_data, abg_data)
 print(combined_data)
 
 # CV Count Graph 
-ggplot(combined_data, aes(x = treatment, y = CV_Count, fill = treatment)) +
+CV_Count_2023 <- ggplot(combined_data, aes(x = treatment, y = CV_Count, fill = treatment)) +
   geom_bar(stat = "identity", position = "dodge") +
   scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red")) +
   guides(fill = FALSE) +
@@ -2681,7 +2726,14 @@ ggplot(combined_data, aes(x = treatment, y = CV_Count, fill = treatment)) +
         axis.title.y = element_text(size = 40),
         axis.ticks.y = element_line(size = 1),
         plot.title = element_text(size = 50)) +  
-  labs(y = "Count Average CV", x = "Treatment", title = "CV Count 2023")
+  labs(y = "Count Average CV", x = "Treatment", title = "CV Count 2023") +  # Update the title
+  annotate("text", x = 0.5, y = max(combined_data$CV_Count), 
+           label = paste("p = >0.001"),  # Update p-value variable name
+           size = 6, color = "black", hjust = 0, vjust = -0.5) +  # Update p-value variable name
+  scale_y_continuous(limits = c(0, 1.40))
+
+CV_Count_2023
+
 
 
 #### 2021 Years Since Burned, Count Evenness Graphs ####
@@ -2692,7 +2744,7 @@ count_boxplot <- ggplot(Abundance_Data2021, aes(x=TreatmentSB, y=Count, fill=Tre
   scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red", "ABG_0" = "blue")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   theme_minimal() +
   annotate("text", x = -Inf, y = Inf, label = "P value: 0.857", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
-  theme(plot.title = element_text(size = 9))  # Adjust size as needed
+  theme(legend.position = "none",  plot.title = element_text(size = 9)) # Adjust size as needed
 
 # Display the plot
 count_boxplot
@@ -2708,7 +2760,7 @@ richness_boxplot <- ggplot(Joined2021, aes(x=TreatmentSB, y=richness, fill=Treat
   scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   theme_minimal() +
   annotate("text", x = -Inf, y = Inf, label = "P value: 0.725", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
-  theme(plot.title = element_text(size = 9))  # Adjust size as needed
+  theme(legend.position = "none",  plot.title = element_text(size = 9)) # Adjust size as needed
 
 # Display the plot
 richness_boxplot
@@ -2725,7 +2777,7 @@ evenness_boxplot <- ggplot(Joined2021, aes(x=TreatmentSB, y=Evar, fill=Treatment
   scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   theme_minimal() +
   annotate("text", x = -Inf, y = Inf, label = "P value: 0.091", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
-  theme(plot.title = element_text(size = 9))  # Adjust size as needed
+  theme(legend.position = "none",  plot.title = element_text(size = 9)) # Adjust size as needed
 
 # Display the plot
 evenness_boxplot
@@ -2743,7 +2795,7 @@ count_boxplot_2022 <- ggplot(Abundance_Data2022, aes(x=TreatmentSB, y=Count, fil
   scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red", "ABG_0" = "blue")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   theme_minimal() +
   annotate("text", x = -Inf, y = Inf, label = "P value: 0.553", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
-  theme(plot.title = element_text(size = 9))  # Adjust size as needed
+  theme(legend.position = "none",  plot.title = element_text(size = 9)) # Adjust size as needed
 
 # Display the plot
 count_boxplot_2022
@@ -2759,7 +2811,7 @@ richness_boxplot_2022 <- ggplot(Joined2022, aes(x=TreatmentSB, y=richness, fill=
   scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   theme_minimal() +
   annotate("text", x = -Inf, y = Inf, label = "P value: 0.062", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
-  theme(plot.title = element_text(size = 9))  # Adjust size as needed
+  theme(legend.position = "none",  plot.title = element_text(size = 9)) # Adjust size as needed
 
 # numDF denDF  F-value p-value
 # (Intercept)     1    59 57.72626  <.0001
@@ -2775,7 +2827,7 @@ evenness_boxplot_2022 <- ggplot(Joined2022, aes(x=TreatmentSB, y=Evar, fill=Trea
   scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   theme_minimal() +
   annotate("text", x = -Inf, y = Inf, label = "P value: 0.446", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
-  theme(plot.title = element_text(size = 9))  # Adjust size as needed
+  theme(legend.position = "none",  plot.title = element_text(size = 9)) # Adjust size as needed
 
 # Display the plot
 evenness_boxplot_2022
@@ -2793,8 +2845,7 @@ count_boxplot_2023 <- ggplot(Abundance_Data2023, aes(x=TreatmentSB, y=Count, fil
   scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red", "ABG_0" = "blue")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   theme_minimal() +
   annotate("text", x = -Inf, y = Inf, label = "P value: 0.039", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
-  theme(plot.title = element_text(size = 9))  # Adjust size as needed
-
+  theme(legend.position = "none",  plot.title = element_text(size = 9)) # Adjust size as needed
 # Display the plot
 count_boxplot_2023
 
@@ -2810,7 +2861,7 @@ richness_boxplot_2023 <- ggplot(Joined2023, aes(x=TreatmentSB, y=richness, fill=
   scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   theme_minimal() +
   annotate("text", x = -Inf, y = Inf, label = "P value: 0.008", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
-  theme(plot.title = element_text(size = 9))  # Adjust size as needed
+  theme(legend.position = "none",  plot.title = element_text(size = 9)) # Adjust size as needed
 
 # Display the plot
 richness_boxplot_2023
@@ -2825,24 +2876,43 @@ evenness_boxplot_2023 <- ggplot(Joined2023, aes(x=TreatmentSB, y=Evar, fill=Trea
   labs(title="Evenness Comparison for Treatments with Years Since Burned (2023)", x="Treatment", y="Evenness") +
   scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   theme_minimal() +
-  annotate("text", x = -Inf, y = Inf, label = "P value: 0.446", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
-  theme(plot.title = element_text(size = 9))  # Adjust size as needed
+  annotate("text", x = -Inf, y = Inf, label = "P value: 0.072", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
+  theme(legend.position = "none",  plot.title = element_text(size = 9)) # Adjust size as needed
 
 # Display the plot
 evenness_boxplot_2023
 
-# numDF denDF  F-value p-value
-# (Intercept)     1    59 2016.432  <.0001
-# TreatmentSB     3    59    0.901  0.4462
 
-                            
+# numDF denDF   F-value p-value
+# (Intercept)     1    58 158.02196  <.0001
+# TreatmentSB     3    58   2.46117  0.0716
+
+
+#### Sample Graph For Legend ####
+legend_2 <- ggplot(average_richness_2021, aes(x = mean_richness, color = "PBG")) +
+  geom_density(alpha = 0.5) +
+  geom_vline(aes(xintercept = mean_richness_ABG_2021 , color = "ABG"), linetype = "dashed", size = 1) +
+  labs(title = "2021: Density Plot of Mean Richness",
+       x = "Mean Richness",
+       y = "Density") +
+  scale_color_manual(values = c("blue", "red"), name = "Legend") +
+  annotate("text", x = 13, y = 0.5, label = "p-value: 0.202", color = "blue", size = 3) +
+  annotate("text", x = 13, y = 0.44, label = "Z-score: 1.276", color = "red", size = 3) +
+  theme_bw()
+
+legend <- get_legend(legend_2)
+
 #### 2021-2023 Multi-panel Years Since Burned ####
 # Arrange plots into a multipanel graph
+theme_set(theme_bw())
+
+
 multi_panel_graph <- grid.arrange(
   count_boxplot, richness_boxplot, evenness_boxplot,
   count_boxplot_2022, richness_boxplot_2022, evenness_boxplot_2022,
   count_boxplot_2023, richness_boxplot_2023, evenness_boxplot_2023,
-  nrow = 3, ncol = 3
+  nrow = 3, ncol = 3,
+  bottom = legend
 )
 
 # Display the multipanel graph
