@@ -37,15 +37,20 @@ Invertebrate_Herbivory_2023 <- Invertebrate_Herbivory_2023 %>%
 #### Bootstrapping ####
 num_bootstrap <- 1000
 
-Invertebrate_Herbivory_2023 <- Invertebrate_Herbivory_2023 %>% mutate(plot_index=1:length(block)) %>% 
-  filter(Treatment == "PBG")
+#Remove plant, species
+
+Invertebrate_Herbivory_2023_New <- Invertebrate_Herbivory_2023 %>% 
+  select(-Plant, -Gensus, -Species, -Herbivory, -Notes) %>% 
+  unique() %>%
+  filter(Treatment == "PBG") %>% 
+  mutate(plot_index=1:length(block)) 
 
 bootstrap_vector <- 1:num_bootstrap
 PBG_rep_master_2023 <- data.frame()  # Initialize an empty dataframe
 
 for (BOOT in bootstrap_vector) {
-  Joined_New_2023 <- Invertebrate_Herbivory_2023 %>%
-    dplyr::select(1:14) %>%
+  Joined_New_2023 <- Invertebrate_Herbivory_2023_New %>%
+    dplyr::select(1:9) %>%
     unique() %>%
     group_by(Block) %>%
     sample_n(24, replace = TRUE) %>%
@@ -53,7 +58,7 @@ for (BOOT in bootstrap_vector) {
     ungroup()
   
   # Join the sampled rows back to the original dataframe
-  PBG_plot_ready_2023 <- Invertebrate_Herbivory_2023 %>%
+  PBG_plot_ready_2023 <- Invertebrate_Herbivory_2023_New %>%
     right_join(Joined_New_2023, by = c("Block", "plot_index")) %>%
     mutate(iteration = BOOT)
   
@@ -62,20 +67,20 @@ for (BOOT in bootstrap_vector) {
 }
 
 
-
+#Merge Output with original full join?
 
 
 
 
 #### Condensing down ####
-PBG_rep_master_2023_new <- PBG_rep_master_2023 %>% 
-  group_by(iteration, Plant) %>% 
-  mutate(Seq = row_number()) %>% 
-  ungroup()
-
-PBG_rep_master_2023_new_2 <- PBG_rep_master_2023_new %>%
-  group_by(Plant, Seq) %>%
-  summarise(Herbivory = mean(Herbivory))
+# PBG_rep_master_2023_new <- PBG_rep_master_2023 %>% 
+#   group_by(iteration, Plant) %>% 
+#   mutate(Seq = row_number()) %>% 
+#   ungroup()
+# 
+# PBG_rep_master_2023_new_2 <- PBG_rep_master_2023_new %>%
+#   group_by(Plant, Seq) %>%
+#   summarise(Herbivory = mean(Herbivory))
 
 
 ############################################################

@@ -39,7 +39,7 @@ Abundance_ID_aboveground$WS <- gsub("CIA", "C1A", Abundance_ID_aboveground$WS)
 table(Abundance_ID_aboveground$WS)
 
 
-#### Aboveground Weight Data Clean up ####
+#### Above ground Weight Data Clean up ####
 
 #Subtracting tube weight from final mass to get sample weight. Also setting negatives to zero (they are true zeros, the scale just doesn't register)
 Weight_2$weight <- as.numeric(Weight_2$`Final mass (mg)`) - as.numeric(Weight_2$`Tube mass (mg)`)
@@ -332,6 +332,10 @@ Weight <- ggplot(Weight_2_combined, aes(x = combined_weight, color = interaction
 print(Weight)
 
 grid.arrange(richness, evenness, counts, Weight)
+
+#Without weight
+
+grid.arrange(richness, evenness, counts, nrow =2, ncol = 2)
 
 
 
@@ -2371,18 +2375,19 @@ CV_Richness_2021 <- ggplot(combined_data, aes(x = treatment, y = `CV_richness`, 
   theme(panel.background = element_rect(fill = "white"),
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 20),
-        axis.title = element_text(size = 40),
-        axis.text.y = element_text(size = 20),
-        axis.title.y = element_text(size = 40),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
         axis.ticks.y = element_line(size = 1),
-        plot.title = element_text(size = 50)) +  # Adjust title size here
+        plot.title = element_text(size = 10)) +  # Adjust title size here
   labs(y = "Count Average CV", x = "Treatment", title = "CV Richness 2021") +
   annotate("text", x = 0.5, y = max(combined_data$CV_richness), 
-           label = paste("p =", round(p_value_R_CV_2021, 3)), 
-           size = 6, color = "black", hjust = 0, vjust = -2) +
-  scale_y_continuous(limits = c(0, 0.5))
+           label = paste("p = >0.001"), 
+           size = 6, color = "black", hjust = 0, vjust = -1) +
+  scale_y_continuous(limits = c(0, 1.25))
 
+CV_Richness_2021
 
 #### Richness CV Graph 2022 ####
 # Create a data frame for PBG mean CV richness and Z-score
@@ -2414,18 +2419,19 @@ CV_Richness_2022 <- ggplot(combined_data, aes(x = treatment, y = `CV_richness`, 
   theme(panel.background = element_rect(fill = "white"),
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 20),
-        axis.title = element_text(size = 40),
-        axis.text.y = element_text(size = 20),
-        axis.title.y = element_text(size = 40),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
         axis.ticks.y = element_line(size = 1),
-        plot.title = element_text(size = 50)) +  # Adjust title size here
+        plot.title = element_text(size = 10)) +  # Adjust title size here
   labs(y = "Count Average CV", x = "Treatment", title = "CV Richness 2022") +  # Update the title
   annotate("text", x = 0.5, y = max(combined_data$CV_richness), 
            label = paste("p =", round(p_value_R_CV_2022, 3)),  # Update p-value variable name
            size = 6, color = "black", hjust = 0, vjust = -2) +  # Update p-value variable name
-  scale_y_continuous(limits = c(0, 0.5))
+  scale_y_continuous(limits = c(0, 1.1))
 
+CV_Richness_2022
 #### Richness CV Graph 2023 ####
 # Create a data frame for PBG mean CV richness and Z-score
 pbg_data <- data.frame(
@@ -2456,17 +2462,17 @@ CV_Richness_2023 <- ggplot(combined_data, aes(x = treatment, y = `CV_richness`, 
   theme(panel.background = element_rect(fill = "white"),
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 20),
-        axis.title = element_text(size = 40),
-        axis.text.y = element_text(size = 20),
-        axis.title.y = element_text(size = 40),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
         axis.ticks.y = element_line(size = 1),
-        plot.title = element_text(size = 50)) +  # Adjust title size here
+        plot.title = element_text(size = 10)) +  # Adjust title size here
   labs(y = "Count Average CV", x = "Treatment", title = "CV Richness 2023") +  # Update the title
   annotate("text", x = 0.5, y = max(combined_data$CV_richness), 
            label = paste("p =", round(p_value_R_CV_2023, 3)),  # Update p-value variable name
            size = 6, color = "black", hjust = 0, vjust = -2) +  # Update p-value variable name
-  scale_y_continuous(limits = c(0, 0.5))
+  scale_y_continuous(limits = c(0, 1.1))
 
 CV_Richness_2023
 #### Evar CV Graph 2021 ####
@@ -2499,17 +2505,17 @@ CV_Evar_2021 <- ggplot(combined_data, aes(x = treatment, y = CV_Evar, fill = tre
   theme(panel.background = element_rect(fill = "white"),
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 20),
-        axis.title = element_text(size = 40),
-        axis.text.y = element_text(size = 20),
-        axis.title.y = element_text(size = 40),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
         axis.ticks.y = element_line(size = 1),
-        plot.title = element_text(size = 50)) +  
+        plot.title = element_text(size = 10)) +  
   labs(y = "Evar Average CV", x = "Treatment", title = "CV Evar 2021") +  # Update the title
   annotate("text", x = 0.5, y = max(combined_data$CV_Evar), 
            label = paste("p =", round(p_value_E_CV_2021, 3)),  # Update p-value variable name
            size = 6, color = "black", hjust = 0, vjust = -2) +  # Update p-value variable name
-  scale_y_continuous(limits = c(0, 0.25))
+  scale_y_continuous(limits = c(0, 0.5))
 
 CV_Evar_2021
 
@@ -2543,17 +2549,17 @@ CV_Evar_2022 <- ggplot(combined_data, aes(x = treatment, y = CV_Evar, fill = tre
   theme(panel.background = element_rect(fill = "white"),
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 20),
-        axis.title = element_text(size = 40),
-        axis.text.y = element_text(size = 20),
-        axis.title.y = element_text(size = 40),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
         axis.ticks.y = element_line(size = 1),
-        plot.title = element_text(size = 50)) +  
+        plot.title = element_text(size = 10)) +  
   labs(y = "Evar Average CV", x = "Treatment", title = "CV Evar 2022") +  # Update the title
   annotate("text", x = 0.5, y = max(combined_data$CV_Evar), 
            label = paste("p =", round(p_value_E_CV_2022, 3)),  # Update p-value variable name
            size = 6, color = "black", hjust = 0, vjust = -2) +  # Update p-value variable name
-  scale_y_continuous(limits = c(0, 0.25))
+  scale_y_continuous(limits = c(0, 0.5))
 
 CV_Evar_2022
 
@@ -2587,17 +2593,17 @@ CV_Evar_2023 <- ggplot(combined_data, aes(x = treatment, y = CV_Evar, fill = tre
   theme(panel.background = element_rect(fill = "white"),
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 20),
-        axis.title = element_text(size = 40),
-        axis.text.y = element_text(size = 20),
-        axis.title.y = element_text(size = 40),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
         axis.ticks.y = element_line(size = 1),
-        plot.title = element_text(size = 50)) +  
+        plot.title = element_text(size = 10)) +  
   labs(y = "Evar Average CV", x = "Treatment", title = "CV Evar 2023") +  # Update the title
   annotate("text", x = 0.5, y = max(combined_data$CV_Evar), 
            label = paste("p =", round(p_value_E_CV_2023, 3)),  # Update p-value variable name
            size = 6, color = "black", hjust = 0, vjust = -2) +  # Update p-value variable name
-  scale_y_continuous(limits = c(0, 0.25))
+  scale_y_continuous(limits = c(0, 0.55))
 
 CV_Evar_2023
 
@@ -2632,17 +2638,17 @@ CV_Count_2021 <- ggplot(combined_data, aes(x = treatment, y = CV_Count, fill = t
   theme(panel.background = element_rect(fill = "white"),
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 20),
-        axis.title = element_text(size = 40),
-        axis.text.y = element_text(size = 20),
-        axis.title.y = element_text(size = 40),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
         axis.ticks.y = element_line(size = 1),
-        plot.title = element_text(size = 50)) +  
+        plot.title = element_text(size = 10)) +  
   labs(y = "Count Average CV", x = "Treatment", title = "CV Count 2021") +  # Update the title
   annotate("text", x = 0.5, y = max(combined_data$CV_Count), 
            label = paste("p = >0.001"),  # Update p-value variable name
            size = 6, color = "black", hjust = 0, vjust = -0.5) +  # Update p-value variable name
-  scale_y_continuous(limits = c(0, 1.30))
+  scale_y_continuous(limits = c(0, 1.6))
 
 CV_Count_2021
 
@@ -2676,17 +2682,17 @@ CV_Count_2022 <- ggplot(combined_data, aes(x = treatment, y = CV_Count, fill = t
   theme(panel.background = element_rect(fill = "white"),
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 20),
-        axis.title = element_text(size = 40),
-        axis.text.y = element_text(size = 20),
-        axis.title.y = element_text(size = 40),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
         axis.ticks.y = element_line(size = 1),
-        plot.title = element_text(size = 50)) +  
+        plot.title = element_text(size = 10)) +  
   labs(y = "Count Average CV", x = "Treatment", title = "CV Count 2022") +  # Update the title
   annotate("text", x = 0.5, y = max(combined_data$CV_Count), 
            label = paste("p = >0.001"),  # Update p-value variable name
            size = 6, color = "black", hjust = 0, vjust = -0.5) +  # Update p-value variable name
-  scale_y_continuous(limits = c(0, 1.60))
+  scale_y_continuous(limits = c(0, 1.95))
 
 CV_Count_2022
 
@@ -2720,21 +2726,30 @@ CV_Count_2023 <- ggplot(combined_data, aes(x = treatment, y = CV_Count, fill = t
   theme(panel.background = element_rect(fill = "white"),
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 20),
-        axis.title = element_text(size = 40),
-        axis.text.y = element_text(size = 20),
-        axis.title.y = element_text(size = 40),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
         axis.ticks.y = element_line(size = 1),
-        plot.title = element_text(size = 50)) +  
+        plot.title = element_text(size = 10)) +  
   labs(y = "Count Average CV", x = "Treatment", title = "CV Count 2023") +  # Update the title
   annotate("text", x = 0.5, y = max(combined_data$CV_Count), 
            label = paste("p = >0.001"),  # Update p-value variable name
            size = 6, color = "black", hjust = 0, vjust = -0.5) +  # Update p-value variable name
-  scale_y_continuous(limits = c(0, 1.40))
+  scale_y_continuous(limits = c(0, 1.75))
 
 CV_Count_2023
 
 
+
+#### Big CV Graphs ####
+multi_panel_graph <- grid.arrange(
+  CV_Count_2021, CV_Evar_2021, CV_Richness_2021,
+  CV_Count_2022, CV_Evar_2022, CV_Richness_2022,
+  CV_Count_2023, CV_Evar_2023, CV_Richness_2023,
+  nrow = 3, ncol = 3,
+  bottom = legend
+)
 
 #### 2021 Years Since Burned, Count Evenness Graphs ####
 # Box plot for count
