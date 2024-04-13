@@ -526,24 +526,51 @@ NMDS_Years_Since_Burned <- ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group
         axis.title.y = element_text(size = 24, color = 'black'),
         legend.text = element_text(size = 24),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank()
-  ) +
-  annotate("text", x=min(BC_NMDS_Graph$MDS1), y=max(BC_NMDS_Graph$MDS2),
-           label="F=1.52, p=0.0420", size=6, hjust=0, vjust=1)
+  ) + 
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = min(BC_NMDS_Graph$MDS2) + 0.035, 
+           label = 'Mean p = 0.042\nVariance p = 0.530', size = 10, hjust = 'left')
 
+NMDS_Years_Since_Burned
+#Mean F=1.5242, df=3,49, p=0.042 
+#Variance #F=0.773 , df=3,49, p=0.53
 
-#F=1.5242, df=3,49, p=0.042 
 #export at 1500x1000
 
 ### by watershed
+#Subsampling
+
+ABG_Test <- abundanceWide %>% 
+  filter(Treatment == "ABG")
+
+#Filter PBG
+PBG_Test <- abundanceWide %>% 
+  filter(Treatment == "PBG")
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Get unique samples
+unique_samples <- unique(PBG_Test$Sample)
+
+# Randomly select 16 unique samples
+subsamples <- sample(unique_samples, 16, replace = FALSE)
+
+# Filter the data frame based on the selected samples
+subsampled_data <- PBG_Test %>% filter(Sample %in% subsamples)
+
+#New Abundance_Data2021 with subsamples
+Abundance_Data <- full_join(subsampled_data, ABG_Test)
+abundanceWide <- Abundance_Data
+
 # PERMANOVA
 print(permanova <- adonis2(formula = abundanceWide[,8:139]~Treatment, data=abundanceWide, permutations=999, method="bray"))
-#F=1.495, df=1,51, p=0.122
+#F=1.0171  , df=1,31, p=0.373
 
 #betadisper
 veg <- vegdist(abundanceWide[,8:139], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$Treatment)
 permutest(dispersion, pairwise=TRUE, permutations=999) 
-#F=0.0325, df=1,51, p=0.851
+#F=0.1295, df=1,30, p=0.689
 
 BC_Data <- metaMDS(abundanceWide[,8:139])
 sites <- 1:nrow(abundanceWide)
@@ -585,13 +612,15 @@ NMDS_ABG_VS_PBG <- ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetyp
         axis.title.y = element_text(size = 24, color = 'black'),
         legend.text = element_text(size = 24),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank()
-  ) +
-  annotate("text", x=min(BC_NMDS_Graph$MDS1), y=max(BC_NMDS_Graph$MDS2),
-           label="F=1.50, p=0.122", size=6, hjust=0, vjust=1)
+  ) + 
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = min(BC_NMDS_Graph$MDS2) + 0.0040, 
+           label = 'Mean p = 0.373\nVariance p = 0.689', size = 10, hjust = 'left')
 
 
-#F=1.495, df=1,51, p=0.122
+#Mean F=1.0171  , df=1,31, p=0.373
+#Variance #F=0.1295, df=1,30, p=0.689
 
+NMDS_ABG_VS_PBG
 
 
 
@@ -716,6 +745,8 @@ print(p_value_C)
 
 
 
+#### Bootstrapped Graphs Settings ####
+
 #### Graphs Bootstrapped Means ####
 
 #Richness means graph
@@ -726,13 +757,22 @@ avg_richness <- ggplot(average_richness, aes(x = mean_richness, color = "PBG")) 
        x = "Mean Richness",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
-  annotate("text", x = min(average_richness$mean_richness), y = 1, 
-           label = "z-value = 1.95, p = 0.0255", hjust = 0, vjust = 1, size = 4, color = "black") + 
+#  annotate("text", x = min(average_richness$mean_richness), y = 1, 
+#           label = "z-value = 1.95, p = 0.0255", hjust = 0, vjust = 1, size = 4, color = "black") + 
   theme_bw() +
-  theme( panel.grid.major=element_blank(), panel.grid.minor=element_blank())
+  theme( panel.grid.major=element_blank(), 
+         panel.grid.minor=element_blank(), 
+         legend.position=c(0.15,0.7), 
+         axis.text = element_text(size = 20),
+         axis.title = element_text(size = 30),
+         axis.text.y = element_text(size = 20),
+         axis.title.y = element_text(size = 30),
+         axis.ticks.y = element_line(size = 1))
 
+avg_richness
 #Z = 1.952155
 #P = 0.02545992
+
 
 
 #Evenness means graph
@@ -745,11 +785,20 @@ avg_evenness <- ggplot(average_evenness, aes(x = mean_evenness, color = "PBG")) 
        x = "Mean Evenness",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
-  annotate("text", x = min(average_evenness$mean_evenness), y = 1, 
-           label = "z-value = 1.28, p = 0.100", hjust = 0, vjust = 1, size = 4, color = "black") + 
+#  annotate("text", x = min(average_evenness$mean_evenness), y = 1, 
+#           label = "z-value = 1.28, p = 0.100", hjust = 0, vjust = 1, size = 4, color = "black") + 
   theme_bw() +
-  theme( panel.grid.major=element_blank(), panel.grid.minor=element_blank())
+  theme( panel.grid.major=element_blank(), 
+         panel.grid.minor=element_blank(), 
+         legend.position= "none", 
+         axis.text = element_text(size = 20),
+         axis.title = element_text(size = 30),
+         axis.text.y = element_text(size = 20),
+         axis.title.y = element_text(size = 30),
+         axis.ticks.y = element_line(size = 1))
 
+avg_evenness
+# theme(legend.position=c(0.15,0.7))
 
 
 #1.280609
@@ -758,23 +807,34 @@ avg_evenness <- ggplot(average_evenness, aes(x = mean_evenness, color = "PBG")) 
 
 #Total_count means graphs
 
-ggplot(average_total_count, aes(x = mean_count, color = "PBG")) +
+total_count <- ggplot(average_total_count, aes(x = mean_count, color = "PBG")) +
   geom_density(aes(y = ..scaled..), alpha = 0.5) +
   geom_vline(aes(xintercept = ABG_mean_total_count, color = "ABG"), linetype = "dashed", size = 1) +
   labs(title = "Density Plot of Abundance",
        x = "Mean Abundance",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
-  annotate("text", x = min(average_total_count$mean_count), y = 1, 
-           label = "z-value = -1.13, p = 0.130", hjust = 0, vjust = 1, size = 4, color = "black") +
+ # annotate("text", x = min(average_total_count$mean_count), y = 1, 
+#           label = "z-value = -1.13, p = 0.130", hjust = 0, vjust = 1, size = 4, color = "black") +
   theme_bw() +
-  theme( panel.grid.major=element_blank(), panel.grid.minor=element_blank())
-
+  theme( panel.grid.major=element_blank(), 
+         panel.grid.minor=element_blank(), 
+         legend.position="none", 
+         axis.text = element_text(size = 20),
+         axis.title = element_text(size = 30),
+         axis.text.y = element_text(size = 20),
+         axis.title.y = element_text(size = 30),
+         axis.ticks.y = element_line(size = 1))
 
 
 #Z-Score: -1.125048
 #P = 0.1302844
 
+#### Three Panel univariate graph ####
+
+evenness_richness <- grid.arrange(avg_richness, avg_evenness, total_count, ncol = 3)
+
+evenness_richness
 
 #### NMDS Two Panel ####
 
@@ -789,6 +849,9 @@ evenness_richness <- grid.arrange(avg_evenness, avg_richness, ncol = 2)
 ggsave("belowground_evenness_richness.png", evenness_richness, width = 20, height = 10)
 
 
+#### Years Since Burned Graph Settings ####
+Axis_Label_Size_1 <- 20 #The actualy ticks and treatments
+Axis_Text_Size <- 20 #Text on axislike abuandance, richness etc
 #### Richness, Count and Evenness Years Since Burn ####
 # Boxplot for Richness
 richness_below <- ggplot(Joined, aes(x=TreatmentSB, y=richness, fill=TreatmentSB)) +
@@ -796,8 +859,17 @@ richness_below <- ggplot(Joined, aes(x=TreatmentSB, y=richness, fill=TreatmentSB
   labs(title="Richness Comparison for Treatments with Years Since Burned", x="Treatment", y="Richness") +
   scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   theme_minimal() +
-  annotate("text", x = -Inf, y = Inf, label = "P value: 0.453", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
-  theme(legend.position = "none",  plot.title = element_text(size = 9)) # Adjust size as needed
+#  annotate("text", x = -Inf, y = Inf, label = "P value: 0.453", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
+  theme(legend.position = "none", plot.title = element_text(size = 9),
+        axis.text.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis labels
+        axis.text.y = element_text(size = Axis_Label_Size_1),
+        axis.title.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis title
+        axis.title.y = element_text(size = Axis_Label_Size_1)) + # Increase the size of y-axis title
+  scale_x_discrete(labels = c("ABG_0" = "ABG 0", "PBG_0" = "PBG 0", "PBG_1" = "PBG 1", "PBG_2" = "PBG 2")) + # Set custom axis labels
+  theme(legend.position = "none", plot.title = element_text(size = 9),
+        axis.text.x = element_text(angle = 0, hjust = 0.5)) # Adjust x-axis text angle for
+
+
 
 # Display the plot
 richness_below
@@ -811,8 +883,15 @@ Evar_below <- ggplot(Joined, aes(x=TreatmentSB, y=Evar, fill=TreatmentSB)) +
   labs(title="Evenness Comparison for Treatments with Years Since Burned", x="Treatment", y="Evenness") +
   scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   theme_minimal() +
-  annotate("text", x = -Inf, y = Inf, label = "P value: 0.672", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
-  theme(legend.position = "none",  plot.title = element_text(size = 9)) # Adjust size as needed
+#  annotate("text", x = -Inf, y = Inf, label = "P value: 0.672", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
+  theme(legend.position = "none", plot.title = element_text(size = 9),
+        axis.text.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis labels
+        axis.text.y = element_text(size = Axis_Label_Size_1),
+        axis.title.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis title
+        axis.title.y = element_text(size = Axis_Label_Size_1)) + # Increase the size of y-axis title
+  scale_x_discrete(labels = c("ABG_0" = "ABG 0", "PBG_0" = "PBG 0", "PBG_1" = "PBG 1", "PBG_2" = "PBG 2")) + # Set custom axis labels
+  theme(legend.position = "none", plot.title = element_text(size = 9),
+        axis.text.x = element_text(angle = 0, hjust = 0.5)) # Adjust x-axis text angle for
 
 # Display the plot
 Evar_below
@@ -827,8 +906,15 @@ Count_below <- ggplot(total_counts2, aes(x=TreatmentSB, y=Count, fill=TreatmentS
   labs(title="Abundance Comparison for Treatments with Years Since Burned", x="Treatment", y="Abundance") +
   scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   theme_minimal() +
-  annotate("text", x = -Inf, y = Inf, label = "P value: 0.466", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
-  theme(legend.position = "none",  plot.title = element_text(size = 9)) # Adjust size as needed
+ # annotate("text", x = -Inf, y = Inf, label = "P value: 0.466", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
+  theme(legend.position = "none", plot.title = element_text(size = 9),
+        axis.text.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis labels
+        axis.text.y = element_text(size = Axis_Label_Size_1),
+        axis.title.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis title
+        axis.title.y = element_text(size = Axis_Label_Size_1)) + # Increase the size of y-axis title
+  scale_x_discrete(labels = c("ABG_0" = "ABG 0", "PBG_0" = "PBG 0", "PBG_1" = "PBG 1", "PBG_2" = "PBG 2")) + # Set custom axis labels
+  theme(legend.position = "none", plot.title = element_text(size = 9),
+        axis.text.x = element_text(angle = 0, hjust = 0.5)) # Adjust x-axis text angle for
 
 Count_below
 # numDF denDF   F-value p-value
@@ -851,4 +937,127 @@ legend <- get_legend(legend_below)
 
 #### Big Graph of Years Since Burned ####
 
-multi_panel_graph <- grid.arrange(richness_below, Evar_below, Count_below, nrow = 1, bottom = legend)
+multi_panel_graph <- grid.arrange(richness_below, Evar_below, Count_below, 
+                                  nrow = 1 
+                                  #, bottom = legend
+                                  )
+
+
+#### CV Richness ####
+ABG_CV_mean_R <- Joined %>%
+  filter(TreatmentSB == "ABG_0")  %>%
+  summarize(CV_richness = sd(`richness`) / mean(`richness`))
+
+
+PBG_average_cv_R <- PBG_plot_master %>%
+  group_by(iteration) %>%
+  summarize(CV_richness = sd(richness, na.rm = T) / mean(richness, na.rm = TRUE))
+
+
+PBG_mean_mean_richness_CV <- mean(PBG_average_cv$CV_richness, na.rm = TRUE)
+
+Z_R_CV <- ((ABG_CV_mean_R$CV_richness) - (PBG_mean_mean_richness_CV))/(sd(PBG_average_cv_R$CV_richness))
+Z_R_CV
+
+p_value_R_CV <- 2*pnorm(-abs(Z_R_CV))
+p_value_R_CV
+
+#### CV Richness graph ####
+
+CV_Richness <- ggplot(PBG_average_cv_R, aes(x = CV_richness, y = ..scaled.., color = "PBG")) +
+  geom_density(alpha = 0.5) +
+  geom_vline(aes(xintercept = ABG_CV_mean_R$CV_richness , color = "ABG"), linetype = "dashed", size = 1) +
+  labs(title = "Density Plot of Mean CV Richness",
+       x = "Mean CV Richness",
+       y = "Density") +
+  scale_color_manual(values = c("blue", "red"), name = "Legend") +
+  # annotate("text", x = 20, y = 1, label = "p-value: 0.217", color = "blue", size = 4, hjust = 1, vjust = 1) +
+  # annotate("text", x = 20, y = 0.80, label = "z-score:  1.24", color = "red", size = 4, hjust = 1, vjust = 1) +
+  theme(legend.position=c(0.15,0.7),  plot.title = element_text(size = 15),  axis.text.x = element_text(size = 22),  # Adjust the size as needed
+        axis.text.y = element_text(size = 22)) 
+# scale_x_continuous(limits = c(5, 20)) +
+#  scale_y_continuous(limits = c(0, 1)) 
+
+CV_Richness
+#### CV Evenness ####
+
+ABG_CV_mean_E <- Joined %>%
+  filter(TreatmentSB == "ABG_0")  %>%
+  summarize(CV_evenness = sd(`Evar`) / mean(`Evar`))
+ABG_CV_mean_E
+
+PBG_average_cv_E <- PBG_plot_master %>%
+  group_by(iteration) %>%
+  summarize(CV_evenness = sd(Evar, na.rm = T) / mean(Evar, na.rm = TRUE))
+PBG_average_cv_E
+
+PBG_mean_mean_evenness_CV <- mean(PBG_average_cv_E$CV_evenness, na.rm = TRUE)
+
+Z_E_CV <- ((ABG_CV_mean_E$CV_evenness) - (PBG_mean_mean_evenness_CV))/(sd(PBG_average_cv_E$CV_evenness))
+Z_E_CV
+
+p_value_E_CV <- 2*pnorm(-abs(Z_E_CV))
+p_value_E_CV
+
+#### CV Evenness Graph ####
+CV_Evar <- ggplot(PBG_average_cv_E, aes(x = CV_evenness, y = ..scaled.., color = "PBG")) +
+  geom_density(alpha = 0.5) +
+  geom_vline(aes(xintercept = ABG_CV_mean_E$CV_evenness , color = "ABG"), linetype = "dashed", size = 1) +
+  labs(title = "Density Plot of Mean CV Evenness",
+       x = "Mean CV Evenness",
+       y = "Density") +
+  scale_color_manual(values = c("blue", "red"), name = "Legend") +
+  # annotate("text", x = 20, y = 1, label = "p-value: 0.217", color = "blue", size = 4, hjust = 1, vjust = 1) +
+  # annotate("text", x = 20, y = 0.80, label = "z-score:  1.24", color = "red", size = 4, hjust = 1, vjust = 1) +
+  theme(legend.position = "none",  plot.title = element_text(size = 15),  axis.text.x = element_text(size = 22),  # Adjust the size as needed
+        axis.text.y = element_text(size = 22)) 
+# scale_x_continuous(limits = c(5, 20)) +
+# scale_y_continuous(limits = c(0, 1)) 
+
+CV_Evar
+#### CV Count ####
+ABG_mean_CV_count_df <- Abundance_Stats %>%
+  group_by(Treatment) %>% 
+  filter(Treatment == "ABG") %>%
+  summarize(CV_Count = sd(Count, na.rm = TRUE) / mean(Count, na.rm = TRUE))
+
+
+# To extract the CV_count value as a single number
+ABG_mean_CV_C <- ABG_mean_CV_count_df$CV_Count
+ABG_mean_CV_C
+
+PBG_average_cv_C <- PBG_plot_master %>%
+  group_by(iteration) %>%
+  summarize(CV_Count = sd(Count, na.rm = T) / mean(Count, na.rm = TRUE))
+PBG_average_cv_C
+
+PBG_mean_mean_count_CV <- mean(PBG_average_cv_C$CV_Count, na.rm = TRUE)
+PBG_mean_mean_count_CV
+
+Z_C_CV <- ((ABG_mean_CV_C) - (PBG_mean_mean_count_CV))/(sd(PBG_average_cv_C$CV_Count))
+Z_C_CV
+
+p_value_C_CV <- 2*pnorm(-abs(Z_C_CV))
+p_value_C_CV_2021
+
+#### CV Count Graph ####
+CV_Count <- ggplot(PBG_average_cv_C, aes(x = CV_Count, y = ..scaled.., color = "PBG")) +
+  geom_density(alpha = 0.5) +
+  geom_vline(aes(xintercept = ABG_mean_CV_C , color = "ABG"), linetype = "dashed", size = 1) +
+  labs(title = "Density Plot of Mean CV Abundance",
+       x = "Mean CV Abundance",
+       y = "Density") +
+  scale_color_manual(values = c("blue", "red"), name = "Legend") +
+  # annotate("text", x = 20, y = 1, label = "p-value: 0.217", color = "blue", size = 4, hjust = 1, vjust = 1) +
+  # annotate("text", x = 20, y = 0.80, label = "z-score:  1.24", color = "red", size = 4, hjust = 1, vjust = 1) +
+  theme(legend.position = "none",  plot.title = element_text(size = 15),  axis.text.x = element_text(size = 22),  # Adjust the size as needed
+        axis.text.y = element_text(size = 22)) + 
+  scale_x_continuous(limits = c(0.2, 1.6)) +
+  scale_y_continuous(limits = c(0, 1)) 
+
+CV_Count
+
+
+#### Big CV Means Graph ####
+
+grid.arrange(CV_Richness, CV_Evar, CV_Count, ncol = 3)
