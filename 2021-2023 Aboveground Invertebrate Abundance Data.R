@@ -8,7 +8,7 @@ library(gridExtra)
 library(vegan)
 library(nlme)
 library(cowplot)
-
+library(emmeans)
 
 #### Seed Set ####
 set.seed(123)
@@ -1718,18 +1718,19 @@ print(p_value_W_2023)
 #Richness means graph
 richness_2021 <- ggplot(average_richness_2021, aes(x = mean_richness, y = ..scaled.., color = "PBG")) +
   geom_density(alpha = 0.5) +
-  geom_vline(aes(xintercept = mean_richness_ABG_2021 , color = "ABG"), linetype = "dashed", size = 1) +
+  geom_vline(aes(xintercept = mean_richness_ABG_2021, color = "ABG"), linetype = "dashed", size = 1) +
   labs(title = "2021: Density Plot of Mean Richness",
        x = "Mean Richness",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
- # annotate("text", x = 20, y = 1, label = "p-value: 0.217", color = "blue", size = 4, hjust = 1, vjust = 1) +
- # annotate("text", x = 20, y = 0.80, label = "z-score:  1.24", color = "red", size = 4, hjust = 1, vjust = 1) +
- # theme(legend.position = "none",  plot.title = element_text(size = 15)) +
   scale_x_continuous(limits = c(5, 20)) +
-  scale_y_continuous(limits = c(0, 1)) + 
-  theme(legend.position=c(0.15,0.7))
+  scale_y_continuous(limits = c(0, 1)) +
+  theme(legend.position = c(0.15, 0.7),
+        axis.text.x = element_text(size = 22),  # Adjust the size as needed
+        axis.text.y = element_text(size = 22))  # Adjust the size as needed
+
 richness_2021
+
 
 
 #Evenness means graph
@@ -1742,10 +1743,13 @@ evenness_2021 <- ggplot(average_evenness_2021, aes(x = mean_evenness, y = ..scal
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
 #  annotate("text", x = 0.8, y = 1, label = "p-value: 0.885", color = "blue", size = 4, hjust = 1, vjust = 1) +
 #  annotate("text", x = 0.8, y = 0.8, label = "Z-score: 0.145", color = "red", size = 4, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 15)) +
+  theme(legend.position = "none",  plot.title = element_text(size = 15), 
+        axis.text.x = element_text(size = 22),  # Adjust the size as needed
+        axis.text.y = element_text(size = 22)) +
   scale_x_continuous(limits = c(.5, .8)) +
   scale_y_continuous(limits = c(0, 1)) 
-  
+
+evenness_2021
 
 #Total_count means graphs
 count_2021 <- ggplot(average_total_count_2021, aes(x = mean_count, y = ..scaled.., color = "PBG")) +
@@ -1757,9 +1761,12 @@ count_2021 <- ggplot(average_total_count_2021, aes(x = mean_count, y = ..scaled.
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
 #  annotate("text", x = 55, y = 1, label = "p-value: 0.252", color = "blue", size = 4, hjust = 1, vjust = 1) +
 #  annotate("text", x = 55, y = 0.80, label = "Z-score: 1.15", color = "red", size = 4, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 15)) +
+  theme(legend.position = "none",  plot.title = element_text(size = 15),  axis.text.x = element_text(size = 22),  # Adjust the size as needed
+        axis.text.y = element_text(size = 22)) +
   scale_x_continuous(limits = c(15, 55)) +
   scale_y_continuous(limits = c(0, 1)) 
+
+count_2021
 
 #Total_weight means graphs
 weight_2021 <- ggplot(average_total_weight_2021, aes(x = mean_weight, y = ..scaled.., color = "PBG")) +
@@ -1771,7 +1778,8 @@ weight_2021 <- ggplot(average_total_weight_2021, aes(x = mean_weight, y = ..scal
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
 #  annotate("text", x = 130, y = 1, label = "p-value: 0.408", color = "blue", size = 4, hjust = 1, vjust = 1) +
 #  annotate("text", x = 130, y = 0.8, label = "Z-score: 0.828", color = "red", size = 4, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 15)) +
+  theme(legend.position = "none",  plot.title = element_text(size = 15),  axis.text.x = element_text(size = 22),  # Adjust the size as needed
+        axis.text.y = element_text(size = 22)) +
   scale_x_continuous(limits = c(25, 130)) +
   scale_y_continuous(limits = c(0, 1)) 
 
@@ -1790,10 +1798,12 @@ richness_2022 <- ggplot(average_richness_2022, aes(x = mean_richness, y = ..scal
   scale_color_manual(values = c("blue", "red"), name = "Legend")  +
 #  annotate("text", x = 20, y = 1, label = "p-value: 0.0425", color = "blue", size = 4, hjust = 1, vjust = 1) +
 #  annotate("text", x = 20, y = .80, label = "Z-score: 2.03", color = "red", size = 4, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 15)) +
+  theme(legend.position = "none",  plot.title = element_text(size = 15), 
+        axis.text.x = element_text(size = 22),  # Adjust the size as needed
+        axis.text.y = element_text(size = 22)) +
   scale_x_continuous(limits = c(5, 20)) +
   scale_y_continuous(limits = c(0, 1)) 
-
+richness_2022
 
 #Evenness means graph
 evenness_2022 <- ggplot(average_evenness_2022, aes(x = mean_evenness, y = ..scaled..,  color = "PBG")) +
@@ -1805,10 +1815,11 @@ evenness_2022 <- ggplot(average_evenness_2022, aes(x = mean_evenness, y = ..scal
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
 #  annotate("text", x = 0.8, y = 1, label = "p-value: 0.343", color = "blue", size = 4, hjust = 1, vjust = 1) +
 #  annotate("text", x = 0.8, y = 0.8, label = "Z-score: 0.948", color = "red", size = 4, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 15)) +
+  theme(legend.position = "none",  plot.title = element_text(size = 15),axis.text.x = element_text(size = 22),  # Adjust the size as needed
+        axis.text.y = element_text(size = 22) ) +
   scale_x_continuous(limits = c(.5, .8)) +
   scale_y_continuous(limits = c(0, 1)) 
-
+evenness_2022
 
 #Total_count means graphs
 count_2022 <- ggplot(average_total_count_2022, aes(x = mean_count, y = ..scaled..,  color = "PBG")) +
@@ -1820,10 +1831,11 @@ count_2022 <- ggplot(average_total_count_2022, aes(x = mean_count, y = ..scaled.
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
 #  annotate("text", x = 55, y = 1, label = "p-value: 0.130", color = "blue", size = 4, hjust = 1, vjust = 1) +
 #  annotate("text", x = 55, y = .80, label = "Z-score: 1.51", color = "red", size = 4, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 15)) +
+  theme(legend.position = "none",  plot.title = element_text(size = 15), axis.text.x = element_text(size = 22),  # Adjust the size as needed
+        axis.text.y = element_text(size = 22) ) +
   scale_x_continuous(limits = c(15, 55)) +
   scale_y_continuous(limits = c(0, 1)) 
-
+count_2022
 
 #Total_weight means graphs
 weight_2022 <- ggplot(average_total_weight_2022, aes(x = mean_weight, y = ..scaled..,  color = "PBG")) +
@@ -1835,7 +1847,8 @@ weight_2022 <- ggplot(average_total_weight_2022, aes(x = mean_weight, y = ..scal
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
 #  annotate("text", x = 130, y = 1, label = "p-value: 0.0897", color = "blue", size = 4, hjust = 1, vjust = 1) +
 #  annotate("text", x = 130, y = .80, label = "Z-score: 1.697", color = "red", size = 4, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 15)) +
+  theme(legend.position = "none",  plot.title = element_text(size = 15),  axis.text.x = element_text(size = 22),  # Adjust the size as needed
+        axis.text.y = element_text(size = 22)) +
   scale_x_continuous(limits = c(25, 130)) +
   scale_y_continuous(limits = c(0, 1)) 
 
@@ -1855,7 +1868,8 @@ richness_2023 <- ggplot(average_richness_2023, aes(x = mean_richness, y = ..scal
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
 #  annotate("text", x = 20, y = 1, label = "p-value: 0.657", color = "blue", size = 4, hjust = 1, vjust = 1) +
 #  annotate("text", x = 20, y = 0.8, label = "Z-score: 0.445", color = "red", size = 4, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 15)) +
+  theme(legend.position = "none",  plot.title = element_text(size = 15),  axis.text.x = element_text(size = 22),  # Adjust the size as needed
+        axis.text.y = element_text(size = 22)) +
   scale_x_continuous(limits = c(5, 20)) +
   scale_y_continuous(limits = c(0, 1)) 
 
@@ -1869,7 +1883,8 @@ evenness_2023 <- ggplot(average_evenness_2023, aes(x = mean_evenness, y = ..scal
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
 #  annotate("text", x = 0.8, y = 1, label = "p-value: <0.001", color = "blue", size = 4, hjust = 1, vjust = 1) +
 #  annotate("text", x = 0.8, y = 0.8, label = "Z-score:  3.400", color = "red", size = 4, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 15)) +
+  theme(legend.position = "none",  plot.title = element_text(size = 15),  axis.text.x = element_text(size = 22),  # Adjust the size as needed
+        axis.text.y = element_text(size = 22)) +
   scale_x_continuous(limits = c(.5, .8)) +
   scale_y_continuous(limits = c(0, 1)) 
 
@@ -1885,7 +1900,8 @@ count_2023 <- ggplot(average_total_count_2023, aes(x = mean_count, y = ..scaled.
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
 #  annotate("text", x = 55, y = 1, label = "p-value: 0.886", color = "blue", size = 4, hjust = 1, vjust = 1) +
 #  annotate("text", x = 55, y = 0.8, label = "Z-score: 0.143", color = "red", size = 4, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 15)) +
+  theme(legend.position = "none",  plot.title = element_text(size = 15),  axis.text.x = element_text(size = 22),  # Adjust the size as needed
+        axis.text.y = element_text(size = 22)) +
   scale_x_continuous(limits = c(15, 55)) +
   scale_y_continuous(limits = c(0, 1)) 
 
@@ -1898,7 +1914,8 @@ weight_2023 <- ggplot(average_total_weight_2023, aes(x = mean_weight, y = ..scal
   scale_color_manual(values = c("blue", "red")) +
 #  annotate("text", x = 130, y = 1, label = "p-value: 0.268", color = "blue", size = 4, hjust = 1, vjust = 1) +
 #  annotate("text", x = 130, y = 0.8, label = "Z-score: 1.11", color = "red", size = 4, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 15)) +
+  theme(legend.position = "none",  plot.title = element_text(size = 15),  axis.text.x = element_text(size = 22),  # Adjust the size as needed
+        axis.text.y = element_text(size = 22)) +
   scale_x_continuous(limits = c(25, 130)) +
   scale_y_continuous(limits = c(0, 1)) 
 
@@ -2032,6 +2049,7 @@ richModel <- #stores the model output into a named list
       data = Joined, #dataset you are analyzing, this must contain all the data (both treatments and all plots)
       random = ~1|block) #this would be where you'd say north or south unit (which should be a variable in the dataframe)
 anova.lme(richModel, type='sequential') #this gives you the ANOVA output from the model, where "sequential" tells it to do a type III anova
+emmeans(richModel, pairwise~TreatmentSB, adjust="tukey") #this gives you contrasts (means and confidence intervals) for each possible pairwise comparison of treatments to know whether they are different or not (overlapping confidence intervals means not different)
 
 # numDF denDF  F-value p-value
 # (Intercept)     1    56 52.75320  <.0001
@@ -2104,6 +2122,7 @@ evarModel <- #stores the model output into a named list
       data = Joined, #dataset you are analyzing, this must contain all the data (both treatments and all plots)
       random = ~1|block) #this would be where you'd say north or south unit (which should be a variable in the dataframe)
 anova.lme(evarModel, type='sequential') #this gives you the ANOVA output from the model, where "sequential" tells it to do a type III anova
+emmeans(evarModel, pairwise~TreatmentSB, adjust="tukey") #this gives you contrasts (means and confidence intervals) for each possible pairwise comparison of treatments to know whether they are different or not (overlapping confidence intervals means not different)
 
 # numDF denDF   F-value p-value
 # (Intercept)     1    58 158.02196  <.0001
@@ -2254,7 +2273,8 @@ CV_Richness_2021 <- ggplot(PBG_average_cv_2021, aes(x = CV_richness, y = ..scale
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
 # annotate("text", x = 20, y = 1, label = "p-value: 0.217", color = "blue", size = 4, hjust = 1, vjust = 1) +
 # annotate("text", x = 20, y = 0.80, label = "z-score:  1.24", color = "red", size = 4, hjust = 1, vjust = 1) +
-theme(legend.position = "none",  plot.title = element_text(size = 15)) 
+theme(legend.position=c(0.15,0.7),  plot.title = element_text(size = 15),  axis.text.x = element_text(size = 22),  # Adjust the size as needed
+      axis.text.y = element_text(size = 22)) 
 # scale_x_continuous(limits = c(5, 20)) +
 #  scale_y_continuous(limits = c(0, 1)) 
 
@@ -2292,7 +2312,8 @@ CV_Richness_2022 <- ggplot(PBG_average_cv_2022, aes(x = CV_richness, y = ..scale
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
   # annotate("text", x = 20, y = 1, label = "p-value: 0.217", color = "blue", size = 4, hjust = 1, vjust = 1) +
   # annotate("text", x = 20, y = 0.80, label = "z-score:  1.24", color = "red", size = 4, hjust = 1, vjust = 1) +
-  theme(legend.position = "none",  plot.title = element_text(size = 15)) 
+  theme(legend.position = "none",  plot.title = element_text(size = 15),  axis.text.x = element_text(size = 22),  # Adjust the size as needed
+        axis.text.y = element_text(size = 22)) 
 # scale_x_continuous(limits = c(5, 20)) +
 #  scale_y_continuous(limits = c(0, 1)) 
 
@@ -2328,7 +2349,8 @@ CV_Richness_2023 <- ggplot(PBG_average_cv_2023, aes(x = CV_richness, y = ..scale
        x = "Mean CV Richness",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
-  theme(legend.position = "none",  plot.title = element_text(size = 15)) 
+  theme(legend.position = "none",  plot.title = element_text(size = 15),  axis.text.x = element_text(size = 22),  # Adjust the size as needed
+        axis.text.y = element_text(size = 22)) 
 # annotate("text", x = 20, y = 1, label = "p-value: 0.217", color = "blue", size = 4, hjust = 1, vjust = 1) +
 # annotate("text", x = 20, y = 0.80, label = "z-score:  1.24", color = "red", size = 4, hjust = 1, vjust = 1) +
 # scale_x_continuous(limits = c(5, 20)) +
@@ -2438,7 +2460,8 @@ CV_Evar_2021 <- ggplot(PBG_average_cv_2021, aes(x = CV_Evar, y = ..scaled.., col
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
 # annotate("text", x = 20, y = 1, label = "p-value: 0.217", color = "blue", size = 4, hjust = 1, vjust = 1) +
 # annotate("text", x = 20, y = 0.80, label = "z-score:  1.24", color = "red", size = 4, hjust = 1, vjust = 1) +
-theme(legend.position = "none",  plot.title = element_text(size = 15)) 
+theme(legend.position = "none",  plot.title = element_text(size = 15),  axis.text.x = element_text(size = 22),  # Adjust the size as needed
+      axis.text.y = element_text(size = 22)) 
 # scale_x_continuous(limits = c(5, 20)) +
 # scale_y_continuous(limits = c(0, 1)) 
 
@@ -2475,7 +2498,8 @@ CV_Evar_2022 <- ggplot(PBG_average_cv_2022, aes(x = CV_Evar, y = ..scaled.., col
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
 # annotate("text", x = 20, y = 1, label = "p-value: 0.217", color = "blue", size = 4, hjust = 1, vjust = 1) +
 # annotate("text", x = 20, y = 0.80, label = "z-score:  1.24", color = "red", size = 4, hjust = 1, vjust = 1) +
- theme(legend.position = "none",  plot.title = element_text(size = 15)) 
+ theme(legend.position = "none",  plot.title = element_text(size = 15),  axis.text.x = element_text(size = 22),  # Adjust the size as needed
+       axis.text.y = element_text(size = 22)) 
 # scale_x_continuous(limits = c(5, 20)) +
 # scale_y_continuous(limits = c(0, 1)) 
 
@@ -2513,7 +2537,8 @@ CV_Evar_2023 <- ggplot(PBG_average_cv_2023, aes(x = CV_Evar, y = ..scaled.., col
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
 # annotate("text", x = 20, y = 1, label = "p-value: 0.217", color = "blue", size = 4, hjust = 1, vjust = 1) +
 # annotate("text", x = 20, y = 0.80, label = "z-score:  1.24", color = "red", size = 4, hjust = 1, vjust = 1) +
-theme(legend.position = "none",  plot.title = element_text(size = 15))
+theme(legend.position = "none",  plot.title = element_text(size = 15),  axis.text.x = element_text(size = 22),  # Adjust the size as needed
+      axis.text.y = element_text(size = 22))
 # scale_x_continuous(limits = c(5, 20)) +
 # scale_y_continuous(limits = c(0, 1)) 
 
@@ -2534,7 +2559,8 @@ PBG_average_cv_2021 <- PBG_plot_master_2021 %>%
 PBG_mean_mean_count_CV_2021 <- mean(PBG_average_cv_2021$CV_count, na.rm = TRUE)
 
 #ABG Mean
-ABG_mean_CV_count_2021 <- countMetrics2021 %>% 
+ABG_mean_CV_count_2021 <- countMetrics2021 %>%
+  filter(TreatmentSB == "ABG_0") %>%
   summarize(CV_count = sd(Count) / mean(Count, na.rm = TRUE))
 
 
@@ -2620,10 +2646,10 @@ CV_Count_2021 <- ggplot(PBG_average_cv_2021, aes(x = CV_count, y = ..scaled.., c
        x = "Mean CV Abundance",
        y = "Density") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
-  theme(legend.position=c(0.15,0.7)) +
 # annotate("text", x = 20, y = 1, label = "p-value: 0.217", color = "blue", size = 4, hjust = 1, vjust = 1) +
 # annotate("text", x = 20, y = 0.80, label = "z-score:  1.24", color = "red", size = 4, hjust = 1, vjust = 1) +
-# theme(legend.position = "none",  plot.title = element_text(size = 15)) +
+theme(legend.position = "none",  plot.title = element_text(size = 15),  axis.text.x = element_text(size = 22),  # Adjust the size as needed
+      axis.text.y = element_text(size = 22)) + 
 scale_x_continuous(limits = c(0.2, 1.6)) +
 scale_y_continuous(limits = c(0, 1)) 
 
@@ -2661,7 +2687,8 @@ CV_Count_2022 <- ggplot(PBG_average_cv_2022, aes(x = CV_count, y = ..scaled.., c
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
 # annotate("text", x = 20, y = 1, label = "p-value: 0.217", color = "blue", size = 4, hjust = 1, vjust = 1) +
 # annotate("text", x = 20, y = 0.80, label = "z-score:  1.24", color = "red", size = 4, hjust = 1, vjust = 1) +
-theme(legend.position = "none",  plot.title = element_text(size = 15)) +
+theme(legend.position = "none",  plot.title = element_text(size = 15),  axis.text.x = element_text(size = 22),  # Adjust the size as needed
+      axis.text.y = element_text(size = 22)) +
 scale_x_continuous(limits = c(0.2, 1.6)) +
 scale_y_continuous(limits = c(0, 1)) 
 
@@ -2699,7 +2726,8 @@ CV_Count_2023 <- ggplot(PBG_average_cv_2023, aes(x = CV_count, y = ..scaled.., c
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
 # annotate("text", x = 20, y = 1, label = "p-value: 0.217", color = "blue", size = 4, hjust = 1, vjust = 1) +
 # annotate("text", x = 20, y = 0.80, label = "z-score:  1.24", color = "red", size = 4, hjust = 1, vjust = 1) +
-theme(legend.position = "none",  plot.title = element_text(size = 15)) +
+theme(legend.position = "none",  plot.title = element_text(size = 15),  axis.text.x = element_text(size = 22),  # Adjust the size as needed
+      axis.text.y = element_text(size = 22)) +
 scale_x_continuous(limits = c(0.2, 1.6)) +
 scale_y_continuous(limits = c(0, 1)) 
 
@@ -2961,3 +2989,4 @@ multi_panel_graph <- grid.arrange(
 
 # Display the multipanel graph
 multi_panel_graph
+
