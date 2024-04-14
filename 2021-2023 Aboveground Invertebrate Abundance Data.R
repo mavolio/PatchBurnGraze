@@ -2170,8 +2170,9 @@ anova.lme(weightModel, type='sequential') #this gives you the ANOVA output from 
 #### CV Richness Calculation 2021 ####
 # Getting coefficient of variation (CV) per iteration for richness in 2021
 
-commMetrics2021 <- Abundance_Data2021 %>%  community_structure(abundance.var='Count', replicate.var='Sample')
-
+commMetrics2021 <- Abundance_Data2021 %>% 
+  filter(TreatmentSB == "ABG_0") %>% 
+  community_structure(abundance.var='Count', replicate.var='Sample') 
 
 
 PBG_average_cv_2021 <- PBG_plot_master_2021 %>%
@@ -2196,7 +2197,9 @@ print(p_value_R_CV_2021)
 #0.8468713
 
 #### CV Richness Calculation 2022 ####
-commMetrics2022 <- Abundance_Data2022 %>%  community_structure(abundance.var='Count', replicate.var='Sample')
+commMetrics2022 <- Abundance_Data2022 %>%  
+  filter(TreatmentSB == "ABG_0") %>% 
+  community_structure(abundance.var='Count', replicate.var='Sample')
 
 PBG_average_cv_2022 <- PBG_plot_master_2022 %>%
   group_by(iteration) %>%
@@ -2219,7 +2222,9 @@ print(p_value_R_CV_2022)
 #0.574077
 
 #### CV Richness Calculation 2023 ####
-commMetrics2023 <- Abundance_Data2023 %>%  community_structure(abundance.var='Count', replicate.var='Sample')
+commMetrics2023 <- Abundance_Data2023 %>%
+  filter(TreatmentSB == "ABG_0") %>% 
+  community_structure(abundance.var='Count', replicate.var='Sample')
 
 PBG_average_cv_2023 <- PBG_plot_master_2023 %>%
   group_by(iteration) %>%
@@ -2359,7 +2364,9 @@ CV_Richness_2023 <- ggplot(PBG_average_cv_2023, aes(x = CV_richness, y = ..scale
 CV_Richness_2023
 
 #### CV Evar Calculation 2021 ####
-commMetrics2021 <- Abundance_Data2021 %>%  community_structure(abundance.var='Count', replicate.var='Sample')
+commMetrics2021 <- Abundance_Data2021 %>%  
+  filter(TreatmentSB == "ABG_0") %>% 
+  community_structure(abundance.var='Count', replicate.var='Sample')
 
 PBG_average_cv_2021 <- PBG_plot_master_2021 %>%
   group_by(iteration) %>%
@@ -2382,7 +2389,9 @@ print(p_value_E_CV_2021)
 #0.04342265
 
 #### CV Evar Calculation 2022 ####
-commMetrics2022 <- Abundance_Data2022 %>%  community_structure(abundance.var='Count', replicate.var='Sample')
+commMetrics2022 <- Abundance_Data2022 %>%  
+  filter(TreatmentSB == "ABG_0") %>% 
+  community_structure(abundance.var='Count', replicate.var='Sample')
 
 PBG_average_cv_2022 <- PBG_plot_master_2022 %>%
   group_by(iteration) %>%
@@ -2407,7 +2416,9 @@ print(p_value_E_CV_2022)
 
 #### CV Evar Calculation 2023 ####
 
-commMetrics2023 <- Abundance_Data2023 %>%  community_structure(abundance.var='Count', replicate.var='Sample')
+commMetrics2023 <- Abundance_Data2023 %>% 
+  filter(TreatmentSB == "ABG_0") %>% 
+  community_structure(abundance.var='Count', replicate.var='Sample')
 
 PBG_average_cv_2023 <- PBG_plot_master_2023 %>%
   group_by(iteration) %>%
@@ -2547,7 +2558,7 @@ CV_Evar_2023
 
 
 #### CV Count Calculation 2021 ####
-countMetrics2021 <- Abundance_Data2021 
+countMetrics2021 <- Abundance_Data2021
 
 
 
@@ -2573,7 +2584,8 @@ p_value_C_CV_2021 <- 2*pnorm(-abs(Z_C_CV_2021))
 print(p_value_C_CV_2021)
 # 8.746414e-28
 #### CV Count Calculation 2022 ####
-countMetrics2022 <- Abundance_Data2022 
+countMetrics2022 <- Abundance_Data2022 %>% 
+  filter(TreatmentSB == "ABG_0")
 
 PBG_average_cv_2022 <- PBG_plot_master_2022 %>%
   group_by(iteration) %>%
@@ -2596,7 +2608,8 @@ print(p_value_C_CV_2022)
 #1.891211e-12
 
 #### CV Count Calculation 2023 ####
-countMetrics2023 <- Abundance_Data2023 
+countMetrics2023 <- Abundance_Data2023 %>% 
+  filter(TreatmentSB == "ABG_0")
 
 PBG_average_cv_2023 <- PBG_plot_master_2023 %>%
   group_by(iteration) %>%

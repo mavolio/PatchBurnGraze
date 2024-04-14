@@ -428,7 +428,7 @@ counts <- ggplot(total_counts, aes(x = Count, color = interaction(Treatment, Blo
   scale_linetype_manual(values = rep(c("solid", "dashed"), each = 2)) +
   theme_minimal()
 
-grid.arrange(richness, evenness, counts, Weight) #Weight comes from weight script!
+# grid.arrange(richness, evenness, counts, Weight) #Weight comes from weight script!
 
 #### multivariate community response - PERMANOVA and NMDS ####
 
@@ -954,13 +954,17 @@ PBG_average_cv_R <- PBG_plot_master %>%
   summarize(CV_richness = sd(richness, na.rm = T) / mean(richness, na.rm = TRUE))
 
 
-PBG_mean_mean_richness_CV <- mean(PBG_average_cv$CV_richness, na.rm = TRUE)
+PBG_mean_mean_richness_CV <- mean(PBG_average_cv_R$CV_richness, na.rm = TRUE)
 
 Z_R_CV <- ((ABG_CV_mean_R$CV_richness) - (PBG_mean_mean_richness_CV))/(sd(PBG_average_cv_R$CV_richness))
 Z_R_CV
 
+# -0.1332362
+
 p_value_R_CV <- 2*pnorm(-abs(Z_R_CV))
 p_value_R_CV
+
+#  0.8940066
 
 #### CV Richness graph ####
 
@@ -996,8 +1000,12 @@ PBG_mean_mean_evenness_CV <- mean(PBG_average_cv_E$CV_evenness, na.rm = TRUE)
 Z_E_CV <- ((ABG_CV_mean_E$CV_evenness) - (PBG_mean_mean_evenness_CV))/(sd(PBG_average_cv_E$CV_evenness))
 Z_E_CV
 
+#-2.604795
+
 p_value_E_CV <- 2*pnorm(-abs(Z_E_CV))
 p_value_E_CV
+
+#0.009192931
 
 #### CV Evenness Graph ####
 CV_Evar <- ggplot(PBG_average_cv_E, aes(x = CV_evenness, y = ..scaled.., color = "PBG")) +
@@ -1037,8 +1045,12 @@ PBG_mean_mean_count_CV
 Z_C_CV <- ((ABG_mean_CV_C) - (PBG_mean_mean_count_CV))/(sd(PBG_average_cv_C$CV_Count))
 Z_C_CV
 
+#4.758492
+
 p_value_C_CV <- 2*pnorm(-abs(Z_C_CV))
-p_value_C_CV_2021
+p_value_C_CV
+
+#1.950446e-06
 
 #### CV Count Graph ####
 CV_Count <- ggplot(PBG_average_cv_C, aes(x = CV_Count, y = ..scaled.., color = "PBG")) +
@@ -1061,3 +1073,4 @@ CV_Count
 #### Big CV Means Graph ####
 
 grid.arrange(CV_Richness, CV_Evar, CV_Count, ncol = 3)
+
