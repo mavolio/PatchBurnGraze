@@ -675,6 +675,7 @@ Combo_north_biomass<-PBG_north_mean%>%
          stab_PBGN_sd=sd(stab_PBGNth),
          z_score_NStab=((Stab_ABGNth-stab_PBGNm)/stab_PBGN_sd),
          pvalue_stab=2*pnorm(-abs(z_score_NStab)))
+write.csv(Combo_north_biomass, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/north_biomass_boot_result.csv")
  
 Combo_south_biomass<-PBG_south_mean%>%
   left_join(ABG_south_biomass, by="RecYear")%>%
@@ -696,6 +697,7 @@ Combo_south_biomass<-PBG_south_mean%>%
          stab_PBGS_sd=sd(stab_PBGSth),
          z_score_SStab=((Stab_ABGSth-stab_PBGSm)/stab_PBGS_sd),
          pvalue_stab=2*pnorm(-abs(z_score_SStab)))
+write.csv(Combo_south_biomass, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/south_biomass_boot_result.csv")
 
 #create a visual of the distribution
 ggplot(Combo_north_biomass,aes(biomass_PBGNth))+
@@ -774,7 +776,21 @@ ggplot(combo_north_geompoint_sd,aes(RecYear, biom_sd, col=treatment))+
   scale_colour_manual(values=c( "#F0E442", "#009E73"),labels=c("ABG","PBG"))+
   geom_errorbar(aes(ymax=biom_sd+1.96*(PBG_sd),
                     ymin=biom_sd-1.96*(PBG_sd)),width=.2)
-###graph for the south unit and sd
+#create new dataframe to graph sd result as bargraph####
+north_sd_bar<-combo_north_geompoint_sd%>%
+  mutate(PBG_confint=1.96*PBG_sd)%>%
+  group_by(treatment)%>%
+  summarise(SD_biomass=mean(biom_sd, na.rm=T),
+            confit_biom=mean(PBG_confint, na.rm=T))
+ggplot(north_sd_bar, aes(treatment, SD_biomass, fill=treatment))+
+  geom_col(width = .5)+
+  geom_errorbar(aes(ymin=SD_biomass-confit_biom,
+                    ymax=SD_biomass+confit_biom), width=.1)+
+  scale_fill_manual(values=c( "#F0E442", "#009E73"),labels=c("ABG","PBG"))
+  
+  
+
+###graph for the south unit and sd####
 combo_south_geompoint_cv<-Combo_south_biomass%>%
   rename(cv_biomass_PBGSth_M=biomass_PBGSth_cv_M)%>%
   pivot_longer(c(cv_biomass_PBGSth_M,cv_biomass_ABGSth),
@@ -808,6 +824,19 @@ ggplot(combo_south_geompoint_sd,aes(RecYear, biom_sd, col=treatment))+
   scale_colour_manual(values=c( "#F0E442", "#009E73"),labels=c("ABG","PBG"))+
   geom_errorbar(aes(ymax=biom_sd+1.96*(PBG_sd),
                     ymin=biom_sd-1.96*(PBG_sd)),width=.2)
+
+#create new dataframe to graph sd result as bargraph####
+south_sd_bar<-combo_south_geompoint_sd%>%
+  mutate(PBG_confint=1.96*PBG_sd)%>%
+  group_by(treatment)%>%
+  summarise(SD_biomass=mean(biom_sd, na.rm=T),
+            confit_biom=mean(PBG_confint, na.rm=T))
+ggplot(south_sd_bar, aes(treatment, SD_biomass, fill=treatment))+
+  geom_col(width = .5)+
+  geom_errorbar(aes(ymin=SD_biomass-confit_biom,
+                    ymax=SD_biomass+confit_biom), width=.1)+
+  scale_fill_manual(values=c( "#F0E442", "#009E73"),labels=c("ABG","PBG"))
+
   
 #bootstrapping for same plot for each year in each unit
 #create an index for the north plots
@@ -1348,7 +1377,4 @@ ggplot(Combo_Sth_biomass_same,aes(stab_PBGSth))+
 
 
 
-biomass_watershed_scale<-biomass_mean_transect_scale%>%
-  group_by(RecYear, Unit, Watershed, FireGrzTrt)%>%
-  summarise(biomass_watershed=mean(biomass_transect, na.rm=T))%>%
-  ungroup()
+
