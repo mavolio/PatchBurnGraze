@@ -1375,6 +1375,134 @@ ggplot(Combo_Sth_biomass_same,aes(stab_PBGSth))+
   xlab("Stability South Unit")
 
 
+#Things to do, calculate PBG stability across unit and sd_cv####
+#compare growing season precip with sd
+ppt_data <- read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/annual and growing season precipitation_knzHQ_1983-2021.csv")
+#relationship between precipitation and biomass sd
+Combo_north_biomass_ppt<-Combo_north_biomass%>%
+  select(RecYear, iteration, sd_biomass_PBGNth, biomass_PBGNth_sd_M, biomass_ABGNth_sd)%>%
+  left_join(ppt_data, by="RecYear")
+
+ggplot(Combo_north_biomass_ppt, aes(x=gs_ppt, y=biomass_ABGNth_sd)) +
+  geom_point(size=3) + geom_smooth(method="lm", se=F) #+ facet_wrap(~yrsins_fire)
+
+ppt_sd_model<-lm(biomass_ABGNth_sd~gs_ppt, data=Combo_north_biomass_ppt)
+summary(ppt_sd_model)
+ppt_sd_model2<-lm(biomass_PBGNth_sd_M~gs_ppt, data=Combo_north_biomass_ppt)
+summary(ppt_sd_model2)
+#using all iteration gives similar estimates as using averages, rsquared is better with average
+#significant positive relationship for both ABG and PBG. slope estimates(0.221, 0.191 respectively)
+
+#combine unit and examine if stability differs####
+#averaging at plot scale
+biomass_plot_scale<-biomass_data%>%
+  group_by(RecYear, Unit, Watershed, FireGrzTrt, Transect, Plotnum)%>%
+  summarise(biomass_plot= mean(biomass, na.rm=T),
+            biomass_sd=sd(biomass))%>%
+  ungroup()
+
+#ABG stability
+biomass_ABG_combine_stab<-biomass_plot_scale%>%
+  filter(FireGrzTrt=="ABG")%>%
+  group_by(RecYear)%>%
+  summarise(biomass_ABG=mean(biomass_plot, na.rm=T))%>%
+  ungroup()%>%
+  mutate(biomass_ABG_stab=mean(biomass_ABG)/sd(biomass_ABG))
+
+
+#filter for PBG to perform bootstrap
+biomass_PBG_plot_index<-biomass_plot_scale%>%
+  filter(FireGrzTrt=="PBG")%>%
+  group_by(RecYear)%>%
+  #number the plots to sample from
+  mutate(biomass_PBG_plot_index= 1:length(RecYear))
 
 
 
+biomass_master_stab<-{}
+for(BOOT in 1:length(bootstrap_vector)){
+  biomass_rand_stab<-biomass_PBG_plot_index%>%
+    dplyr::select(RecYear, Unit, Watershed, FireGrzTrt, Transect, biomass_PBG_plot_index)%>%
+    unique()%>%
+    filter(RecYear==2012)%>%
+    ungroup()%>%
+    sample_n(400, replace=T)%>%
+    dplyr::select(biomass_PBG_plot_index)%>%
+    left_join(biomass_PBG_plot_index, by="biomass_PBG_plot_index", multiple="all")
+  biomass_ready_stab<-biomass_rand_stab%>%
+    mutate(iteration=BOOT)
+  biomass_master_stab<-rbind(biomass_master_stab, biomass_ready_stab)
+}
+
+biomass_combine_stab<-biomass_master_stab%>%
+  select(RecYear, iteration, biomass_plot)%>%
+  group_by(RecYear, iteration)%>%
+  summarise(biomass_mean=mean(biomass_plot,na.rm=T))%>%
+  ungroup()%>%
+  group_by(iteration)%>%
+  mutate(biomass_PBG_stab=mean(biomass_mean, na.rm=T)/sd(biomass_mean))%>%
+  ungroup()%>%
+  mutate(PBG_stab_M=mean(biomass_PBG_stab),
+         PBG_stab_sd=sd(biomass_PBG_stab))%>%
+  left_join(biomass_ABG_combine_stab, by="RecYear")%>%
+  mutate(zscore=(biomass_ABG_stab-PBG_stab_M)/PBG_stab_sd)%>%
+  mutate(pval=2*pnorm(-abs(zscore)))
+write.csv(biomass_combine_stab, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/biomass_stability_combined_unit.csv")
+
+ggplot(biomass_combine_stab,aes(biomass_PBG_stab))+
+  geom_density(size=2,col="#009E73")+
+  #facet_grid("RecYear")+
+  geom_vline(aes(xintercept=biomass_ABG_stab), linetype=2,size=2, col="#F0E442")+
+  xlab("Biomass stability")  
+
+#combined unit sd, mean, cv####
+#ABG mean, cv, sd
+biomass_ABG_combine_mean_sd<-biomass_plot_scale%>%
+  filter(FireGrzTrt=="ABG")%>%
+  group_by(RecYear)%>%
+  summarise(biomass_ABG=mean(biomass_plot, na.rm=T),
+            biomass_ABG_sd=sd(biomass_plot),
+            biomass_ABG_cv=biomass_ABG_sd/biomass_ABG)
+
+
+biomass_master_mean_sd_cv<-{}
+for(BOOT in 1:length(bootstrap_vector)){
+  biomass_rand_mean<-biomass_PBG_plot_index%>%
+    dplyr::select(RecYear, Unit, Watershed, FireGrzTrt, Transect, biomass_PBG_plot_index)%>%
+    unique()%>%
+    group_by(RecYear)%>%
+    sample_n(400, replace=T)%>%
+    dplyr::select(RecYear,biomass_PBG_plot_index)%>%
+    left_join(biomass_PBG_plot_index, by=c("biomass_PBG_plot_index","RecYear"), multiple="all")
+  biomass_ready_mean<-biomass_rand_mean%>%
+    mutate(iteration=BOOT)
+  biomass_master_mean_sd_cv<-rbind(biomass_master_mean_sd_cv, biomass_ready_mean)
+}
+
+#calculate zscore and p vals####
+biomass_combine_mean_sd<-biomass_master_mean_sd_cv%>%
+  select(RecYear, iteration, biomass_plot)%>%
+  group_by(RecYear, iteration)%>%
+  summarise(biomass_PBG_mean=mean(biomass_plot,na.rm=T),
+            biomass_PBG_sd=sd(biomass_plot),
+            biomass_PBG_cv=biomass_PBG_sd/biomass_PBG_mean)%>%
+  ungroup()%>%
+  group_by(RecYear)%>%
+  summarise(biom_PBG_MM=mean(biomass_PBG_mean),
+         biom_PBG_M_sd=sd(biomass_PBG_mean),
+         biom_PBG_sd_M=mean(biomass_PBG_sd),
+         biom_PBG_sd_sd=sd(biomass_PBG_sd),
+         biom_PBG_cv_M=mean(biomass_PBG_cv),
+         biom_PBG_cv_sd=sd(biomass_PBG_cv))%>%
+  left_join(biomass_ABG_combine_mean_sd, by="RecYear")%>%
+  mutate(zscore_M=(biomass_ABG-biom_PBG_MM)/biom_PBG_M_sd,
+         pval_M=2*pnorm(-abs(zscore_M)),
+         zscore_sd=(biomass_ABG_sd-biom_PBG_sd_M)/biom_PBG_sd_sd,
+         pval_sd=2*pnorm(-abs(zscore_sd)),
+         zscore_cv=(biomass_ABG_cv-biom_PBG_cv_M)/biom_PBG_cv_sd,
+         pval_cv=2*pnorm(-abs(zscore_cv)))
+write.csv(biomass_combine_mean_sd, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/biomass_mean_sd_combined_unit.csv")
+
+#create visuals
+
+  
