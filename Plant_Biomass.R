@@ -2,7 +2,7 @@
 ####Plant Biomass from diskpasture meter
 ###Author: Joshua Ajowele
 ###collaborators: PBG synthesis group
-###last update:4/10/2024
+###last update:4/21/2024
 
 #packages 
 library(tidyverse)
@@ -1665,3 +1665,15 @@ ggplot(yrs_interact_viz,aes(RecYear, yrs_interact_bt_mean, col=yrsins_fire, line
   scale_colour_manual(values=c( "#F0E442", "#009E73", "#999999", "#0072B2"))
 
 #average across years for simplification
+
+yrs_interact_bar<-yrs_interact_viz%>%
+  group_by(yrsins_fire)%>%
+  summarise(biomass_mean=mean(yrs_interact_bt_mean),
+            se_upper=mean(yrs_interact_bt_upper),
+            se_lower=mean(yrs_interact_bt_lower))
+ggplot(yrs_interact_bar,aes(x=yrsins_fire,fill=yrsins_fire))+
+  geom_bar(stat = "identity",aes(y=biomass_mean),width = 0.5)+
+  geom_errorbar(aes(ymin=se_lower,
+                    ymax=se_upper),width=0.2,linetype=1)+
+  scale_fill_manual(values=c( "#F0E442", "#009E73", "#999999", "#0072B2"))
+
