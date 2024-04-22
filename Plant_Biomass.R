@@ -1453,7 +1453,7 @@ ggplot(biomass_combine_stab,aes(biomass_PBG_stab))+
   geom_density(size=2,col="#009E73")+
   #facet_grid("RecYear")+
   geom_vline(aes(xintercept=biomass_ABG_stab), linetype=2,size=2, col="#F0E442")+
-  xlab("Biomass stability")  
+  xlab("Biomass stability")+xlim(0,4.5) 
 
 #combined unit sd, mean, cv####
 #ABG mean, cv, sd
