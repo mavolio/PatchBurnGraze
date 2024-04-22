@@ -775,3 +775,139 @@ ggplot(GH_metric_Nth_combo_geompoint,aes(RecYear, diver_sd, col=treatment))+
                     ymin=diver_sd-1.96*(shan_sd_NthPBG_sd)),width=.2)
 
 
+#Combine unit for bootstrap sd and cv####
+grass_ABG_count<-grassh_count_df%>%
+    #ABG mean, cv, sd
+    filter(FireGrzTrt=="ABG")%>%
+    group_by(RecYear)%>%
+    summarise(ghcount_ABG=mean(Tcount, na.rm=T),
+              ghcount_ABG_sd=sd(Tcount),
+              ghcount_ABG_cv=ghcount_ABG_sd/ghcount_ABG)
+
+
+gh_count_index<-grassh_count_df%>%
+  filter(FireGrzTrt=="PBG")%>%
+  group_by(RecYear)%>%
+  mutate(plot_index=1:length(RecYear))
+
+num_bootstrap<-1000
+bootstrap_vector<-1:num_bootstrap
+ghcount_master_combine_mean_sd_cv<-{}
+  for(BOOT in 1:length(bootstrap_vector)){
+    count_rand_mean<-gh_count_index%>%
+      dplyr::select(RecYear, Unit, Watershed, FireGrzTrt, Repsite, plot_index)%>%
+      unique()%>%
+      group_by(RecYear)%>%
+      sample_n(8, replace=T)%>%
+      dplyr::select(RecYear,plot_index)%>%
+      left_join(gh_count_index, by=c("plot_index","RecYear"), multiple="all")
+    count_ready_mean<-count_rand_mean%>%
+      mutate(iteration=BOOT)
+    ghcount_master_combine_mean_sd_cv<-rbind(ghcount_master_combine_mean_sd_cv, count_ready_mean)
+  }
+gh_combine_mean_sd<-ghcount_master_combine_mean_sd_cv%>%
+  select(RecYear, iteration, Tcount)%>%
+  group_by(RecYear, iteration)%>%
+  summarise(gh_PBG_mean=mean(Tcount,na.rm=T),
+            gh_PBG_sd=sd(Tcount),
+            gh_PBG_cv=gh_PBG_sd/gh_PBG_mean)%>%
+  ungroup()%>%
+  group_by(RecYear)%>%
+  summarise(gh_PBG_MM=mean(gh_PBG_mean),
+            gh_PBG_M_sd=sd(gh_PBG_mean),
+            gh_PBG_sd_M=mean(gh_PBG_sd),
+            gh_PBG_sd_sd=sd(gh_PBG_sd),
+            gh_PBG_cv_M=mean(gh_PBG_cv),
+            gh_PBG_cv_sd=sd(gh_PBG_cv))%>%
+  left_join(grass_ABG_count, by="RecYear")%>%
+  mutate(zscore_M=(ghcount_ABG-gh_PBG_MM)/gh_PBG_M_sd,
+         pval_M=2*pnorm(-abs(zscore_M)),
+         zscore_sd=(ghcount_ABG_sd-gh_PBG_sd_M)/gh_PBG_sd_sd,
+         pval_sd=2*pnorm(-abs(zscore_sd)),
+         zscore_cv=(ghcount_ABG_cv-gh_PBG_cv_M)/gh_PBG_cv_sd,
+         pval_cv=2*pnorm(-abs(zscore_cv)))
+write.csv(gh_combine_mean_sd, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/gh_count_mean_sd_combined_unit.csv")
+
+#create visuals####
+#grasshopper average count
+combo_ghcount_geompoint_M<-gh_combine_mean_sd%>%
+  pivot_longer(c(gh_PBG_MM,ghcount_ABG),
+               names_to = "treatment", values_to = "count_M")%>%
+  select(treatment,count_M,RecYear, gh_PBG_M_sd)%>%
+  distinct()%>%
+  mutate(PBG_sd=round(gh_PBG_M_sd,digits=2))%>%
+  mutate(PBG_sd=ifelse(PBG_sd==2.43 & treatment=="ghcount_ABG",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==6.43 & treatment=="ghcount_ABG",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==24.06 & treatment=="ghcount_ABG",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==7.19 & treatment=="ghcount_ABG",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==8.82 & treatment=="ghcount_ABG",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==5.85 & treatment=="ghcount_ABG",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==11.35 & treatment=="ghcount_ABG",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==14.36 & treatment=="ghcount_ABG",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==7.44 & treatment=="ghcount_ABG",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==9.50 & treatment=="ghcount_ABG",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==8.64 & treatment=="ghcount_ABG",NA,PBG_sd))
+
+ggplot(combo_ghcount_geompoint_M,aes(RecYear, count_M, col=treatment))+
+  geom_point()+
+  geom_path(aes(as.numeric(RecYear)))+
+  scale_colour_manual(values=c( "#009E73","#F0E442"),labels=c("PBG","ABG"))+
+  geom_errorbar(aes(ymax=count_M+1.96*(PBG_sd),
+                    ymin=count_M-1.96*(PBG_sd)),width=.2)
+
+  
+#grasshopper sd count
+combo_ghcount_geompoint_sd<-gh_combine_mean_sd%>%
+  pivot_longer(c(gh_PBG_sd_M,ghcount_ABG_sd),
+               names_to = "treatment", values_to = "count_sd")%>%
+  select(treatment,count_sd,RecYear, gh_PBG_sd_sd)%>%
+  distinct()%>%
+  mutate(PBG_sd=round(gh_PBG_sd_sd,digits=2))%>%
+  mutate(PBG_sd=ifelse(PBG_sd==1.88 & treatment=="ghcount_ABG_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==6.19 & treatment=="ghcount_ABG_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==22.06 & treatment=="ghcount_ABG_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==6.56 & treatment=="ghcount_ABG_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==9.41 & treatment=="ghcount_ABG_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==3.50 & treatment=="ghcount_ABG_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==11.01 & treatment=="ghcount_ABG_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==19.93 & treatment=="ghcount_ABG_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==5.08 & treatment=="ghcount_ABG_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==14.85 & treatment=="ghcount_ABG_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==5.02 & treatment=="ghcount_ABG_sd",NA,PBG_sd))
+
+ggplot(combo_ghcount_geompoint_sd,aes(RecYear, count_sd, col=treatment))+
+  geom_point()+
+  geom_path(aes(as.numeric(RecYear)))+
+  scale_colour_manual(values=c( "#009E73","#F0E442"),labels=c("PBG","ABG"))+
+  geom_errorbar(aes(ymax=count_sd+1.96*(PBG_sd),
+                    ymin=count_sd-1.96*(PBG_sd)),width=.2)
+
+#grasshopper cv count
+combo_ghcount_geompoint_cv<-gh_combine_mean_sd%>%
+  pivot_longer(c(gh_PBG_cv_M,ghcount_ABG_cv),
+               names_to = "treatment", values_to = "count_cv")%>%
+  select(treatment,count_cv,RecYear, gh_PBG_cv_sd)%>%
+  distinct()%>%
+  mutate(PBG_sd=round(gh_PBG_cv_sd,digits=2))%>%
+  mutate(PBG_sd=ifelse(PBG_sd==0.05 & treatment=="ghcount_ABG_cv",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.17 & treatment=="ghcount_ABG_cv",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.13 & treatment=="ghcount_ABG_cv",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.09 & treatment=="ghcount_ABG_cv",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.16 & treatment=="ghcount_ABG_cv",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.07 & treatment=="ghcount_ABG_cv",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.11 & treatment=="ghcount_ABG_cv",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.20 & treatment=="ghcount_ABG_cv",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.06 & treatment=="ghcount_ABG_cv",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.22 & treatment=="ghcount_ABG_cv",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.07 & treatment=="ghcount_ABG_cv",NA,PBG_sd))
+
+ggplot(combo_ghcount_geompoint_cv,aes(RecYear, count_cv, col=treatment))+
+  geom_point()+
+  geom_path(aes(as.numeric(RecYear)))+
+  scale_colour_manual(values=c( "#009E73","#F0E442"),labels=c("PBG","ABG"))+
+  geom_errorbar(aes(ymax=count_cv+1.96*(PBG_sd),
+                    ymin=count_cv-1.96*(PBG_sd)),width=.2)
+
+#bootstrap for stability
+
+  
