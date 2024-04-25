@@ -782,7 +782,9 @@ grass_ABG_count<-grassh_count_df%>%
     group_by(RecYear)%>%
     summarise(ghcount_ABG=mean(Tcount, na.rm=T),
               ghcount_ABG_sd=sd(Tcount),
-              ghcount_ABG_cv=ghcount_ABG_sd/ghcount_ABG)
+              ghcount_ABG_cv=ghcount_ABG_sd/ghcount_ABG)%>%
+    ungroup()%>%
+    mutate(ghcount_ABG_stab=mean(ghcount_ABG)/sd(ghcount_ABG))
 
 
 gh_count_index<-grassh_count_df%>%
@@ -908,6 +910,141 @@ ggplot(combo_ghcount_geompoint_cv,aes(RecYear, count_cv, col=treatment))+
   geom_errorbar(aes(ymax=count_cv+1.96*(PBG_sd),
                     ymin=count_cv-1.96*(PBG_sd)),width=.2)
 
-#bootstrap for stability
+#bootstrap for stability####
+num_bootstrap<-1000
+bootstrap_vector<-1:num_bootstrap
+ghcount_master_stab<-{}
+for(BOOT in 1:length(bootstrap_vector)){
+  count_rand_stab<-gh_count_index%>%
+    dplyr::select(RecYear, Unit, Watershed, FireGrzTrt, Repsite, plot_index)%>%
+    unique()%>%
+    filter(RecYear==2011)%>%
+    ungroup()%>%
+    sample_n(8, replace=T)%>%
+    dplyr::select(plot_index)%>%
+    left_join(gh_count_index, by="plot_index", multiple="all")
+  count_ready_stab<-count_rand_stab%>%
+    mutate(iteration=BOOT)
+  ghcount_master_stab<-rbind(ghcount_master_stab, count_ready_stab)
+}
+#just so you don't worry-2012-C03B transect A is missing(i think bad sample)
+ghcount_master_combine_stab<-ghcount_master_stab%>%
+    select(RecYear, iteration, Tcount)%>%
+  group_by(RecYear, iteration)%>%
+  summarise(count_mean=mean(Tcount,na.rm=T))%>%
+  ungroup()%>%
+  group_by(iteration)%>%
+  mutate(count_PBG_stab=mean(count_mean, na.rm=T)/sd(count_mean))%>%
+  ungroup()%>%
+  mutate(PBG_stab_M=mean(count_PBG_stab),
+         PBG_stab_sd=sd(count_PBG_stab))%>%
+  left_join(grass_ABG_count, by="RecYear")%>%
+  mutate(zscore=(ghcount_ABG_stab-PBG_stab_M)/PBG_stab_sd)%>%
+  mutate(pval=2*pnorm(-abs(zscore)))
+write.csv(ghcount_master_combine_stab, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/gh_stability_combined_unit.csv")
+
+ggplot(ghcount_master_combine_stab,aes(count_PBG_stab))+
+  geom_density(size=2,col="#009E73")+
+  #facet_grid("RecYear")+
+  geom_vline(aes(xintercept=ghcount_ABG_stab), linetype=2,size=2, col="#F0E442")+
+  xlab("Grasshopper count stability")+xlim(0,4) 
+
+#next step year since fire calculation
+#creating a key for year since fire
+YrSinceFire_key <- tibble(year_watershed= c("2011_C01A", "2011_C03A", "2011_C03B",
+                                            "2011_C03C", "2011_C1SB", "2011_C3SA",
+                                            "2011_C3SB", "2011_C3SC",
+                                            "2012_C01A", "2012_C03A", "2012_C03B",
+                                            "2012_C03C", "2012_C1SB", "2012_C3SA",
+                                            "2012_C3SB", "2012_C3SC", "2013_C03A",
+                                            "2013_C03B", "2013_C03C", "2013_C1SB",
+                                            "2013_C3SA", "2013_C3SB", "2013_C01A",
+                                            "2013_C3SC", "2014_C01A", "2014_C03A",
+                                            "2014_C03B", "2014_C03C", "2014_C1SB",
+                                            "2014_C3SA", "2014_C3SB", "2014_C3SC",
+                                            "2015_C1SB", "2015_C03A", "2015_C03B",
+                                            "2015_C3SC", "2015_C3SA", "2015_C3SB",
+                                            "2015_C03C", "2015_C01A", "2016_C03A",
+                                            "2016_C03B", "2016_C3SC", "2016_C01A",
+                                            "2016_C03C", "2016_C1SB", "2016_C3SA",
+                                            "2016_C3SB", "2017_C3SA", "2017_C3SB",
+                                            "2017_C03C", "2017_C03A", "2017_C03B",
+                                            "2017_C1SB", "2017_C3SC", "2017_C01A",
+                                            "2018_C03A", "2018_C03B", "2018_C03C",
+                                            "2018_C01A", "2018_C3SA", "2018_C3SB",
+                                            "2018_C1SB", "2018_C3SC", "2019_C3SA",
+                                            "2019_C3SB", "2019_C1SB", "2019_C03A",
+                                            "2019_C03B", "2019_C03C", "2019_C3SC",
+                                            "2019_C01A", "2020_C1SB", "2020_C3SA",
+                                            "2020_C3SB", "2020_C3SC", "2020_C03A",
+                                            "2020_C03B", "2020_C03C", "2020_C01A",
+                                            "2021_C01A", "2021_C03C", "2021_C03A",
+                                            "2021_C03B", "2021_C3SA", "2021_C3SB",
+                                            "2021_C3SC", "2021_C1SB"),
+                          yrsins_fire= c("ABG0","PBG1","PBG0", "PBG2", "ABG0","PBG0","PBG1","PBG1",
+                                         "ABG0","PBG2","PBG1","PBG0","ABG0","PBG1","PBG2",
+                                         "PBG0","PBG0", "PBG2", "PBG1", "ABG0","PBG2", "PBG0",
+                                         "ABG0", "PBG1","ABG0","PBG1", "PBG0","PBG2","ABG0",
+                                         "PBG0","PBG1","PBG2","ABG0","PBG2","PBG1","PBG0","PBG1",
+                                         "PBG2","PBG0","ABG0","PBG0","PBG2","PBG1","ABG0","PBG1",
+                                         "ABG0","PBG2","PBG0","PBG0","PBG1","PBG2","PBG1","PBG0",
+                                         "ABG0","PBG2","ABG0","PBG2","PBG1","PBG0","ABG0","PBG1",
+                                         "PBG2","ABG0","PBG0","PBG2","PBG0","ABG0","PBG0","PBG2",
+                                         "PBG1","PBG1","ABG0","ABG0","PBG0","PBG1","PBG2","PBG1",
+                                         "PBG0","PBG2","ABG0","ABG0","PBG0","PBG2","PBG1","PBG1",
+                                         "PBG2","PBG0","ABG0"))
+#merge with biomass data ####
+ghcount_yrs<-grassh_count_df%>%
+  mutate(year_watershed=paste(RecYear,Watershed, sep ="_"))%>%
+  left_join(YrSinceFire_key, by="year_watershed")%>%
+  group_by(RecYear,Unit, Watershed,yrsins_fire,FireGrzTrt,Repsite)%>%
+  summarise(Tcount=mean(Tcount, na.rm=T))
+ghcount_yrs$RecYear=as.factor(ghcount_yrs$RecYear)
+ghcount_yrs$yrsins_fire=as.factor(ghcount_yrs$yrsins_fire)
+ghcount_yrs$Unit=as.factor(ghcount_yrs$Unit)
+ghcount_yrs$Watershed=as.factor(ghcount_yrs$Watershed)
+ghcount_yrs$Repsite=as.factor(ghcount_yrs$Repsite)
+
+
+#mixed anova
+yrs_ghcount_model<-lmer(log(Tcount)~yrsins_fire*RecYear+(1|Unit/Watershed/Repsite),
+                        data=ghcount_yrs)#issingular
+check_model(yrs_ghcount_model)
+Anova(yrs_ghcount_model, type=3)
+qqnorm(resid(yrs_ghcount_model))
+
+#multiple comparison
+testInteractions(yrs_ghcount_model, pairwise="yrsins_fire", fixed="RecYear",
+                 adjustment="BH")
+#using mean estimate to create figure 
+yrs_interact<-interactionMeans(yrs_ghcount_model)
+#replacing spaces in column names with underscore 
+names(yrs_interact)<-str_replace_all(names(yrs_interact), " ","_")
+#df for visuals from model estimates
+yrs_interact_viz<-yrs_interact%>%
+  mutate(yrs_interact_bt_mean=exp(adjusted_mean),
+         yrs_interact_bt_upper=exp(adjusted_mean+SE_of_link),
+         yrs_interact_bt_lower=exp(adjusted_mean-SE_of_link))
+#visual
+ggplot(yrs_interact_viz,aes(RecYear, yrs_interact_bt_mean, col=yrsins_fire, linetype=yrsins_fire))+
+  geom_point(size=3)+
+  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
+  geom_errorbar(aes(ymin=yrs_interact_bt_lower,
+                    ymax=yrs_interact_bt_upper),width=0.2,linetype=1)+
+  scale_colour_manual(values=c( "#F0E442", "#009E73", "#999999", "#0072B2"))
+
+#average across years for simplification
+yrs_interact_bar<-yrs_interact_viz%>%
+  group_by(yrsins_fire)%>%
+  summarise(Grasshopper_count=mean(yrs_interact_bt_mean),
+            se_upper=mean(yrs_interact_bt_upper),
+            se_lower=mean(yrs_interact_bt_lower))
+ggplot(yrs_interact_bar,aes(x=yrsins_fire,fill=yrsins_fire))+
+  geom_bar(stat = "identity",aes(y=Grasshopper_count),width = 0.5)+
+  geom_errorbar(aes(ymin=se_lower,
+                    ymax=se_upper),width=0.2,linetype=1)+
+  scale_fill_manual(values=c( "#F0E442", "#009E73", "#999999", "#0072B2"))
 
   
+  
+
