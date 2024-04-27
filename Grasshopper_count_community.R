@@ -1045,6 +1045,285 @@ ggplot(yrs_interact_bar,aes(x=yrsins_fire,fill=yrsins_fire))+
                     ymax=se_upper),width=0.2,linetype=1)+
   scale_fill_manual(values=c( "#F0E442", "#009E73", "#999999", "#0072B2"))
 
-  
-  
 
+#create df with individual species abundance####
+grassh_comm_df <- grasshopperspcomp_df%>%
+  full_join(watershed_key, by = "Watershed")%>%
+  left_join(Watershed_key2,by="Watershed")%>%
+  mutate(spe=paste(Genus,Species, sep="_"))%>%
+  mutate(RecYear = Recyear)%>%
+  filter(!RecYear== 2010)%>%
+  #using the max cover from the two sweeps done on each transect
+  group_by(Unit,RecYear,FireGrzTrt,Watershed,Repsite,spe)%>%
+  summarise(Total=max(Total))%>%
+  filter(Repsite!="C" | Watershed!="C03C")%>%
+  filter(Watershed!="C03C" | Repsite!="D")%>%
+  filter(Watershed!="C03B" | Repsite!="A")%>%
+  filter(Watershed!="C03B" | Repsite!="B")%>%
+  filter(Watershed!="C03B" | Repsite!="C")%>%
+  filter(Watershed!="C03A" | Repsite!="A")%>%
+  filter(Watershed!="C03A" | Repsite!="B")%>%
+  filter(Watershed!="C03A" | Repsite!="C")%>%
+  filter(Watershed!="C3SC" | Repsite!="A")%>%
+  filter(Watershed!="C3SC" | Repsite!="B")%>%
+  filter(Watershed!="C3SC" | Repsite!="C")%>%
+  filter(Watershed!="C3SA" | Repsite!="B")%>%
+  filter(Watershed!="C3SA" | Repsite!="C")%>%
+  filter(Watershed!="C3SA" | Repsite!="D")%>%
+  filter(Watershed!="C3SB" | Repsite!="A")%>%
+  filter(Watershed!="C3SB" | Repsite!="B")%>%
+  group_by(Unit,RecYear,FireGrzTrt,spe)%>%
+  summarise(total_avg=mean(Total,na.rm=T))%>%
+  group_by(Unit,RecYear,FireGrzTrt)%>%
+  #converting count data to abundance data (0-100% scale)
+  mutate(abundance=(total_avg/sum(total_avg, na.rm=T))*100)%>%
+  group_by(Unit,RecYear,FireGrzTrt,spe)%>%
+  mutate(Rep_id=paste(Unit,FireGrzTrt, sep="_"))
+
+#community metrics with codyn####
+#deriving richness and evenness using codyn at landscape scale
+gh_rich <- community_structure(grassh_comm_df, time.var = "RecYear", 
+                                 abundance.var = "abundance",
+                                 replicate.var = "Rep_id", metric = "Evar")
+
+#deriving diversity values
+gh_diver <- community_diversity(grassh_comm_df, time.var = "RecYear", 
+                                  abundance.var = "abundance",
+                                  replicate.var = "Rep_id", metric="Shannon")
+
+
+#extracting important columns 
+grassh_comm_subset <- grassh_comm_df %>%
+  ungroup()%>%
+  dplyr::select(RecYear,FireGrzTrt,Rep_id, Unit) %>%
+  distinct()#remove repeated rows
+
+#combine into a single data
+grassh_rich_diver<- gh_diver %>%
+  #combine richness and diversity
+  left_join(gh_rich, by = c("Rep_id","RecYear")) %>%
+  #combine with important columns
+  left_join(grassh_comm_subset, by = c("Rep_id","RecYear"))
+#convert to factors
+grassh_rich_diver$RecYear<-as.factor(grassh_rich_diver$RecYear)
+grassh_rich_diver$Unit<-as.factor(grassh_rich_diver$Unit)
+grassh_rich_diver$FireGrzTrt<-as.factor(grassh_rich_diver$FireGrzTrt)
+#build model
+gh_diver_model<-lmer(log(Shannon)~FireGrzTrt*RecYear+(1|Unit),
+                     data=grassh_rich_diver)
+Anova(gh_diver_model, type=3)
+qqnorm(resid(gh_diver_model))
+
+gh_diver_lm<-aov(log(Shannon)~FireGrzTrt*RecYear, data=grassh_rich_diver)
+summary(gh_diver_lm)
+Anova(gh_diver_lm, type=3)
+check_model(gh_diver_model)
+
+#multiple comparison
+testInteractions(gh_diver_model, pairwise="FireGrzTrt", fixed="RecYear",
+                 adjustment="BH")
+#using mean estimate to create figure 
+ghdiver_interact<-interactionMeans(gh_diver_model)
+#replacing spaces in column names with underscore 
+names(ghdiver_interact)<-str_replace_all(names(ghdiver_interact), " ","_")
+#df for visuals from model estimates
+ghdiver_interact_viz<-ghdiver_interact%>%
+  mutate(ghdiver_mean=exp(adjusted_mean),
+         ghdiver_upper=exp(adjusted_mean+SE_of_link),
+         ghdiver_lower=exp(adjusted_mean-SE_of_link))
+#visual
+ggplot(ghdiver_interact_viz,aes(RecYear, ghdiver_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
+  geom_point(size=3)+
+  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
+  geom_errorbar(aes(ymin=ghdiver_lower,
+                    ymax=ghdiver_upper),width=0.2,linetype=1)+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))
+#average across years for simplification
+ghdiver_interact_bar<-ghdiver_interact_viz%>%
+  group_by(FireGrzTrt)%>%
+  summarise(gh_diver=mean(ghdiver_mean),
+            se_upper=mean(ghdiver_upper),
+            se_lower=mean(ghdiver_lower))
+ggplot(ghdiver_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
+  geom_bar(stat = "identity",aes(y=gh_diver),width = 0.5)+
+  geom_errorbar(aes(ymin=se_lower,
+                    ymax=se_upper),width=0.2,linetype=1)+
+  scale_fill_manual(values=c( "#F0E442", "#009E73"))
+
+#richness model
+ghrich_model<-lmer(log(richness)~FireGrzTrt*RecYear+(1|Unit),
+                   data=grassh_rich_diver)
+Anova(ghrich_model, type=3)
+qqnorm(resid(ghrich_model))
+check_model(ghrich_model)
+#multiple comparison
+testInteractions(ghrich_model, pairwise="FireGrzTrt", fixed="RecYear",
+                 adjustment="BH")
+#using mean estimate to create figure 
+ghrich_interact<-interactionMeans(ghrich_model)
+#replacing spaces in column names with underscore 
+names(ghrich_interact)<-str_replace_all(names(ghrich_interact), " ","_")
+#df for visuals from model estimates
+ghrich_interact_viz<-ghrich_interact%>%
+  mutate(ghrich_mean=exp(adjusted_mean),
+         ghrich_upper=exp(adjusted_mean+SE_of_link),
+         ghrich_lower=exp(adjusted_mean-SE_of_link))
+#visual
+ggplot(ghrich_interact_viz,aes(RecYear, ghrich_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
+  geom_point(size=3)+
+  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
+  geom_errorbar(aes(ymin=ghrich_lower,
+                    ymax=ghrich_upper),width=0.2,linetype=1)+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))
+
+#average across years for simplification
+ghrich_interact_bar<-ghrich_interact_viz%>%
+  group_by(FireGrzTrt)%>%
+  summarise(gh_richness=mean(ghrich_mean),
+            se_upper=mean(ghrich_upper),
+            se_lower=mean(ghrich_lower))
+ggplot(ghrich_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
+  geom_bar(stat = "identity",aes(y=gh_richness),width = 0.5)+
+  geom_errorbar(aes(ymin=se_lower,
+                    ymax=se_upper),width=0.2,linetype=1)+
+  scale_fill_manual(values=c( "#F0E442", "#009E73"))
+
+#evenness model
+ghevenness_model<-lmer(log(Evar)~FireGrzTrt*RecYear+(1|Unit),
+                   data=grassh_rich_diver)
+Anova(ghevenness_model, type=3)
+qqnorm(resid(ghevenness_model))
+check_model(ghevenness_model)
+#multiple comparison
+testInteractions(ghevenness_model, pairwise="FireGrzTrt", fixed="RecYear",
+                 adjustment="BH")
+#using mean estimate to create figure 
+gheven_interact<-interactionMeans(ghevenness_model)
+#replacing spaces in column names with underscore 
+names(gheven_interact)<-str_replace_all(names(gheven_interact), " ","_")
+#df for visuals from model estimates
+gheven_interact_viz<-gheven_interact%>%
+  mutate(ghevenness_mean=exp(adjusted_mean),
+         gheven_upper=exp(adjusted_mean+SE_of_link),
+         gheven_lower=exp(adjusted_mean-SE_of_link))
+#visual
+ggplot(gheven_interact_viz,aes(RecYear, ghevenness_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
+  geom_point(size=3)+
+  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
+  geom_errorbar(aes(ymin=gheven_lower,
+                    ymax=gheven_upper),width=0.2,linetype=1)+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))
+
+#average across years for simplification
+gheven_interact_bar<-gheven_interact_viz%>%
+  group_by(FireGrzTrt)%>%
+  summarise(gh_evenness=mean(ghevenness_mean),
+            se_upper=mean(gheven_upper),
+            se_lower=mean(gheven_lower))
+ggplot(gheven_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
+  geom_bar(stat = "identity",aes(y=gh_evenness),width = 0.5)+
+  geom_errorbar(aes(ymin=se_lower,
+                    ymax=se_upper),width=0.2,linetype=1)+
+  scale_fill_manual(values=c( "#F0E442", "#009E73"))
+
+#perform permanova and calculate betadiversity####
+#create df with individual species abundance####
+grassh_permav_df <- grasshopperspcomp_df%>%
+  full_join(watershed_key, by = "Watershed")%>%
+  left_join(Watershed_key2,by="Watershed")%>%
+  mutate(spe=paste(Genus,Species, sep="_"))%>%
+  mutate(RecYear = Recyear)%>%
+  filter(!RecYear== 2010)%>%
+  #using the max cover from the two sweeps done on each transect
+  group_by(Unit,RecYear,FireGrzTrt,Watershed,Repsite,spe)%>%
+  summarise(Total=max(Total))%>%
+  filter(Repsite!="C" | Watershed!="C03C")%>%
+  filter(Watershed!="C03C" | Repsite!="D")%>%
+  filter(Watershed!="C03B" | Repsite!="A")%>%
+  filter(Watershed!="C03B" | Repsite!="B")%>%
+  filter(Watershed!="C03B" | Repsite!="C")%>%
+  filter(Watershed!="C03A" | Repsite!="A")%>%
+  filter(Watershed!="C03A" | Repsite!="B")%>%
+  filter(Watershed!="C03A" | Repsite!="C")%>%
+  filter(Watershed!="C3SC" | Repsite!="A")%>%
+  filter(Watershed!="C3SC" | Repsite!="B")%>%
+  filter(Watershed!="C3SC" | Repsite!="C")%>%
+  filter(Watershed!="C3SA" | Repsite!="B")%>%
+  filter(Watershed!="C3SA" | Repsite!="C")%>%
+  filter(Watershed!="C3SA" | Repsite!="D")%>%
+  filter(Watershed!="C3SB" | Repsite!="A")%>%
+  filter(Watershed!="C3SB" | Repsite!="B")%>%
+  group_by(Unit,RecYear,Watershed,Repsite,FireGrzTrt,spe)%>%
+  summarise(total_avg=mean(Total,na.rm=T))%>%
+  group_by(Unit,RecYear,Watershed,Repsite,FireGrzTrt)%>%
+  #converting count data to abundance data (0-100% scale)
+  mutate(abundance=(total_avg/sum(total_avg, na.rm=T))*100,
+         unit_trt=paste(Unit, FireGrzTrt, sep="_"))%>%
+  group_by(Unit,RecYear,Watershed,Repsite,FireGrzTrt,unit_trt,spe)%>%
+  summarise(abundance=mean(abundance,na.rm=T))%>%
+  pivot_wider(names_from = spe, values_from = abundance, values_fill = 0)
+
+# Separate out spcomp and environmental columns (cols are species) #
+Gh_sp_data <- grassh_permav_df %>%
+  ungroup()%>%
+  dplyr::select(-1:-6)
+Gh_env_data <- grassh_permav_df%>%dplyr::select(1:6)
+
+#get nmds1 and 2
+Gh_mds_all <- metaMDS(Gh_sp_data, distance = "bray")
+#Run 20 stress 0.2472714
+
+#combine NMDS1 and 2 with factor columns and create centroids
+Gh_mds_scores <- data.frame(Gh_env_data, scores(Gh_mds_all, display="sites"))%>%
+  group_by(RecYear, FireGrzTrt)%>%
+  mutate(NMDS1_mean=mean(NMDS1),
+         NMDS2_mean=mean(NMDS2))
+#write into csv format 
+#write.csv(Gh_mds_scores,"C:/Users/joshu/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/Gh_mds_scores.csv")
+
+#for ordispider sake!
+Gh_mds_scores_mean <- Gh_mds_scores%>%
+  group_by(RecYear, FireGrzTrt)%>%
+  summarise(NMDS1=mean(NMDS1),
+            NMDS2=mean(NMDS2))
+#ordispider with ggplot
+ggplot(Gh_mds_scores, aes(x=NMDS1, y=NMDS2, col=FireGrzTrt)) +
+  geom_segment(aes(xend=NMDS1_mean, yend= NMDS2_mean))+
+  geom_point(data=Gh_mds_scores_mean, size=5) +
+  geom_point()+
+  facet_wrap(~ RecYear, scales = "free")+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))  #+
+theme_bw() 
+
+#summarise into centroid and have a single figure
+#Plot with geompoint for abg vs pbg nmds
+ggplot(Gh_mds_scores_mean, aes(x=NMDS1, y=NMDS2, col=FireGrzTrt))+
+  geom_point(size=5)+
+  geom_path()+
+  #geom_errorbar(aes(ymax=NMDS2_mean+NMDS2_SE, ymin=NMDS2_mean-NMDS2_SE))+
+  #geom_errorbarh(aes(xmax=NMDS1_mean+NMDS1_SE, xmin=NMDS1_mean-NMDS1_SE))+
+  scale_shape_manual(values=10:21)+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))
+
+#not necessary-just checking if composition differs with unit####
+Gh_mds_scores_unit <- data.frame(Gh_env_data, scores(Gh_mds_all, display="sites"))%>%
+  group_by(RecYear, unit_trt)%>%
+  mutate(NMDS1_mean=mean(NMDS1),
+         NMDS2_mean=mean(NMDS2))
+
+#for ordispider sake!
+Gh_mds_scores_mean_unit <- Gh_mds_scores_unit%>%
+  group_by(RecYear, unit_trt)%>%
+  summarise(NMDS1=mean(NMDS1),
+            NMDS2=mean(NMDS2))
+#ordispider with ggplot
+ggplot(Gh_mds_scores_unit, aes(x=NMDS1, y=NMDS2, col=unit_trt)) +
+  geom_segment(aes(xend=NMDS1_mean, yend= NMDS2_mean))+
+  geom_point(data=Gh_mds_scores_mean_unit, size=5) +
+  geom_point()+
+  facet_wrap(~ RecYear, scales = "free")#+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))  #+
+theme_bw() 
+
+
+#permanova and betdiversity####
