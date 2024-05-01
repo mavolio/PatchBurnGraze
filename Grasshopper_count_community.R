@@ -1,6 +1,6 @@
 #BPBG grasshopper count and community metrics
 #Authors: Joshua Ajowele
-#Started: 26 May 2022 last modified: 16 Feb 2024
+#Started: 26 May 2022 last modified: 01 May 2024
 
 #load library
 library(tidyverse)
@@ -1327,3 +1327,253 @@ theme_bw()
 
 
 #permanova and betdiversity####
+#calculating permanova and betadiversity
+#creating a loop to do this
+year_vec_gh <- unique(Gh_env_data$RecYear)
+gh_perm <- {}
+gh_beta <- {}
+
+gh
+
+for(YEAR in 1:length(year_vec_gh)){
+  vdist_temp_gh <- vegdist(filter(Gh_sp_data, Gh_env_data$RecYear ==  year_vec_gh[YEAR]))
+  permanova_temp_gh <- adonis(vdist_temp_gh ~ subset(Gh_env_data, RecYear == year_vec_gh[YEAR])$FireGrzTrt)
+  permanova_out_temp_gh <- data.frame(RecYear = year_vec_gh[YEAR], 
+                                      DF = permanova_temp_gh$aov.tab[1,1],
+                                      F_value = permanova_temp_gh$aov.tab[1,4],
+                                      P_value = permanova_temp_gh$aov.tab[1,6])
+  gh_perm <- rbind(gh_perm,permanova_out_temp_gh)
+  
+  bdisp_temp_gh <- betadisper(vdist_temp_gh, filter(Gh_env_data, RecYear==year_vec_gh[YEAR])$FireGrzTrt, type = "centroid")
+  bdisp_out_temp_gh <- data.frame(filter(Gh_env_data, RecYear==year_vec_gh[YEAR]), distance = bdisp_temp_gh$distances)
+  gh_beta <- rbind(gh_beta, bdisp_out_temp_gh)
+  
+  rm(vdist_temp_gh, permanova_temp_gh, permanova_out_temp_gh, bdisp_temp_gh, bdisp_out_temp_gh)
+}
+write.csv(gh_beta, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/Grasshoper_betadiver.csv")
+write.csv(gh_perm, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/Grasshopper_permanova.csv")
+#model for betadiversity
+gh_beta$RecYear<-as.factor(gh_beta$RecYear)
+gh_beta_model<-lmer(log(distance)~FireGrzTrt*RecYear+(1|Unit),
+                    data=gh_beta)#issingular
+Anova(gh_beta_model, type=3)
+qqnorm(resid(gh_beta_model))
+check_model(gh_beta_model)
+#pairwise interaction 
+testInteractions(gh_beta_model, fixed="RecYear",
+                 pairwise = "FireGrzTrt", adjustment="BH")
+#using mean estimate from post-hoc to create figure as a comparison to raw data
+model_estimates_beta<-interactionMeans(gh_beta_model)
+#replacing spaces in column names with underscore 
+names(model_estimates_beta)<-str_replace_all(names(model_estimates_beta), " ","_")
+#df for visuals from model estimates
+model_estimates_beta_viz<-model_estimates_beta%>%
+  mutate(gh_betadiv=exp(adjusted_mean),
+         gh_upper=exp(adjusted_mean+SE_of_link),
+         gh_lower=exp(adjusted_mean-SE_of_link))
+#visual
+ggplot(model_estimates_beta_viz,aes(RecYear, gh_betadiv, col=FireGrzTrt, linetype=FireGrzTrt))+
+  geom_point(size=3)+
+  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
+  geom_errorbar(aes(ymin=gh_lower,
+                    ymax=gh_upper),width=0.2,linetype=1)+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))
+#summarize with a bargraph
+ghbeta_interact_bar<-model_estimates_beta_viz%>%
+  group_by(FireGrzTrt)%>%
+  summarise(gh_betadiver=mean(gh_betadiv),
+            se_upper=mean(gh_upper),
+            se_lower=mean(gh_lower))
+ggplot(ghbeta_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
+  geom_bar(stat = "identity",aes(y=gh_betadiver),width = 0.5)+
+  geom_errorbar(aes(ymin=se_lower,
+                    ymax=se_upper),width=0.2,linetype=1)+
+  scale_fill_manual(values=c( "#F0E442", "#009E73"))
+
+#simper analysis to find what species are driving difference in composition####
+#filter data for year with difference
+Gh_sp_data_2011 <- grassh_permav_df %>%
+  filter(RecYear==2011)%>%
+  ungroup()%>%
+  dplyr::select(-1:-6)
+Gh_env_data_2011 <- grassh_permav_df%>%
+  dplyr::select(1:6)%>%
+  filter(RecYear==2011)
+
+simper_abgvspbg<-simper(Gh_sp_data_2011,Gh_env_data_2011$FireGrzTrt)
+simper_gh_2011<-summary(simper_abgvspbg, order=T)
+Simper_df<-data.frame(simper_gh_2011$ABG_PBG)
+
+#2013
+Gh_sp_data_2013 <- grassh_permav_df %>%
+  filter(RecYear==2013)%>%
+  ungroup()%>%
+  dplyr::select(-1:-6)
+Gh_env_data_2013 <- grassh_permav_df%>%
+  dplyr::select(1:6)%>%
+  filter(RecYear==2013)
+
+simper_gh_2013<-simper(Gh_sp_data_2013,Gh_env_data_2013$FireGrzTrt)
+simper_gh_2013_sum<-summary(simper_gh_2013, order=T)
+Simper_df<-data.frame(simper_gh_2013_sum$ABG_PBG)
+
+#2014
+Gh_sp_data_2014 <- grassh_permav_df %>%
+  filter(RecYear==2014)%>%
+  ungroup()%>%
+  dplyr::select(-1:-6)
+Gh_env_data_2014 <- grassh_permav_df%>%
+  dplyr::select(1:6)%>%
+  filter(RecYear==2014)
+
+simper_gh_2014<-simper(Gh_sp_data_2014,Gh_env_data_2014$FireGrzTrt)
+simper_gh_2014_sum<-summary(simper_gh_2014, order=T)
+Simper_df<-data.frame(simper_gh_2014_sum$ABG_PBG)
+
+#2017
+Gh_sp_data_2017 <- grassh_permav_df %>%
+  filter(RecYear==2017)%>%
+  ungroup()%>%
+  dplyr::select(-1:-6)
+Gh_env_data_2017 <- grassh_permav_df%>%
+  dplyr::select(1:6)%>%
+  filter(RecYear==2017)
+
+simper_gh_2017<-simper(Gh_sp_data_2017,Gh_env_data_2017$FireGrzTrt)
+simper_gh_2017_sum<-summary(simper_gh_2017, order=T)
+Simper_df<-data.frame(simper_gh_2017_sum$ABG_PBG)
+#2018
+Gh_sp_data_2018 <- grassh_permav_df %>%
+  filter(RecYear==2018)%>%
+  ungroup()%>%
+  dplyr::select(-1:-6)
+Gh_env_data_2018 <- grassh_permav_df%>%
+  dplyr::select(1:6)%>%
+  filter(RecYear==2018)
+
+simper_gh_2018<-simper(Gh_sp_data_2018,Gh_env_data_2018$FireGrzTrt)
+simper_gh_2018_sum<-summary(simper_gh_2018, order=T)
+Simper_df<-data.frame(simper_gh_2018_sum$ABG_PBG)
+#2019
+Gh_sp_data_2019 <- grassh_permav_df %>%
+  filter(RecYear==2019)%>%
+  ungroup()%>%
+  dplyr::select(-1:-6)
+Gh_env_data_2019 <- grassh_permav_df%>%
+  dplyr::select(1:6)%>%
+  filter(RecYear==2019)
+
+simper_gh_2019<-simper(Gh_sp_data_2019,Gh_env_data_2019$FireGrzTrt)
+simper_gh_2019_sum<-summary(simper_gh_2019, order=T)
+Simper_df<-data.frame(simper_gh_2019_sum$ABG_PBG)
+#2020
+Gh_sp_data_2020 <- grassh_permav_df %>%
+  filter(RecYear==2020)%>%
+  ungroup()%>%
+  dplyr::select(-1:-6)
+Gh_env_data_2020 <- grassh_permav_df%>%
+  dplyr::select(1:6)%>%
+  filter(RecYear==2020)
+
+simper_gh_2020<-simper(Gh_sp_data_2020,Gh_env_data_2020$FireGrzTrt)
+simper_gh_2020_sum<-summary(simper_gh_2020, order=T)
+Simper_df<-data.frame(simper_gh_2020_sum$ABG_PBG)
+#2021
+Gh_sp_data_2021 <- grassh_permav_df %>%
+  filter(RecYear==2021)%>%
+  ungroup()%>%
+  dplyr::select(-1:-6)
+Gh_env_data_2021 <- grassh_permav_df%>%
+  dplyr::select(1:6)%>%
+  filter(RecYear==2021)
+
+simper_2021<-simper(Gh_sp_data_2021,Gh_env_data_2021$FireGrzTrt)
+simper_gh_2021<-summary(simper_2021, order=T)
+Simper_df_2021<-data.frame(simper_gh_2021$ABG_PBG)
+#2020
+Gh_sp_data_2020 <- grassh_permav_df %>%
+  filter(RecYear==2020)%>%
+  ungroup()%>%
+  dplyr::select(-1:-6)
+Gh_env_data_2020 <- grassh_permav_df%>%
+  dplyr::select(1:6)%>%
+  filter(RecYear==2020)
+
+simper_2020<-simper(Gh_sp_data_2020,Gh_env_data_2020$FireGrzTrt)
+simper_gh_2020<-summary(simper_2020, order=T)
+Simper_df_2020<-data.frame(simper_gh_2020$ABG_PBG)
+
+#extract species driving difference in composition####
+grassh_cover_2021_df <- grasshopperspcomp_df%>%
+  full_join(watershed_key, by = "Watershed")%>%
+  left_join(Watershed_key2,by="Watershed")%>%
+  mutate(spe=paste(Genus,Species, sep="_"))%>%
+  mutate(RecYear = Recyear)%>%
+  #using the max cover from the two sweeps done on each transect
+  group_by(Unit,RecYear,FireGrzTrt,Watershed,Repsite,spe)%>%
+  summarise(Total=max(Total))%>%
+  filter(Repsite!="C" | Watershed!="C03C")%>%
+  filter(Watershed!="C03C" | Repsite!="D")%>%
+  filter(Watershed!="C03B" | Repsite!="A")%>%
+  filter(Watershed!="C03B" | Repsite!="B")%>%
+  filter(Watershed!="C03B" | Repsite!="C")%>%
+  filter(Watershed!="C03A" | Repsite!="A")%>%
+  filter(Watershed!="C03A" | Repsite!="B")%>%
+  filter(Watershed!="C03A" | Repsite!="C")%>%
+  filter(Watershed!="C3SC" | Repsite!="A")%>%
+  filter(Watershed!="C3SC" | Repsite!="B")%>%
+  filter(Watershed!="C3SC" | Repsite!="C")%>%
+  filter(Watershed!="C3SA" | Repsite!="B")%>%
+  filter(Watershed!="C3SA" | Repsite!="C")%>%
+  filter(Watershed!="C3SA" | Repsite!="D")%>%
+  filter(Watershed!="C3SB" | Repsite!="A")%>%
+  filter(Watershed!="C3SB" | Repsite!="B")%>%
+  group_by(Unit,RecYear,Watershed,Repsite,FireGrzTrt,spe)%>%
+  summarise(total_avg=mean(Total,na.rm=T))%>%
+  group_by(Unit,RecYear,Watershed,Repsite,FireGrzTrt)%>%
+  #converting count data to abundance data (0-100% scale)
+  mutate(abundance=(total_avg/sum(total_avg, na.rm=T))*100,
+         unit_trt=paste(Unit, FireGrzTrt, sep="_"))%>%
+  group_by(Unit,RecYear,Watershed,Repsite,FireGrzTrt,unit_trt,spe)%>%
+  summarise(abundance=mean(abundance,na.rm=T))%>%
+  filter(spe%in%c("Conocephalus_spp.","Orphulella_speciosa",
+                  "Phoetaliotes_nebrascensis","Oecanthinae_spp.","Melanoplus_keeleri",
+                  "Eritettix_simplex","Melanoplus_femurrubrum","Campylacantha_olivacea",
+                  "Hypochlora_alba","Orchelimum_spp.","Oedipodinae_spp.","Melanoplus_scudderi",
+                  "Mermiria_spp.","Syrbula_admirabilis"))#%>%
+#Checking trends for each species
+ggplot_species_data<-grassh_cover_2021_df%>%
+  filter(!RecYear==2010)%>%
+  group_by(FireGrzTrt,RecYear, spe)%>%
+  summarise(abundance=mean(abundance))
+ggplot(ggplot_species_data, aes(RecYear, abundance, col=FireGrzTrt))+
+  geom_point()+
+  geom_path()+
+  facet_wrap(~spe, scales = "free")
+
+gh_cover_2021<-grassh_cover_2021_df%>%
+  filter(RecYear==2021)%>%
+  group_by(spe,FireGrzTrt)%>%
+  summarise(abundance=mean(abundance,na.rm=F))%>%
+  pivot_wider(names_from = "FireGrzTrt", values_from = "abundance", values_fill = 0)%>%
+  mutate(abund_ABG_PBG=ABG-PBG)
+#ggplot 
+#reset theme for this figure
+#theme_set(theme_bw())
+#theme_update(axis.title.x=element_text(size=10, vjust=-0.35), axis.text.x=element_text(size=10),
+#             axis.title.y=element_text(size=10, angle=90, vjust=0.5), axis.text.y=element_text(size=10),
+#             plot.title = element_text(size=14, vjust=2),
+#             panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+#             legend.title=element_text(size=10), legend.text=element_text(size=10))
+ggplot(gh_cover_2021,aes(x=spe))+
+  geom_bar(stat = "identity",aes(y=abund_ABG_PBG),width = 0.5)+
+  scale_x_discrete(guide = guide_axis(angle = 90))
+
+
+
+#just checking if any species is an indicator distingushing treatent
+#library(indicspecies)
+#indicator_abgvspbg<-multipatt(Gh_sp_data_2011,Gh_env_data_2011$FireGrzTrt)
+#ff<-summary(indicator_abgvspbg)
+#none
+
