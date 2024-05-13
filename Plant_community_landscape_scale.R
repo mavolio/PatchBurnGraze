@@ -188,9 +188,14 @@ ggplot(plrich_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
 #evenness model
 plevenness_model<-lmer(Evar~FireGrzTrt*RecYear+(1|Unit),
                        data=pl_rich_diver)#is.singular
-Anova(plevenness_model, type=3)
+Anova(plevenness_model, type=3)#compare Anova and anova
 qqnorm(resid(plevenness_model))
 check_model(plevenness_model)
+anova(plevenness_model)
+library(lmerTest)
+?lmerTest
+summary(plevenness_model)
+
 #multiple comparison
 #testInteractions(plevenness_model, pairwise="FireGrzTrt", fixed="RecYear",
 #                 adjustment="BH")
