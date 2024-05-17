@@ -1074,3 +1074,47 @@ CV_Count
 
 grid.arrange(CV_Richness, CV_Evar, CV_Count, ncol = 3)
 
+
+#### Beta Diversity ####
+# Load necessary packages
+library(vegan)
+library(dplyr)
+
+# Assuming you have Combined_Data and abundanceWide defined
+
+Joined_New_1 <- abundanceWide %>%
+  filter(Treatment == "PBG") %>%
+  group_by(block) %>%
+  mutate(plot_index = row_number()) # Corrected index generation
+
+num_bootstrap <- 1000
+PBG_plot_master <- data.frame(iteration = 1:num_bootstrap, beta_diversity = numeric(num_bootstrap))
+
+for (BOOT in 1:num_bootstrap) {
+  Joined_New_Key <- Joined_New_1 %>%
+    sample_n(16, replace = TRUE) %>%
+    select(plot_index) %>%
+    ungroup()
+  
+  PBG_plot_ready <- Joined_New_1 %>%
+    right_join(Joined_New_Key, by = "plot_index") %>%
+    mutate(iteration = BOOT)
+  
+  data_matrix <- PBG_plot_ready %>%
+    select(8:141) # Assuming these are your species columns
+  
+  dissimilarity_matrix <- vegdist(data_matrix, method = "bray")
+  
+  beta_diversity_value <- mean(dissimilarity_matrix)
+  
+  PBG_plot_master$beta_diversity[BOOT] <- beta_diversity_value
+}
+
+# Print the results
+print(PBG_plot_master)
+
+ggplot(PBG_plot_master, aes(x = beta_diversity)) +
+  geom_density() +
+  labs(title = "Density Plot of Beta Diversity",
+       x = "Beta Diversity",
+       y = "Density")

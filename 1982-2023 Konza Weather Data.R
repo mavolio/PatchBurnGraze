@@ -26,3 +26,4 @@ yearly_DPPT <- aggregate(DPPT ~ RECYEAR, data = Weather_Data, FUN = sum, na.rm =
 # Calculate the mean of yearly DPPT
 mean_yearly_DPPT <- mean(yearly_DPPT$DPPT)
 print(mean_yearly_DPPT)
+
