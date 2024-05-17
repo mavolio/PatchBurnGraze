@@ -1,6 +1,6 @@
 #BPBG grasshopper count and community metrics
 #Authors: Joshua Ajowele
-#Started: 26 May 2022 last modified: 16 Feb 2024
+#Started: 26 May 2022 last modified: 12 May 2024
 
 #load library
 library(tidyverse)
@@ -75,6 +75,7 @@ Watershed_key2<-tibble(Watershed=levels(factor(grasshopperspcomp_df$Watershed)),
 print(Watershed_key2)
 #converting all repsite into uppercase
 grasshopperspcomp_df$Repsite=toupper(grasshopperspcomp_df$Repsite)
+unique(grassh_count_df$spe)
 #merging key with dataset
 grassh_count_df <- grasshopperspcomp_df%>%
   full_join(watershed_key, by = "Watershed")%>%
@@ -82,6 +83,11 @@ grassh_count_df <- grasshopperspcomp_df%>%
   mutate(spe=paste(Genus,Species, sep="_"))%>%
   mutate(RecYear = Recyear)%>%
   filter(!RecYear== 2010)%>%
+  filter(!spe%in%c("Oecanthinae_spp.","Tettigoniidae_spp.","Gryllidae_spp.",
+                   "Conocephalus_spp.","Neoconocephalus_robustus","Scudderia_texensis",
+                   "Arethaea_constricta","Orchelimum_spp.","Amblycorypha_oblongifolia","Pediodectes_haldemani",
+                   "Amblycorypha_rotundifolia","Neoconocephalus_spp.","Neoconocephalus_ensiger","Pediodectes_nigromarginatus",
+                   "Scudderia_furcata","Scudderia_spp."))%>%
   #using the max cover from the two sweeps done on each transect
   group_by(Unit,RecYear,FireGrzTrt,Watershed,Repsite,spe)%>%
   summarise(Total=max(Total))%>%
@@ -489,6 +495,11 @@ grassh_comm_df <- grasshopperspcomp_df%>%
   mutate(spe=paste(Genus,Species, sep="_"))%>%
   mutate(RecYear = Recyear)%>%
   filter(!RecYear== 2010)%>%
+  filter(!spe%in%c("Oecanthinae_spp.","Tettigoniidae_spp.","Gryllidae_spp.",
+                   "Conocephalus_spp.","Neoconocephalus_robustus","Scudderia_texensis",
+                   "Arethaea_constricta","Orchelimum_spp.","Amblycorypha_oblongifolia","Pediodectes_haldemani",
+                   "Amblycorypha_rotundifolia","Neoconocephalus_spp.","Neoconocephalus_ensiger","Pediodectes_nigromarginatus",
+                   "Scudderia_furcata","Scudderia_spp."))%>%
   #using the max cover from the two sweeps done on each transect
   group_by(Unit,RecYear,FireGrzTrt,Watershed,Repsite,spe)%>%
   summarise(Total=max(Total))%>%
@@ -774,4 +785,788 @@ ggplot(GH_metric_Nth_combo_geompoint,aes(RecYear, diver_sd, col=treatment))+
   geom_errorbar(aes(ymax=diver_sd+1.96*(shan_sd_NthPBG_sd),
                     ymin=diver_sd-1.96*(shan_sd_NthPBG_sd)),width=.2)
 
+
+#Combine unit for bootstrap sd and cv####
+grass_ABG_count<-grassh_count_df%>%
+    #ABG mean, cv, sd
+    filter(FireGrzTrt=="ABG")%>%
+    group_by(RecYear)%>%
+    summarise(ghcount_ABG=mean(Tcount, na.rm=T),
+              ghcount_ABG_sd=sd(Tcount),
+              ghcount_ABG_cv=ghcount_ABG_sd/ghcount_ABG)%>%
+    ungroup()%>%
+    mutate(ghcount_ABG_stab=mean(ghcount_ABG)/sd(ghcount_ABG))
+
+
+gh_count_index<-grassh_count_df%>%
+  filter(FireGrzTrt=="PBG")%>%
+  group_by(RecYear)%>%
+  mutate(plot_index=1:length(RecYear))
+
+num_bootstrap<-1000
+bootstrap_vector<-1:num_bootstrap
+ghcount_master_combine_mean_sd_cv<-{}
+  for(BOOT in 1:length(bootstrap_vector)){
+    count_rand_mean<-gh_count_index%>%
+      dplyr::select(RecYear, Unit, Watershed, FireGrzTrt, Repsite, plot_index)%>%
+      unique()%>%
+      group_by(RecYear)%>%
+      sample_n(8, replace=T)%>%
+      dplyr::select(RecYear,plot_index)%>%
+      left_join(gh_count_index, by=c("plot_index","RecYear"), multiple="all")
+    count_ready_mean<-count_rand_mean%>%
+      mutate(iteration=BOOT)
+    ghcount_master_combine_mean_sd_cv<-rbind(ghcount_master_combine_mean_sd_cv, count_ready_mean)
+  }
+gh_combine_mean_sd<-ghcount_master_combine_mean_sd_cv%>%
+  select(RecYear, iteration, Tcount)%>%
+  group_by(RecYear, iteration)%>%
+  summarise(gh_PBG_mean=mean(Tcount,na.rm=T),
+            gh_PBG_sd=sd(Tcount),
+            gh_PBG_cv=gh_PBG_sd/gh_PBG_mean)%>%
+  ungroup()%>%
+  group_by(RecYear)%>%
+  summarise(gh_PBG_MM=mean(gh_PBG_mean),
+            gh_PBG_M_sd=sd(gh_PBG_mean),
+            gh_PBG_sd_M=mean(gh_PBG_sd),
+            gh_PBG_sd_sd=sd(gh_PBG_sd),
+            gh_PBG_cv_M=mean(gh_PBG_cv),
+            gh_PBG_cv_sd=sd(gh_PBG_cv))%>%
+  left_join(grass_ABG_count, by="RecYear")%>%
+  mutate(zscore_M=(ghcount_ABG-gh_PBG_MM)/gh_PBG_M_sd,
+         pval_M=2*pnorm(-abs(zscore_M)),
+         zscore_sd=(ghcount_ABG_sd-gh_PBG_sd_M)/gh_PBG_sd_sd,
+         pval_sd=2*pnorm(-abs(zscore_sd)),
+         zscore_cv=(ghcount_ABG_cv-gh_PBG_cv_M)/gh_PBG_cv_sd,
+         pval_cv=2*pnorm(-abs(zscore_cv)))
+write.csv(gh_combine_mean_sd, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/gh_count_mean_sd_combined_unit.csv")
+
+#create visuals####
+#grasshopper average count
+combo_ghcount_geompoint_M<-gh_combine_mean_sd%>%
+  pivot_longer(c(gh_PBG_MM,ghcount_ABG),
+               names_to = "treatment", values_to = "count_M")%>%
+  select(treatment,count_M,RecYear, gh_PBG_M_sd)%>%
+  distinct()%>%
+  mutate(PBG_sd=round(gh_PBG_M_sd,digits=2))#%>%
+  mutate(PBG_sd=ifelse(PBG_sd==2.55 & treatment=="ghcount_ABG",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==6.75 & treatment=="ghcount_ABG",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==24.97 & treatment=="ghcount_ABG",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==5.42 & treatment=="ghcount_ABG",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==6.82 & treatment=="ghcount_ABG",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==1.95 & treatment=="ghcount_ABG",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==6.36 & treatment=="ghcount_ABG",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==13.35 & treatment=="ghcount_ABG",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==7.21 & treatment=="ghcount_ABG",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==5.21 & treatment=="ghcount_ABG",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==6.12 & treatment=="ghcount_ABG",NA,PBG_sd))
+
+ggplot(combo_ghcount_geompoint_M,aes(RecYear, count_M, col=treatment))+
+  geom_point()+
+  geom_path(aes(as.numeric(RecYear)))+
+  scale_colour_manual(values=c( "#009E73","#F0E442"),labels=c("PBG","ABG"))+
+  geom_errorbar(aes(ymax=count_M+1.96*(PBG_sd),
+                    ymin=count_M-1.96*(PBG_sd)),width=.2)
+
+  
+#grasshopper sd count
+combo_ghcount_geompoint_sd<-gh_combine_mean_sd%>%
+  pivot_longer(c(gh_PBG_sd_M,ghcount_ABG_sd),
+               names_to = "treatment", values_to = "count_sd")%>%
+  select(treatment,count_sd,RecYear, gh_PBG_sd_sd)%>%
+  distinct()%>%
+  mutate(PBG_sd=round(gh_PBG_sd_sd,digits=2))%>%
+  mutate(PBG_sd=ifelse(PBG_sd==1.89 & treatment=="ghcount_ABG_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==6.23 & treatment=="ghcount_ABG_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==21.59 & treatment=="ghcount_ABG_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==3.68 & treatment=="ghcount_ABG_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==6.86 & treatment=="ghcount_ABG_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==1.98 & treatment=="ghcount_ABG_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==9.67 & treatment=="ghcount_ABG_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==20.06 & treatment=="ghcount_ABG_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==4.30 & treatment=="ghcount_ABG_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==6.90 & treatment=="ghcount_ABG_sd",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==4.73 & treatment=="ghcount_ABG_sd",NA,PBG_sd))
+
+ggplot(combo_ghcount_geompoint_sd,aes(RecYear, count_sd, col=treatment))+
+  geom_point()+
+  geom_path(aes(as.numeric(RecYear)))+
+  scale_colour_manual(values=c( "#009E73","#F0E442"),labels=c("PBG","ABG"))+
+  geom_errorbar(aes(ymax=count_sd+1.96*(PBG_sd),
+                    ymin=count_sd-1.96*(PBG_sd)),width=.2)
+
+#grasshopper cv count
+combo_ghcount_geompoint_cv<-gh_combine_mean_sd%>%
+  pivot_longer(c(gh_PBG_cv_M,ghcount_ABG_cv),
+               names_to = "treatment", values_to = "count_cv")%>%
+  select(treatment,count_cv,RecYear, gh_PBG_cv_sd)%>%
+  distinct()%>%
+  mutate(PBG_sd=round(gh_PBG_cv_sd,digits=2))%>%
+  mutate(PBG_sd=ifelse(PBG_sd==0.05 & treatment=="ghcount_ABG_cv",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.16 & treatment=="ghcount_ABG_cv",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.13 & treatment=="ghcount_ABG_cv",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.08 & treatment=="ghcount_ABG_cv",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.19 & treatment=="ghcount_ABG_cv",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.10 & treatment=="ghcount_ABG_cv",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.20 & treatment=="ghcount_ABG_cv",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.25 & treatment=="ghcount_ABG_cv",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.07 & treatment=="ghcount_ABG_cv",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.19 & treatment=="ghcount_ABG_cv",NA,PBG_sd),
+         PBG_sd=ifelse(PBG_sd==0.11 & treatment=="ghcount_ABG_cv",NA,PBG_sd))
+
+ggplot(combo_ghcount_geompoint_cv,aes(RecYear, count_cv, col=treatment))+
+  geom_point()+
+  geom_path(aes(as.numeric(RecYear)))+
+  scale_colour_manual(values=c( "#009E73","#F0E442"),labels=c("PBG","ABG"))+
+  geom_errorbar(aes(ymax=count_cv+1.96*(PBG_sd),
+                    ymin=count_cv-1.96*(PBG_sd)),width=.2)
+
+#bootstrap for stability####
+num_bootstrap<-1000
+bootstrap_vector<-1:num_bootstrap
+ghcount_master_stab<-{}
+for(BOOT in 1:length(bootstrap_vector)){
+  count_rand_stab<-gh_count_index%>%
+    dplyr::select(RecYear, Unit, Watershed, FireGrzTrt, Repsite, plot_index)%>%
+    unique()%>%
+    filter(RecYear==2011)%>%
+    ungroup()%>%
+    sample_n(8, replace=T)%>%
+    dplyr::select(plot_index)%>%
+    left_join(gh_count_index, by="plot_index", multiple="all")
+  count_ready_stab<-count_rand_stab%>%
+    mutate(iteration=BOOT)
+  ghcount_master_stab<-rbind(ghcount_master_stab, count_ready_stab)
+}
+#just so you don't worry-2012-C03B transect A is missing(i think bad sample)
+ghcount_master_combine_stab<-ghcount_master_stab%>%
+    select(RecYear, iteration, Tcount)%>%
+  group_by(RecYear, iteration)%>%
+  summarise(count_mean=mean(Tcount,na.rm=T))%>%
+  ungroup()%>%
+  group_by(iteration)%>%
+  mutate(count_PBG_stab=mean(count_mean, na.rm=T)/sd(count_mean))%>%
+  ungroup()%>%
+  mutate(PBG_stab_M=mean(count_PBG_stab),
+         PBG_stab_sd=sd(count_PBG_stab))%>%
+  left_join(grass_ABG_count, by="RecYear")%>%
+  mutate(zscore=(ghcount_ABG_stab-PBG_stab_M)/PBG_stab_sd)%>%
+  mutate(pval=2*pnorm(-abs(zscore)))
+write.csv(ghcount_master_combine_stab, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/gh_stability_combined_unit.csv")
+#start from zero
+ggplot(ghcount_master_combine_stab,aes(count_PBG_stab))+
+  geom_density(size=2,col="#009E73")+
+  #facet_grid("RecYear")+
+  geom_vline(aes(xintercept=ghcount_ABG_stab), linetype=2,size=2, col="#F0E442")+
+  xlab("Grasshopper count stability")+xlim(0,4)
+#x axis not set
+ggplot(ghcount_master_combine_stab,aes(count_PBG_stab))+
+  geom_density(size=2,col="#009E73")+
+  #facet_grid("RecYear")+
+  geom_vline(aes(xintercept=ghcount_ABG_stab), linetype=2,size=2, col="#F0E442")+
+  xlab("Grasshopper count stability")
+
+#next step year since fire calculation
+#creating a key for year since fire
+YrSinceFire_key <- tibble(year_watershed= c("2011_C01A", "2011_C03A", "2011_C03B",
+                                            "2011_C03C", "2011_C1SB", "2011_C3SA",
+                                            "2011_C3SB", "2011_C3SC",
+                                            "2012_C01A", "2012_C03A", "2012_C03B",
+                                            "2012_C03C", "2012_C1SB", "2012_C3SA",
+                                            "2012_C3SB", "2012_C3SC", "2013_C03A",
+                                            "2013_C03B", "2013_C03C", "2013_C1SB",
+                                            "2013_C3SA", "2013_C3SB", "2013_C01A",
+                                            "2013_C3SC", "2014_C01A", "2014_C03A",
+                                            "2014_C03B", "2014_C03C", "2014_C1SB",
+                                            "2014_C3SA", "2014_C3SB", "2014_C3SC",
+                                            "2015_C1SB", "2015_C03A", "2015_C03B",
+                                            "2015_C3SC", "2015_C3SA", "2015_C3SB",
+                                            "2015_C03C", "2015_C01A", "2016_C03A",
+                                            "2016_C03B", "2016_C3SC", "2016_C01A",
+                                            "2016_C03C", "2016_C1SB", "2016_C3SA",
+                                            "2016_C3SB", "2017_C3SA", "2017_C3SB",
+                                            "2017_C03C", "2017_C03A", "2017_C03B",
+                                            "2017_C1SB", "2017_C3SC", "2017_C01A",
+                                            "2018_C03A", "2018_C03B", "2018_C03C",
+                                            "2018_C01A", "2018_C3SA", "2018_C3SB",
+                                            "2018_C1SB", "2018_C3SC", "2019_C3SA",
+                                            "2019_C3SB", "2019_C1SB", "2019_C03A",
+                                            "2019_C03B", "2019_C03C", "2019_C3SC",
+                                            "2019_C01A", "2020_C1SB", "2020_C3SA",
+                                            "2020_C3SB", "2020_C3SC", "2020_C03A",
+                                            "2020_C03B", "2020_C03C", "2020_C01A",
+                                            "2021_C01A", "2021_C03C", "2021_C03A",
+                                            "2021_C03B", "2021_C3SA", "2021_C3SB",
+                                            "2021_C3SC", "2021_C1SB"),
+                          yrsins_fire= c("ABG0","PBG1","PBG0", "PBG2", "ABG0","PBG0","PBG1","PBG1",
+                                         "ABG0","PBG2","PBG1","PBG0","ABG0","PBG1","PBG2",
+                                         "PBG0","PBG0", "PBG2", "PBG1", "ABG0","PBG2", "PBG0",
+                                         "ABG0", "PBG1","ABG0","PBG1", "PBG0","PBG2","ABG0",
+                                         "PBG0","PBG1","PBG2","ABG0","PBG2","PBG1","PBG0","PBG1",
+                                         "PBG2","PBG0","ABG0","PBG0","PBG2","PBG1","ABG0","PBG1",
+                                         "ABG0","PBG2","PBG0","PBG0","PBG1","PBG2","PBG1","PBG0",
+                                         "ABG0","PBG2","ABG0","PBG2","PBG1","PBG0","ABG0","PBG1",
+                                         "PBG2","ABG0","PBG0","PBG2","PBG0","ABG0","PBG0","PBG2",
+                                         "PBG1","PBG1","ABG0","ABG0","PBG0","PBG1","PBG2","PBG1",
+                                         "PBG0","PBG2","ABG0","ABG0","PBG0","PBG2","PBG1","PBG1",
+                                         "PBG2","PBG0","ABG0"))
+#merge with biomass data ####
+ghcount_yrs<-grassh_count_df%>%
+  mutate(year_watershed=paste(RecYear,Watershed, sep ="_"))%>%
+  left_join(YrSinceFire_key, by="year_watershed")%>%
+  group_by(RecYear,Unit, Watershed,yrsins_fire,FireGrzTrt,Repsite)%>%
+  summarise(Tcount=mean(Tcount, na.rm=T))
+ghcount_yrs$RecYear=as.factor(ghcount_yrs$RecYear)
+ghcount_yrs$yrsins_fire=as.factor(ghcount_yrs$yrsins_fire)
+ghcount_yrs$Unit=as.factor(ghcount_yrs$Unit)
+ghcount_yrs$Watershed=as.factor(ghcount_yrs$Watershed)
+ghcount_yrs$Repsite=as.factor(ghcount_yrs$Repsite)
+
+
+#mixed anova
+yrs_ghcount_model<-lmer(log(Tcount)~yrsins_fire*RecYear+(1|Unit/Watershed),
+                        data=ghcount_yrs)
+check_model(yrs_ghcount_model)
+Anova(yrs_ghcount_model, type=3)
+qqnorm(resid(yrs_ghcount_model))
+
+#multiple comparison
+testInteractions(yrs_ghcount_model, pairwise="yrsins_fire", fixed="RecYear",
+                 adjustment="BH")
+#using mean estimate to create figure 
+yrs_interact<-interactionMeans(yrs_ghcount_model)
+#replacing spaces in column names with underscore 
+names(yrs_interact)<-str_replace_all(names(yrs_interact), " ","_")
+#df for visuals from model estimates
+yrs_interact_viz<-yrs_interact%>%
+  mutate(yrs_interact_bt_mean=exp(adjusted_mean),
+         yrs_interact_bt_upper=exp(adjusted_mean+SE_of_link),
+         yrs_interact_bt_lower=exp(adjusted_mean-SE_of_link))
+#visual
+ggplot(yrs_interact_viz,aes(RecYear, yrs_interact_bt_mean, col=yrsins_fire, linetype=yrsins_fire))+
+  geom_point(size=3)+
+  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
+  geom_errorbar(aes(ymin=yrs_interact_bt_lower,
+                    ymax=yrs_interact_bt_upper),width=0.2,linetype=1)+
+  scale_colour_manual(values=c( "#F0E442", "#009E73", "#999999", "#0072B2"))
+
+#average across years for simplification
+yrs_interact_bar<-yrs_interact_viz%>%
+  group_by(yrsins_fire)%>%
+  summarise(Grasshopper_count=mean(yrs_interact_bt_mean),
+            se_upper=mean(yrs_interact_bt_upper),
+            se_lower=mean(yrs_interact_bt_lower))
+ggplot(yrs_interact_bar,aes(x=yrsins_fire,fill=yrsins_fire))+
+  geom_bar(stat = "identity",aes(y=Grasshopper_count),width = 0.5)+
+  geom_errorbar(aes(ymin=se_lower,
+                    ymax=se_upper),width=0.2,linetype=1)+
+  scale_fill_manual(values=c( "#F0E442", "#009E73", "#999999", "#0072B2"))
+
+
+#create df with individual species abundance####
+grassh_comm_df <- grasshopperspcomp_df%>%
+  full_join(watershed_key, by = "Watershed")%>%
+  left_join(Watershed_key2,by="Watershed")%>%
+  mutate(spe=paste(Genus,Species, sep="_"))%>%
+  mutate(RecYear = Recyear)%>%
+  filter(!RecYear== 2010)%>%
+  filter(!spe%in%c("Oecanthinae_spp.","Tettigoniidae_spp.","Gryllidae_spp.",
+                   "Conocephalus_spp.","Neoconocephalus_robustus","Scudderia_texensis",
+                   "Arethaea_constricta","Orchelimum_spp.","Amblycorypha_oblongifolia","Pediodectes_haldemani",
+                   "Amblycorypha_rotundifolia","Neoconocephalus_spp.","Neoconocephalus_ensiger","Pediodectes_nigromarginatus",
+                   "Scudderia_furcata","Scudderia_spp."))%>%
+  #using the max cover from the two sweeps done on each transect
+  group_by(Unit,RecYear,FireGrzTrt,Watershed,Repsite,spe)%>%
+  summarise(Total=max(Total))%>%
+  filter(Repsite!="C" | Watershed!="C03C")%>%
+  filter(Watershed!="C03C" | Repsite!="D")%>%
+  filter(Watershed!="C03B" | Repsite!="A")%>%
+  filter(Watershed!="C03B" | Repsite!="B")%>%
+  filter(Watershed!="C03B" | Repsite!="C")%>%
+  filter(Watershed!="C03A" | Repsite!="A")%>%
+  filter(Watershed!="C03A" | Repsite!="B")%>%
+  filter(Watershed!="C03A" | Repsite!="C")%>%
+  filter(Watershed!="C3SC" | Repsite!="A")%>%
+  filter(Watershed!="C3SC" | Repsite!="B")%>%
+  filter(Watershed!="C3SC" | Repsite!="C")%>%
+  filter(Watershed!="C3SA" | Repsite!="B")%>%
+  filter(Watershed!="C3SA" | Repsite!="C")%>%
+  filter(Watershed!="C3SA" | Repsite!="D")%>%
+  filter(Watershed!="C3SB" | Repsite!="A")%>%
+  filter(Watershed!="C3SB" | Repsite!="B")%>%
+  group_by(Unit,RecYear,FireGrzTrt,spe)%>%
+  summarise(total_avg=mean(Total,na.rm=T))%>%
+  group_by(Unit,RecYear,FireGrzTrt)%>%
+  #converting count data to abundance data (0-100% scale)
+  mutate(abundance=(total_avg/sum(total_avg, na.rm=T))*100)%>%
+  group_by(Unit,RecYear,FireGrzTrt,spe)%>%
+  mutate(Rep_id=paste(Unit,FireGrzTrt, sep="_"))
+
+#community metrics with codyn####
+#deriving richness and evenness using codyn at landscape scale
+gh_rich <- community_structure(grassh_comm_df, time.var = "RecYear", 
+                                 abundance.var = "abundance",
+                                 replicate.var = "Rep_id", metric = "Evar")
+
+#deriving diversity values
+gh_diver <- community_diversity(grassh_comm_df, time.var = "RecYear", 
+                                  abundance.var = "abundance",
+                                  replicate.var = "Rep_id", metric="Shannon")
+
+
+#extracting important columns 
+grassh_comm_subset <- grassh_comm_df %>%
+  ungroup()%>%
+  dplyr::select(RecYear,FireGrzTrt,Rep_id, Unit) %>%
+  distinct()#remove repeated rows
+
+#combine into a single data
+grassh_rich_diver<- gh_diver %>%
+  #combine richness and diversity
+  left_join(gh_rich, by = c("Rep_id","RecYear")) %>%
+  #combine with important columns
+  left_join(grassh_comm_subset, by = c("Rep_id","RecYear"))
+#convert to factors
+grassh_rich_diver$RecYear<-as.factor(grassh_rich_diver$RecYear)
+grassh_rich_diver$Unit<-as.factor(grassh_rich_diver$Unit)
+grassh_rich_diver$FireGrzTrt<-as.factor(grassh_rich_diver$FireGrzTrt)
+#build model
+gh_diver_model<-lmer(log(Shannon)~FireGrzTrt*RecYear+(1|Unit),
+                     data=grassh_rich_diver)
+Anova(gh_diver_model, type=3)
+qqnorm(resid(gh_diver_model))
+
+
+#multiple comparison
+testInteractions(gh_diver_model, pairwise="FireGrzTrt", fixed="RecYear",
+                 adjustment="BH")
+#using mean estimate to create figure 
+ghdiver_interact<-interactionMeans(gh_diver_model)
+#replacing spaces in column names with underscore 
+names(ghdiver_interact)<-str_replace_all(names(ghdiver_interact), " ","_")
+#df for visuals from model estimates
+ghdiver_interact_viz<-ghdiver_interact%>%
+  mutate(ghdiver_mean=exp(adjusted_mean),
+         ghdiver_upper=exp(adjusted_mean+SE_of_link),
+         ghdiver_lower=exp(adjusted_mean-SE_of_link))
+#visual
+ggplot(ghdiver_interact_viz,aes(RecYear, ghdiver_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
+  geom_point(size=3)+
+  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
+  geom_errorbar(aes(ymin=ghdiver_lower,
+                    ymax=ghdiver_upper),width=0.2,linetype=1)+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))
+#average across years for simplification
+ghdiver_interact_bar<-ghdiver_interact_viz%>%
+  group_by(FireGrzTrt)%>%
+  summarise(gh_diver=mean(ghdiver_mean),
+            se_upper=mean(ghdiver_upper),
+            se_lower=mean(ghdiver_lower))
+ggplot(ghdiver_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
+  geom_bar(stat = "identity",aes(y=gh_diver),width = 0.5)+
+  geom_errorbar(aes(ymin=se_lower,
+                    ymax=se_upper),width=0.2,linetype=1)+
+  scale_fill_manual(values=c( "#F0E442", "#009E73"))
+
+#richness model
+ghrich_model<-lmer(log(richness)~FireGrzTrt*RecYear+(1|Unit),
+                   data=grassh_rich_diver)
+Anova(ghrich_model, type=3)
+qqnorm(resid(ghrich_model))
+check_model(ghrich_model)
+#multiple comparison
+testInteractions(ghrich_model, pairwise="FireGrzTrt", fixed="RecYear",
+                 adjustment="BH")
+#using mean estimate to create figure 
+ghrich_interact<-interactionMeans(ghrich_model)
+#replacing spaces in column names with underscore 
+names(ghrich_interact)<-str_replace_all(names(ghrich_interact), " ","_")
+#df for visuals from model estimates
+ghrich_interact_viz<-ghrich_interact%>%
+  mutate(ghrich_mean=exp(adjusted_mean),
+         ghrich_upper=exp(adjusted_mean+SE_of_link),
+         ghrich_lower=exp(adjusted_mean-SE_of_link))
+#visual
+ggplot(ghrich_interact_viz,aes(RecYear, ghrich_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
+  geom_point(size=3)+
+  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
+  geom_errorbar(aes(ymin=ghrich_lower,
+                    ymax=ghrich_upper),width=0.2,linetype=1)+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))
+
+#average across years for simplification
+ghrich_interact_bar<-ghrich_interact_viz%>%
+  group_by(FireGrzTrt)%>%
+  summarise(gh_richness=mean(ghrich_mean),
+            se_upper=mean(ghrich_upper),
+            se_lower=mean(ghrich_lower))
+ggplot(ghrich_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
+  geom_bar(stat = "identity",aes(y=gh_richness),width = 0.5)+
+  geom_errorbar(aes(ymin=se_lower,
+                    ymax=se_upper),width=0.2,linetype=1)+
+  scale_fill_manual(values=c( "#F0E442", "#009E73"))
+
+#evenness model
+ghevenness_model<-lmer(log(Evar)~FireGrzTrt*RecYear+(1|Unit),
+                   data=grassh_rich_diver)
+Anova(ghevenness_model, type=3)
+qqnorm(resid(ghevenness_model))
+check_model(ghevenness_model)
+#multiple comparison
+testInteractions(ghevenness_model, pairwise="FireGrzTrt", fixed="RecYear",
+                 adjustment="BH")
+#using mean estimate to create figure 
+gheven_interact<-interactionMeans(ghevenness_model)
+#replacing spaces in column names with underscore 
+names(gheven_interact)<-str_replace_all(names(gheven_interact), " ","_")
+#df for visuals from model estimates
+gheven_interact_viz<-gheven_interact%>%
+  mutate(ghevenness_mean=exp(adjusted_mean),
+         gheven_upper=exp(adjusted_mean+SE_of_link),
+         gheven_lower=exp(adjusted_mean-SE_of_link))
+#visual
+ggplot(gheven_interact_viz,aes(RecYear, ghevenness_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
+  geom_point(size=3)+
+  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
+  geom_errorbar(aes(ymin=gheven_lower,
+                    ymax=gheven_upper),width=0.2,linetype=1)+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))
+
+#average across years for simplification
+gheven_interact_bar<-gheven_interact_viz%>%
+  group_by(FireGrzTrt)%>%
+  summarise(gh_evenness=mean(ghevenness_mean),
+            se_upper=mean(gheven_upper),
+            se_lower=mean(gheven_lower))
+ggplot(gheven_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
+  geom_bar(stat = "identity",aes(y=gh_evenness),width = 0.5)+
+  geom_errorbar(aes(ymin=se_lower,
+                    ymax=se_upper),width=0.2,linetype=1)+
+  scale_fill_manual(values=c( "#F0E442", "#009E73"))
+
+#perform permanova and calculate betadiversity####
+#create df with individual species abundance####
+grassh_permav_df <- grasshopperspcomp_df%>%
+  full_join(watershed_key, by = "Watershed")%>%
+  left_join(Watershed_key2,by="Watershed")%>%
+  mutate(spe=paste(Genus,Species, sep="_"))%>%
+  mutate(RecYear = Recyear)%>%
+  filter(!RecYear== 2010)%>%
+  filter(!spe%in%c("Oecanthinae_spp.","Tettigoniidae_spp.","Gryllidae_spp.",
+                   "Conocephalus_spp.","Neoconocephalus_robustus","Scudderia_texensis",
+                   "Arethaea_constricta","Orchelimum_spp.","Amblycorypha_oblongifolia","Pediodectes_haldemani",
+                   "Amblycorypha_rotundifolia","Neoconocephalus_spp.","Neoconocephalus_ensiger","Pediodectes_nigromarginatus",
+                   "Scudderia_furcata","Scudderia_spp."))%>%
+  #using the max cover from the two sweeps done on each transect
+  group_by(Unit,RecYear,FireGrzTrt,Watershed,Repsite,spe)%>%
+  summarise(Total=max(Total))%>%
+  filter(Repsite!="C" | Watershed!="C03C")%>%
+  filter(Watershed!="C03C" | Repsite!="D")%>%
+  filter(Watershed!="C03B" | Repsite!="A")%>%
+  filter(Watershed!="C03B" | Repsite!="B")%>%
+  filter(Watershed!="C03B" | Repsite!="C")%>%
+  filter(Watershed!="C03A" | Repsite!="A")%>%
+  filter(Watershed!="C03A" | Repsite!="B")%>%
+  filter(Watershed!="C03A" | Repsite!="C")%>%
+  filter(Watershed!="C3SC" | Repsite!="A")%>%
+  filter(Watershed!="C3SC" | Repsite!="B")%>%
+  filter(Watershed!="C3SC" | Repsite!="C")%>%
+  filter(Watershed!="C3SA" | Repsite!="B")%>%
+  filter(Watershed!="C3SA" | Repsite!="C")%>%
+  filter(Watershed!="C3SA" | Repsite!="D")%>%
+  filter(Watershed!="C3SB" | Repsite!="A")%>%
+  filter(Watershed!="C3SB" | Repsite!="B")%>%
+  group_by(Unit,RecYear,Watershed,Repsite,FireGrzTrt,spe)%>%
+  summarise(total_avg=mean(Total,na.rm=T))%>%
+  group_by(Unit,RecYear,Watershed,Repsite,FireGrzTrt)%>%
+  #converting count data to abundance data (0-100% scale)
+  mutate(abundance=(total_avg/sum(total_avg, na.rm=T))*100,
+         unit_trt=paste(Unit, FireGrzTrt, sep="_"))%>%
+  group_by(Unit,RecYear,Watershed,Repsite,FireGrzTrt,unit_trt,spe)%>%
+  summarise(abundance=mean(abundance,na.rm=T))%>%
+  pivot_wider(names_from = spe, values_from = abundance, values_fill = 0)
+
+# Separate out spcomp and environmental columns (cols are species) #
+Gh_sp_data <- grassh_permav_df %>%
+  ungroup()%>%
+  dplyr::select(-1:-6)
+Gh_env_data <- grassh_permav_df%>%dplyr::select(1:6)
+
+#get nmds1 and 2
+Gh_mds_all <- metaMDS(Gh_sp_data, distance = "bray")
+#Run 20 stress 0.2695
+
+#combine NMDS1 and 2 with factor columns and create centroids
+Gh_mds_scores <- data.frame(Gh_env_data, scores(Gh_mds_all, display="sites"))%>%
+  group_by(RecYear, FireGrzTrt)%>%
+  mutate(NMDS1_mean=mean(NMDS1),
+         NMDS2_mean=mean(NMDS2))
+#write into csv format 
+#write.csv(Gh_mds_scores,"C:/Users/joshu/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/Gh_mds_scores.csv")
+
+#for ordispider sake!
+Gh_mds_scores_mean <- Gh_mds_scores%>%
+  group_by(RecYear, FireGrzTrt)%>%
+  summarise(NMDS1=mean(NMDS1),
+            NMDS2=mean(NMDS2))
+#ordispider with ggplot
+ggplot(Gh_mds_scores, aes(x=NMDS1, y=NMDS2, col=FireGrzTrt)) +
+  geom_segment(aes(xend=NMDS1_mean, yend= NMDS2_mean))+
+  geom_point(data=Gh_mds_scores_mean, size=5) +
+  geom_point()+
+  facet_wrap(~ RecYear, scales = "free")+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))  #+
+theme_bw() 
+
+#summarise into centroid and have a single figure
+#Plot with geompoint for abg vs pbg nmds
+ggplot(Gh_mds_scores_mean, aes(x=NMDS1, y=NMDS2, col=FireGrzTrt))+
+  geom_point(size=5)+
+  geom_path()+
+  #geom_errorbar(aes(ymax=NMDS2_mean+NMDS2_SE, ymin=NMDS2_mean-NMDS2_SE))+
+  #geom_errorbarh(aes(xmax=NMDS1_mean+NMDS1_SE, xmin=NMDS1_mean-NMDS1_SE))+
+  scale_shape_manual(values=10:21)+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))
+
+#not necessary-just checking if composition differs with unit####
+Gh_mds_scores_unit <- data.frame(Gh_env_data, scores(Gh_mds_all, display="sites"))%>%
+  group_by(RecYear, unit_trt)%>%
+  mutate(NMDS1_mean=mean(NMDS1),
+         NMDS2_mean=mean(NMDS2))
+
+#for ordispider sake!
+Gh_mds_scores_mean_unit <- Gh_mds_scores_unit%>%
+  group_by(RecYear, unit_trt)%>%
+  summarise(NMDS1=mean(NMDS1),
+            NMDS2=mean(NMDS2))
+#ordispider with ggplot
+ggplot(Gh_mds_scores_unit, aes(x=NMDS1, y=NMDS2, col=unit_trt)) +
+  geom_segment(aes(xend=NMDS1_mean, yend= NMDS2_mean))+
+  geom_point(data=Gh_mds_scores_mean_unit, size=5) +
+  geom_point()+
+  facet_wrap(~ RecYear, scales = "free")#+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))  #+
+theme_bw() 
+
+
+#permanova and betdiversity####
+#calculating permanova and betadiversity
+#creating a loop to do this
+year_vec_gh <- unique(Gh_env_data$RecYear)
+gh_perm <- {}
+gh_beta <- {}
+
+
+for(YEAR in 1:length(year_vec_gh)){
+  vdist_temp_gh <- vegdist(filter(Gh_sp_data, Gh_env_data$RecYear ==  year_vec_gh[YEAR]))
+  permanova_temp_gh <- adonis(vdist_temp_gh ~ subset(Gh_env_data, RecYear == year_vec_gh[YEAR])$FireGrzTrt)
+  permanova_out_temp_gh <- data.frame(RecYear = year_vec_gh[YEAR], 
+                                      DF = permanova_temp_gh$aov.tab[1,1],
+                                      F_value = permanova_temp_gh$aov.tab[1,4],
+                                      P_value = permanova_temp_gh$aov.tab[1,6])
+  gh_perm <- rbind(gh_perm,permanova_out_temp_gh)
+  
+  bdisp_temp_gh <- betadisper(vdist_temp_gh, filter(Gh_env_data, RecYear==year_vec_gh[YEAR])$FireGrzTrt, type = "centroid")
+  bdisp_out_temp_gh <- data.frame(filter(Gh_env_data, RecYear==year_vec_gh[YEAR]), distance = bdisp_temp_gh$distances)
+  gh_beta <- rbind(gh_beta, bdisp_out_temp_gh)
+  
+  rm(vdist_temp_gh, permanova_temp_gh, permanova_out_temp_gh, bdisp_temp_gh, bdisp_out_temp_gh)
+}
+write.csv(gh_beta, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/Grasshoper_betadiver.csv")
+write.csv(gh_perm, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/Grasshopper_permanova.csv")
+#model for betadiversity
+gh_beta$RecYear<-as.factor(gh_beta$RecYear)
+gh_beta_model<-lmer(log(distance)~FireGrzTrt*RecYear+(1|Unit),
+                    data=gh_beta)#issingular
+Anova(gh_beta_model, type=3)
+qqnorm(resid(gh_beta_model))
+check_model(gh_beta_model)
+#pairwise interaction 
+testInteractions(gh_beta_model, fixed="RecYear",
+                 pairwise = "FireGrzTrt", adjustment="BH")
+#using mean estimate from post-hoc to create figure as a comparison to raw data
+model_estimates_beta<-interactionMeans(gh_beta_model)
+#replacing spaces in column names with underscore 
+names(model_estimates_beta)<-str_replace_all(names(model_estimates_beta), " ","_")
+#df for visuals from model estimates
+model_estimates_beta_viz<-model_estimates_beta%>%
+  mutate(gh_betadiv=exp(adjusted_mean),
+         gh_upper=exp(adjusted_mean+SE_of_link),
+         gh_lower=exp(adjusted_mean-SE_of_link))
+#visual
+ggplot(model_estimates_beta_viz,aes(RecYear, gh_betadiv, col=FireGrzTrt, linetype=FireGrzTrt))+
+  geom_point(size=3)+
+  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
+  geom_errorbar(aes(ymin=gh_lower,
+                    ymax=gh_upper),width=0.2,linetype=1)+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))
+#summarize with a bargraph
+ghbeta_interact_bar<-model_estimates_beta_viz%>%
+  group_by(FireGrzTrt)%>%
+  summarise(gh_betadiver=mean(gh_betadiv),
+            se_upper=mean(gh_upper),
+            se_lower=mean(gh_lower))
+ggplot(ghbeta_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
+  geom_bar(stat = "identity",aes(y=gh_betadiver),width = 0.5)+
+  geom_errorbar(aes(ymin=se_lower,
+                    ymax=se_upper),width=0.2,linetype=1)+
+  scale_fill_manual(values=c( "#F0E442", "#009E73"))
+
+#simper analysis to find what species are driving difference in composition####
+#filter data for year with difference
+Gh_sp_data_2011 <- grassh_permav_df %>%
+  filter(RecYear==2011)%>%
+  ungroup()%>%
+  dplyr::select(-1:-6)
+Gh_env_data_2011 <- grassh_permav_df%>%
+  dplyr::select(1:6)%>%
+  filter(RecYear==2011)
+
+simper_abgvspbg<-simper(Gh_sp_data_2011,Gh_env_data_2011$FireGrzTrt)
+simper_gh_2011<-summary(simper_abgvspbg, order=T)
+Simper_df<-data.frame(simper_gh_2011$ABG_PBG)
+
+
+#2017
+Gh_sp_data_2017 <- grassh_permav_df %>%
+  filter(RecYear==2017)%>%
+  ungroup()%>%
+  dplyr::select(-1:-6)
+Gh_env_data_2017 <- grassh_permav_df%>%
+  dplyr::select(1:6)%>%
+  filter(RecYear==2017)
+
+simper_gh_2017<-simper(Gh_sp_data_2017,Gh_env_data_2017$FireGrzTrt)
+simper_gh_2017_sum<-summary(simper_gh_2017, order=T)
+Simper_df<-data.frame(simper_gh_2017_sum$ABG_PBG)
+#2018
+Gh_sp_data_2018 <- grassh_permav_df %>%
+  filter(RecYear==2018)%>%
+  ungroup()%>%
+  dplyr::select(-1:-6)
+Gh_env_data_2018 <- grassh_permav_df%>%
+  dplyr::select(1:6)%>%
+  filter(RecYear==2018)
+
+simper_gh_2018<-simper(Gh_sp_data_2018,Gh_env_data_2018$FireGrzTrt)
+simper_gh_2018_sum<-summary(simper_gh_2018, order=T)
+Simper_df<-data.frame(simper_gh_2018_sum$ABG_PBG)
+#2019
+Gh_sp_data_2019 <- grassh_permav_df %>%
+  filter(RecYear==2019)%>%
+  ungroup()%>%
+  dplyr::select(-1:-6)
+Gh_env_data_2019 <- grassh_permav_df%>%
+  dplyr::select(1:6)%>%
+  filter(RecYear==2019)
+
+simper_gh_2019<-simper(Gh_sp_data_2019,Gh_env_data_2019$FireGrzTrt)
+simper_gh_2019_sum<-summary(simper_gh_2019, order=T)
+Simper_df<-data.frame(simper_gh_2019_sum$ABG_PBG)
+#2020
+Gh_sp_data_2020 <- grassh_permav_df %>%
+  filter(RecYear==2020)%>%
+  ungroup()%>%
+  dplyr::select(-1:-6)
+Gh_env_data_2020 <- grassh_permav_df%>%
+  dplyr::select(1:6)%>%
+  filter(RecYear==2020)
+
+simper_gh_2020<-simper(Gh_sp_data_2020,Gh_env_data_2020$FireGrzTrt)
+simper_gh_2020_sum<-summary(simper_gh_2020, order=T)
+Simper_df<-data.frame(simper_gh_2020_sum$ABG_PBG)
+#2021
+Gh_sp_data_2021 <- grassh_permav_df %>%
+  filter(RecYear==2021)%>%
+  ungroup()%>%
+  dplyr::select(-1:-6)
+Gh_env_data_2021 <- grassh_permav_df%>%
+  dplyr::select(1:6)%>%
+  filter(RecYear==2021)
+
+simper_2021<-simper(Gh_sp_data_2021,Gh_env_data_2021$FireGrzTrt)
+simper_gh_2021<-summary(simper_2021, order=T)
+Simper_df_2021<-data.frame(simper_gh_2021$ABG_PBG)
+
+
+
+
+#extract species driving difference in composition####
+grassh_cover_2021_df <- grasshopperspcomp_df%>%
+  full_join(watershed_key, by = "Watershed")%>%
+  left_join(Watershed_key2,by="Watershed")%>%
+  mutate(spe=paste(Genus,Species, sep="_"))%>%
+  mutate(RecYear = Recyear)%>%
+  filter(!spe%in%c("Oecanthinae_spp.","Tettigoniidae_spp.","Gryllidae_spp.",
+                   "Conocephalus_spp.","Neoconocephalus_robustus","Scudderia_texensis",
+                   "Arethaea_constricta","Orchelimum_spp.","Amblycorypha_oblongifolia","Pediodectes_haldemani",
+                   "Amblycorypha_rotundifolia","Neoconocephalus_spp.","Neoconocephalus_ensiger","Pediodectes_nigromarginatus",
+                   "Scudderia_furcata","Scudderia_spp."))%>%
+  #using the max cover from the two sweeps done on each transect
+  group_by(Unit,RecYear,FireGrzTrt,Watershed,Repsite,spe)%>%
+  summarise(Total=max(Total))%>%
+  filter(Repsite!="C" | Watershed!="C03C")%>%
+  filter(Watershed!="C03C" | Repsite!="D")%>%
+  filter(Watershed!="C03B" | Repsite!="A")%>%
+  filter(Watershed!="C03B" | Repsite!="B")%>%
+  filter(Watershed!="C03B" | Repsite!="C")%>%
+  filter(Watershed!="C03A" | Repsite!="A")%>%
+  filter(Watershed!="C03A" | Repsite!="B")%>%
+  filter(Watershed!="C03A" | Repsite!="C")%>%
+  filter(Watershed!="C3SC" | Repsite!="A")%>%
+  filter(Watershed!="C3SC" | Repsite!="B")%>%
+  filter(Watershed!="C3SC" | Repsite!="C")%>%
+  filter(Watershed!="C3SA" | Repsite!="B")%>%
+  filter(Watershed!="C3SA" | Repsite!="C")%>%
+  filter(Watershed!="C3SA" | Repsite!="D")%>%
+  filter(Watershed!="C3SB" | Repsite!="A")%>%
+  filter(Watershed!="C3SB" | Repsite!="B")%>%
+  group_by(Unit,RecYear,Watershed,Repsite,FireGrzTrt,spe)%>%
+  summarise(total_avg=mean(Total,na.rm=T))%>%
+  group_by(Unit,RecYear,Watershed,Repsite,FireGrzTrt)%>%
+  #converting count data to abundance data (0-100% scale)
+  mutate(abundance=(total_avg/sum(total_avg, na.rm=T))*100,
+         unit_trt=paste(Unit, FireGrzTrt, sep="_"))%>%
+  group_by(Unit,RecYear,Watershed,Repsite,FireGrzTrt,unit_trt,spe)%>%
+  summarise(abundance=mean(abundance,na.rm=T))%>%
+  filter(spe%in%c("Orphulella_speciosa",
+                  "Phoetaliotes_nebrascensis","Melanoplus_keeleri",
+                  "Eritettix_simplex","Melanoplus_femurrubrum","Campylacantha_olivacea",
+                  "Hypochlora_alba","Mermiria_bivittata","Oedipodinae_spp.","Melanoplus_scudderi",
+                  "Mermiria_spp.","Syrbula_admirabilis"))#%>%
+#Checking trends for each species
+ggplot_species_data<-grassh_cover_2021_df%>%
+  filter(!RecYear==2010)%>%
+  group_by(FireGrzTrt,RecYear, spe)%>%
+  summarise(abundance=mean(abundance))
+ggplot(ggplot_species_data, aes(RecYear, abundance, col=FireGrzTrt))+
+  geom_point()+
+  geom_path()+
+  facet_wrap(~spe, scales = "free")
+
+gh_cover_2021<-grassh_cover_2021_df%>%
+  filter(RecYear==2021)%>%
+  group_by(spe,FireGrzTrt)%>%
+  summarise(abundance=mean(abundance,na.rm=F))%>%
+  pivot_wider(names_from = "FireGrzTrt", values_from = "abundance", values_fill = 0)%>%
+  mutate(abund_ABG_PBG=ABG-PBG)
+#ggplot 
+#reset theme for this figure
+#theme_set(theme_bw())
+#theme_update(axis.title.x=element_text(size=10, vjust=-0.35), axis.text.x=element_text(size=10),
+#             axis.title.y=element_text(size=10, angle=90, vjust=0.5), axis.text.y=element_text(size=10),
+#             plot.title = element_text(size=14, vjust=2),
+#             panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+#             legend.title=element_text(size=10), legend.text=element_text(size=10))
+ggplot(gh_cover_2021,aes(x=spe))+
+  geom_bar(stat = "identity",aes(y=abund_ABG_PBG),width = 0.5)+
+  scale_x_discrete(guide = guide_axis(angle = 90))
+
+
+
+#just checking if any species is an indicator distingushing treatent
+#library(indicspecies)
+#indicator_abgvspbg<-multipatt(Gh_sp_data_2011,Gh_env_data_2011$FireGrzTrt)
+#ff<-summary(indicator_abgvspbg)
+#none
 
