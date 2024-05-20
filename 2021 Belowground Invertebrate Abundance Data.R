@@ -1080,7 +1080,7 @@ grid.arrange(CV_Richness, CV_Evar, CV_Count, ncol = 3)
 library(vegan)
 library(dplyr)
 
-# Assuming you have Combined_Data and abundanceWide defined
+#Caculating Beta Diversity for PBG
 
 Joined_New_1 <- abundanceWide %>%
   filter(Treatment == "PBG") %>%
@@ -1101,7 +1101,7 @@ for (BOOT in 1:num_bootstrap) {
     mutate(iteration = BOOT)
   
   data_matrix <- PBG_plot_ready %>%
-    select(8:141) # Assuming these are your species columns
+    select(8:141) # Species column
   
   dissimilarity_matrix <- vegdist(data_matrix, method = "bray")
   
@@ -1110,6 +1110,11 @@ for (BOOT in 1:num_bootstrap) {
   PBG_plot_master$beta_diversity[BOOT] <- beta_diversity_value
 }
 
+#Add Treatment column
+
+PBG_plot_master$Treatment <- 'PBG'
+
+
 # Print the results
 print(PBG_plot_master)
 
@@ -1117,4 +1122,62 @@ ggplot(PBG_plot_master, aes(x = beta_diversity)) +
   geom_density() +
   labs(title = "Density Plot of Beta Diversity",
        x = "Beta Diversity",
-       y = "Density")
+       y = "Density") +
+  theme_bw()
+
+
+
+#Calculating ABG betadiveristy
+
+Joined_New_2 <- abundanceWide %>%
+  filter(Treatment == "ABG")
+
+data_matrix_2 <- Joined_New_2 %>%
+  select(8:140) # Species column
+
+dissimilarity_matrix_2 <- vegdist(data_matrix, method = "bray")
+
+beta_diversity_value_2 <- mean(dissimilarity_matrix)
+
+#### Beta Diversity Graph ####
+
+
+# Beta Diversity Density plot
+ggplot(PBG_plot_master, aes(x = beta_diversity, color = "PBG")) +
+  geom_density(aes(y = ..scaled..), alpha = 0.5) +
+  geom_vline(aes(xintercept = beta_diversity_value_2, color = "ABG"), linetype = "dashed", size = 1) +
+  labs(title = "Density Plot of Beta Diversity",
+       x = "Mean Beta Diversity",
+       y = "Density") +
+  scale_color_manual(values = c("blue", "red"), name = "Legend") +
+  # annotate("text", x = min(average_total_count$mean_count), y = 1, 
+  #           label = "z-value = -1.13, p = 0.130", hjust = 0, vjust = 1, size = 4, color = "black") +
+  theme_bw() +
+  theme( panel.grid.major=element_blank(), 
+         panel.grid.minor=element_blank(), 
+         legend.position="none", 
+         axis.text = element_text(size = 20),
+         axis.title = element_text(size = 30),
+         axis.text.y = element_text(size = 20),
+         axis.title.y = element_text(size = 30),
+         axis.ticks.y = element_line(size = 1))
+
+#### Beta Diversity Z-score ####
+
+#Getting average richness per iteration for bootstrapped dataframe
+PBG_average_beta <- PBG_plot_master %>%
+  summarize(mean_beta = mean(beta_diversity))
+
+
+# Z-Score for richness 
+
+Z_B <- ((beta_diversity_value_2) - (PBG_average_beta$mean_beta))/(sd(PBG_plot_master$beta_diversity))
+Z_B
+
+
+p_value_B <- 1 - pnorm(Z_B)
+
+#lower.tail = FALSE
+
+print(p_value_B)
+
