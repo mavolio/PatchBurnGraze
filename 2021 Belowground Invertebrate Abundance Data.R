@@ -12,6 +12,23 @@ library(boot)
 library(purrr)
 
 
+### Pairwise Function ####
+pairwise.adonis <- function(x, factors, sim.method = "bray", p.adjust.m = "bonferroni") {
+  library(vegan)
+  co = combn(unique(factors), 2)
+  pairs = list()
+  for (elem in 1:ncol(co)) {
+    factors_sub = factors[factors %in% co[, elem]]
+    x_sub = x[factors %in% co[, elem], ]
+    ad = adonis(x_sub ~ factors_sub, method = sim.method)
+    pairs[[elem]] = c(co[1, elem], co[2, elem], ad$aov.tab[1, 6])
+  }
+  pairs = as.data.frame(do.call(rbind, pairs))
+  pairs$p.adjusted = p.adjust(pairs$V3, method = p.adjust.m)
+  colnames(pairs) = c("Group1", "Group2", "p.value", "p.adjusted")
+  return(pairs)
+}
+
 #### CSV read ####
 
 #Contains Belowground Abundance ID information
@@ -121,8 +138,10 @@ combined_cv_count <- rbind(ABG_CV_Average, PBG_CV_Average)
 
 #### Prep for Total Count Stats and Graph ####
 
-Abundance_Stats <- group_by(Abundance_ID_Belowground_Reformated, Morphospp, Sample) %>% 
-  summarize(Count = sum(Count, na.rm = TRUE))
+Abundance_Stats <- group_by(Abundance_ID_Belowground_Reformated, Morphospp, Sample) %>%
+  summarize(Count = sum(Count, na.rm = TRUE)) %>%
+  filter(Sample != 'C1A_A_38_ABG')
+
 
 Abundance_Stats$Treatment <- ifelse(grepl("ABG", Abundance_Stats$Sample), "ABG", 
                                     ifelse(grepl("PBG", Abundance_Stats$Sample), "PBG", NA))
@@ -207,9 +226,9 @@ TotalcountModel <- #stores the model output into a named list
 anova.lme(TotalcountModel, type='sequential') #this gives you the ANOVA output from the model, where "sequential" tells it to do a type III anova
 emmeans(TotalcountModel, pairwise~TreatmentSB, adjust="tukey") #this gives you contrasts (means and confidence intervals) for each possible pairwise comparison of treatments to know whether they are different or not (overlapping confidence intervals means not different)
 
-# numDF denDF   F-value p-value
-# (Intercept)     1    50 231.04818  <.0001
-# TreatmentSB     3    50   0.86496  0.4655
+# numDF denDF  F-value p-value
+# (Intercept)     1    49 227.8829  <.0001
+# TreatmentSB     3    49   0.7795  0.5111
 
 #### Prep for Richness + Evenness Graphs & Stats ####
 
@@ -219,6 +238,7 @@ commMetrics$Treatment <- ifelse(grepl("C1", commMetrics$Sample), "ABG", "PBG")
 
 #Adding Blocks
 commMetrics2 <- commMetrics %>% mutate(block = ifelse(grepl("S", Sample), "North", "South")) %>% 
+  filter(Sample != 'C1A_A_38_ABG') %>% 
   separate(col = "Sample", into = c("WS","Trans","Dist.","Trea"), sep="_")
 
 #Joining Burn information with Treatment
@@ -358,9 +378,9 @@ anova.lme(richModel, type='sequential') #this gives you the ANOVA output from th
 #
 emmeans(richModel, pairwise~TreatmentSB, adjust="tukey") #this gives you contrasts (means and confidence intervals) for each possible pairwise comparison of treatments to know whether they are different or not (overlapping confidence intervals means not different)
 
-# numDF denDF   F-value p-value
-# (Intercept)     1    50 178.46582  <.0001
-# TreatmentSB     3    50   0.88895  0.4533
+# numDF denDF  F-value p-value
+# (Intercept)     1    49 380.4980  <.0001
+# TreatmentSB     3    49   1.9081  0.1406
 
 #### Evenness Graphs ####
 ggplot(Joined, aes(x = TreatmentSB, y = Evar, fill= Trea)) +
@@ -390,9 +410,9 @@ EvenModel <- #stores the model output into a named list
 anova.lme(EvenModel, type='sequential') #this gives you the ANOVA output from the model, where "sequential" tells it to do a type III anova
 emmeans(EvenModel, pairwise~TreatmentSB, adjust="tukey") #this gives you contrasts (means and confid
 
-# numDF denDF   F-value p-value
-# (Intercept)     1    47 219.24688  <.0001
-# TreatmentSB     3    47   0.51725  0.6724
+# numDF denDF  F-value p-value
+# (Intercept)     1    46 326.5477  <.0001
+# TreatmentSB     3    46   0.7888  0.5064
 
 #### Density Plots ####
 
@@ -470,6 +490,10 @@ abundanceWide <- abundanceWide %>%
 print(permanova <- adonis2(formula = abundanceWide[,8:139]~TreatmentSB, data=abundanceWide, permutations=999, method="bray"))
 #F=1.5242, df=3,49, p=0.042 
 
+pairwise_results <- pairwise.adonis(abundanceWide[, 8:139], abundanceWide$TreatmentSB)
+print(pairwise_results)
+
+
 #betadisper
 veg <- vegdist(abundanceWide[,8:140], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$TreatmentSB)
@@ -538,6 +562,7 @@ NMDS_Years_Since_Burned
 
 ### by watershed
 #Subsampling
+set.seed(124)
 
 ABG_Test <- abundanceWide %>% 
   filter(Treatment == "ABG")
@@ -547,7 +572,6 @@ PBG_Test <- abundanceWide %>%
   filter(Treatment == "PBG")
 
 # Set seed for reproducibility
-set.seed(123)
 
 # Get unique samples
 unique_samples <- unique(PBG_Test$Sample)
@@ -560,21 +584,21 @@ subsampled_data <- PBG_Test %>% filter(Sample %in% subsamples)
 
 #New Abundance_Data2021 with subsamples
 Abundance_Data <- full_join(subsampled_data, ABG_Test)
-abundanceWide <- Abundance_Data
+
 
 # PERMANOVA
-print(permanova <- adonis2(formula = abundanceWide[,8:139]~Treatment, data=abundanceWide, permutations=999, method="bray"))
+print(permanova <- adonis2(formula = Abundance_Data[,8:139]~Treatment, data=Abundance_Data, permutations=999, method="bray"))
 #F=1.0171  , df=1,31, p=0.373
 
 #betadisper
-veg <- vegdist(abundanceWide[,8:139], method = "bray")
-dispersion <- betadisper(veg, abundanceWide$Treatment)
+veg <- vegdist(Abundance_Data[,8:139], method = "bray")
+dispersion <- betadisper(veg, Abundance_Data$Treatment)
 permutest(dispersion, pairwise=TRUE, permutations=999) 
 #F=0.1295, df=1,30, p=0.689
 
-BC_Data <- metaMDS(abundanceWide[,8:139])
-sites <- 1:nrow(abundanceWide)
-BC_Meta_Data <- abundanceWide[,1:7]
+BC_Data <- metaMDS(Abundance_Data[,8:139])
+sites <- 1:nrow(Abundance_Data)
+BC_Meta_Data <- Abundance_Data[,1:7]
 plot(BC_Data$points, col=as.factor(BC_Meta_Data$Treatment))
 ordiellipse(BC_Data, groups = as.factor(BC_Meta_Data$Treatment), kind = "sd", display = "sites", label = T)
 
@@ -596,7 +620,7 @@ for(g in levels(as.factor(BC_NMDS$group))){
 }
 
 #Plot the data from BC_NMDS_Graph, where x=MDS1 and y=MDS2, make an ellipse based on "group"
-NMDS_ABG_VS_PBG <- ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = group)) +
+NMDS_ABG_VS_PBG_2 <- ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = group)) +
   geom_point(size=6) + 
   geom_path(data = BC_Ellipses, aes(x = NMDS1, y = NMDS2), size = 3) +
   labs(color="", linetype = "", shape = "") +
@@ -613,16 +637,38 @@ NMDS_ABG_VS_PBG <- ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetyp
         legend.text = element_text(size = 24),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank()
   ) + 
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = min(BC_NMDS_Graph$MDS2) + 0.0040, 
-           label = 'Mean p = 0.373\nVariance p = 0.689', size = 10, hjust = 'left')
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = min(BC_NMDS_Graph$MDS2) + 0.2, 
+           label = 'Mean p = 0.206\nVariance p = 0.847', size = 10, hjust = 'left')
 
 
-#Mean F=1.0171  , df=1,31, p=0.373
-#Variance #F=0.1295, df=1,30, p=0.689
+grid.arrange(NMDS_ABG_VS_PBG_1, NMDS_ABG_VS_PBG_2, NMDS_ABG_VS_PBG_3, NMDS_ABG_VS_PBG_4, ncol = 2, nrow = 2)
 
-NMDS_ABG_VS_PBG
+#NMDS_ABG_VS_PBG_1
+#Mean p = 0.373\nVariance p = 0.689
+#set.seed(123)
 
+#NMDS_ABG_VS_PBG_2
+#Mean p = 0.206\nVariance p = 0.847
+#set.seed(124)
 
+#NMDS_ABG_VS_PBG_3
+#Mean p = 0.195\nVariance p = 0.469
+#set.seed(125)
+
+#NMDS_ABG_VS_PBG_4
+#Mean p = 0.259\nVariance p = 0.457
+#set.seed(126)
+
+#### Simper Analysis ####
+
+# Perform SIMPER analysis
+simper_results <- simper(Abundance_Data[, 8:139], group = abundanceWide$Treatment, permutations = 999)
+
+# Print SIMPER results
+print(simper_results)
+
+# To view the contribution of each species, you can examine the output in detail
+summary(simper_results)
 
 
 #### Bootstrapping! ####
@@ -933,7 +979,7 @@ legend_below <- ggplot(total_counts2, aes(x=TreatmentSB, y=Count, fill=Treatment
 
 legend_below
 
-legend <- get_legend(legend_below)
+#legend <- get_legend(legend_below)
 
 #### Big Graph of Years Since Burned ####
 
@@ -1077,6 +1123,8 @@ grid.arrange(CV_Richness, CV_Evar, CV_Count, ncol = 3)
 
 #### Beta Diversity ####
 # Load necessary packages
+set.seed(123)
+
 library(vegan)
 library(dplyr)
 
@@ -1143,25 +1191,24 @@ beta_diversity_value_2 <- mean(dissimilarity_matrix)
 
 
 # Beta Diversity Density plot
-ggplot(PBG_plot_master, aes(x = beta_diversity, color = "PBG")) +
-  geom_density(aes(y = ..scaled..), alpha = 0.5) +
+ggplot(PBG_plot_master, aes(x = beta_diversity)) +
+  geom_density(aes(y = ..scaled.., color = "PBG"), alpha = 0.5) +
   geom_vline(aes(xintercept = beta_diversity_value_2, color = "ABG"), linetype = "dashed", size = 1) +
   labs(title = "Density Plot of Beta Diversity",
        x = "Mean Beta Diversity",
        y = "Density") +
-  scale_color_manual(values = c("blue", "red"), name = "Legend") +
-  # annotate("text", x = min(average_total_count$mean_count), y = 1, 
-  #           label = "z-value = -1.13, p = 0.130", hjust = 0, vjust = 1, size = 4, color = "black") +
+  scale_color_manual(values = c("PBG" = "red", "ABG" = "blue"), name = "Legend") +
   theme_bw() +
-  theme( panel.grid.major=element_blank(), 
-         panel.grid.minor=element_blank(), 
-         legend.position="none", 
-         axis.text = element_text(size = 20),
-         axis.title = element_text(size = 30),
-         axis.text.y = element_text(size = 20),
-         axis.title.y = element_text(size = 30),
-         axis.ticks.y = element_line(size = 1))
-
+  theme(
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(), 
+    legend.position = "right",  # Adjusted to display the legend
+    axis.text = element_text(size = 20),
+    axis.title = element_text(size = 30),
+    axis.text.y = element_text(size = 20),
+    axis.title.y = element_text(size = 30),
+    axis.ticks.y = element_line(size = 1)
+  )
 #### Beta Diversity Z-score ####
 
 #Getting average richness per iteration for bootstrapped dataframe
@@ -1180,4 +1227,10 @@ p_value_B <- 1 - pnorm(Z_B)
 #lower.tail = FALSE
 
 print(p_value_B)
+
+#Z-score = 0.336496, p = 0.3682484
+
+#Do Simper analysis
+
+
 
