@@ -12,7 +12,7 @@ library(boot)
 library(purrr)
 
 
-### Pairwise Function ####
+#### Pairwise Function ####
 pairwise.adonis <- function(x, factors, sim.method = "bray", p.adjust.m = "bonferroni") {
   library(vegan)
   co = combn(unique(factors), 2)
@@ -148,7 +148,8 @@ Abundance_Stats$Treatment <- ifelse(grepl("ABG", Abundance_Stats$Sample), "ABG",
 
 #Adding Block for use in modeling
 total_counts <- aggregate(Count ~ Sample + Treatment, data = Abundance_Stats, FUN = sum) %>% 
-  separate(Sample, into = c("WS", "Trans", "Dist"), sep = "_", extra = "drop") %>% mutate(Block = ifelse(grepl("S", WS), "North", "South"))
+  separate(Sample, into = c("WS", "Trans", "Dist"), sep = "_", extra = "drop") %>%
+  mutate(Block = ifelse(grepl("S", WS), "North", "South"))
 
 #Average counts of ABG and PBG for graphing
 avg_counts <- aggregate(Count ~ Treatment, data = total_counts, FUN = mean) 
@@ -461,9 +462,17 @@ CountGraph <- full_join(Abundance_ID_Belowground_Reformated, BurnInfo) %>%
 
 CountGraph$Treatment <- ifelse(grepl("C1", CountGraph$Sample), "ABG", "PBG") 
 
+#New Code to drop missing unit (block)
+CountGraph_New <- CountGraph %>% 
+  mutate(Block = ifelse(grepl("S", WS), "North", "South"))
+
+CountGraph_Filtered <- CountGraph_New %>% 
+  filter(Block == "South")
+
+
 # PERMANOVA
 
-abundanceWide <- CountGraph %>% 
+abundanceWide <- CountGraph_Filtered %>% 
   mutate(block = ifelse(grepl("S", Sample), "North", "South")) %>%
   select(Sample, block, WS, Trans, Dist., Treatment, TreatmentSB, Morphospp, Count) %>%
   group_by(Sample, block, WS, Trans, Dist., Treatment, TreatmentSB, Morphospp) %>% 
@@ -472,7 +481,7 @@ abundanceWide <- CountGraph %>%
   pivot_wider(names_from = 'Morphospp', values_from = 'Count', values_fill = list(Count = 0)) 
 
 abundanceWide <- abundanceWide %>% 
-  mutate(sum = rowSums(abundanceWide[, c(8:139)], na.rm = TRUE)) %>% 
+  mutate(sum = rowSums(abundanceWide[, c(8:86)], na.rm = TRUE)) %>% 
   filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
 
 ###Defined in itself?
@@ -487,20 +496,20 @@ abundanceWide <- abundanceWide %>%
 #  filter(sum>0, Sample!='C1A_A_38_ABG') #PROBLEM: Check why two of the samples have nothing in them, is this real?
 ###IMPORTANT: removing sample from C1A_A_38_ABG, which is a big outlier because of high values of endogenic worms and brown shrimp-like beetles, which no other plots had
 
-print(permanova <- adonis2(formula = abundanceWide[,8:139]~TreatmentSB, data=abundanceWide, permutations=999, method="bray"))
+print(permanova <- adonis2(formula = abundanceWide[,8:86]~TreatmentSB, data=abundanceWide, permutations=999, method="bray"))
 #F=1.5242, df=3,49, p=0.042 
 
-pairwise_results <- pairwise.adonis(abundanceWide[, 8:139], abundanceWide$TreatmentSB)
+pairwise_results <- pairwise.adonis(abundanceWide[, 8:86], abundanceWide$TreatmentSB)
 print(pairwise_results)
 
 
 #betadisper
-veg <- vegdist(abundanceWide[,8:140], method = "bray")
+veg <- vegdist(abundanceWide[,8:86], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$TreatmentSB)
 permutest(dispersion, pairwise=TRUE, permutations=999) 
 #F=0.773 , df=3,49, p=0.53
 
-BC_Data <- metaMDS(abundanceWide[,8:140])
+BC_Data <- metaMDS(abundanceWide[,8:86])
 sites <- 1:nrow(abundanceWide)
 BC_Meta_Data <- abundanceWide[,1:7]
 plot(BC_Data$points, col=as.factor(BC_Meta_Data$TreatmentSB))
@@ -544,15 +553,15 @@ NMDS_Years_Since_Burned <- ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group
   xlab("NMDS1") + 
   ylab("NMDS2") + 
   theme_bw() +
-  theme(axis.text.x=element_text(size=24, color = "black"), 
-        axis.text.y = element_text(size = 24, color = "black"), 
-        axis.title.x = element_text(size = 24, color = 'black'),
-        axis.title.y = element_text(size = 24, color = 'black'),
-        legend.text = element_text(size = 24),
+  theme(axis.text.x=element_text(size=34, color = "black"), 
+        axis.text.y = element_text(size = 34, color = "black"), 
+        axis.title.x = element_text(size = 34, color = 'black'),
+        axis.title.y = element_text(size = 34, color = 'black'),
+        legend.text = element_text(size = 34),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank()
-  ) + 
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = min(BC_NMDS_Graph$MDS2) + 0.035, 
-           label = 'Mean p = 0.042\nVariance p = 0.530', size = 10, hjust = 'left')
+  )  
+  # annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = min(BC_NMDS_Graph$MDS2) + 0.035, 
+  #          label = 'Mean p = 0.042\nVariance p = 0.530', size = 10, hjust = 'left')
 
 NMDS_Years_Since_Burned
 #Mean F=1.5242, df=3,49, p=0.042 
@@ -562,7 +571,7 @@ NMDS_Years_Since_Burned
 
 ### by watershed
 #Subsampling
-set.seed(124)
+set.seed(123)
 
 ABG_Test <- abundanceWide %>% 
   filter(Treatment == "ABG")
@@ -587,16 +596,16 @@ Abundance_Data <- full_join(subsampled_data, ABG_Test)
 
 
 # PERMANOVA
-print(permanova <- adonis2(formula = Abundance_Data[,8:139]~Treatment, data=Abundance_Data, permutations=999, method="bray"))
+print(permanova <- adonis2(formula = Abundance_Data[,8:86]~Treatment, data=Abundance_Data, permutations=999, method="bray"))
 #F=1.0171  , df=1,31, p=0.373
 
 #betadisper
-veg <- vegdist(Abundance_Data[,8:139], method = "bray")
+veg <- vegdist(Abundance_Data[,8:86], method = "bray")
 dispersion <- betadisper(veg, Abundance_Data$Treatment)
 permutest(dispersion, pairwise=TRUE, permutations=999) 
 #F=0.1295, df=1,30, p=0.689
 
-BC_Data <- metaMDS(Abundance_Data[,8:139])
+BC_Data <- metaMDS(Abundance_Data[,8:86])
 sites <- 1:nrow(Abundance_Data)
 BC_Meta_Data <- Abundance_Data[,1:7]
 plot(BC_Data$points, col=as.factor(BC_Meta_Data$Treatment))
@@ -620,7 +629,7 @@ for(g in levels(as.factor(BC_NMDS$group))){
 }
 
 #Plot the data from BC_NMDS_Graph, where x=MDS1 and y=MDS2, make an ellipse based on "group"
-NMDS_ABG_VS_PBG_2 <- ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = group)) +
+NMDS_ABG_VS_PBG <- ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = group)) +
   geom_point(size=6) + 
   geom_path(data = BC_Ellipses, aes(x = NMDS1, y = NMDS2), size = 3) +
   labs(color="", linetype = "", shape = "") +
@@ -630,18 +639,20 @@ NMDS_ABG_VS_PBG_2 <- ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linet
   xlab("NMDS1") + 
   ylab("NMDS2") + 
   theme_bw() +
-  theme(axis.text.x=element_text(size=24, color = "black"), 
-        axis.text.y = element_text(size = 24, color = "black"), 
-        axis.title.x = element_text(size = 24, color = 'black'),
-        axis.title.y = element_text(size = 24, color = 'black'),
-        legend.text = element_text(size = 24),
+  theme(axis.text.x=element_text(size=34, color = "black"), 
+        axis.text.y = element_text(size = 34, color = "black"), 
+        axis.title.x = element_text(size = 34, color = 'black'),
+        axis.title.y = element_text(size = 34, color = 'black'),
+        legend.text = element_text(size = 34),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank()
-  ) + 
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = min(BC_NMDS_Graph$MDS2) + 0.2, 
-           label = 'Mean p = 0.206\nVariance p = 0.847', size = 10, hjust = 'left')
+  )  
+
+NMDS_ABG_VS_PBG
+#  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = min(BC_NMDS_Graph$MDS2) + 0.2, 
+#           label = 'Mean p = 0.206\nVariance p = 0.847', size = 10, hjust = 'left')
 
 
-grid.arrange(NMDS_ABG_VS_PBG_1, NMDS_ABG_VS_PBG_2, NMDS_ABG_VS_PBG_3, NMDS_ABG_VS_PBG_4, ncol = 2, nrow = 2)
+# grid.arrange(NMDS_ABG_VS_PBG_1, NMDS_ABG_VS_PBG_2, NMDS_ABG_VS_PBG_3, NMDS_ABG_VS_PBG_4, ncol = 2, nrow = 2)
 
 #NMDS_ABG_VS_PBG_1
 #Mean p = 0.373\nVariance p = 0.689
@@ -662,7 +673,7 @@ grid.arrange(NMDS_ABG_VS_PBG_1, NMDS_ABG_VS_PBG_2, NMDS_ABG_VS_PBG_3, NMDS_ABG_V
 #### Simper Analysis ####
 
 # Perform SIMPER analysis
-simper_results <- simper(Abundance_Data[, 8:139], group = abundanceWide$Treatment, permutations = 999)
+simper_results <- simper(Abundance_Data[, 8:139], group = Abundance_Data$TreatmentSB, permutations = 999)
 
 # Print SIMPER results
 print(simper_results)
@@ -808,11 +819,12 @@ avg_richness <- ggplot(average_richness, aes(x = mean_richness, color = "PBG")) 
   theme_bw() +
   theme( panel.grid.major=element_blank(), 
          panel.grid.minor=element_blank(), 
-         legend.position=c(0.15,0.7), 
-         axis.text = element_text(size = 20),
-         axis.title = element_text(size = 30),
-         axis.text.y = element_text(size = 20),
-         axis.title.y = element_text(size = 30),
+         legend.position=c(0.2,0.82), 
+         axis.text = element_text(size = 25),
+         legend.text = element_text(size = 29),
+         axis.title = element_text(size = 25),
+         axis.text.y = element_text(size = 25),
+         axis.title.y = element_text(size = 25),
          axis.ticks.y = element_line(size = 1))
 
 avg_richness
@@ -837,10 +849,10 @@ avg_evenness <- ggplot(average_evenness, aes(x = mean_evenness, color = "PBG")) 
   theme( panel.grid.major=element_blank(), 
          panel.grid.minor=element_blank(), 
          legend.position= "none", 
-         axis.text = element_text(size = 20),
-         axis.title = element_text(size = 30),
-         axis.text.y = element_text(size = 20),
-         axis.title.y = element_text(size = 30),
+         axis.text = element_text(size = 25),
+         axis.title = element_text(size = 25),
+         axis.text.y = element_text(size = 25),
+         axis.title.y = element_text(size = 25),
          axis.ticks.y = element_line(size = 1))
 
 avg_evenness
@@ -866,10 +878,10 @@ total_count <- ggplot(average_total_count, aes(x = mean_count, color = "PBG")) +
   theme( panel.grid.major=element_blank(), 
          panel.grid.minor=element_blank(), 
          legend.position="none", 
-         axis.text = element_text(size = 20),
+         axis.text = element_text(size = 25),
          axis.title = element_text(size = 30),
-         axis.text.y = element_text(size = 20),
-         axis.title.y = element_text(size = 30),
+         axis.text.y = element_text(size = 25),
+         axis.title.y = element_text(size = 25),
          axis.ticks.y = element_line(size = 1))
 
 
@@ -1202,13 +1214,17 @@ ggplot(PBG_plot_master, aes(x = beta_diversity)) +
   theme(
     panel.grid.major = element_blank(), 
     panel.grid.minor = element_blank(), 
-    legend.position = "right",  # Adjusted to display the legend
+    legend.position = c(0.1, 0.8), 
+    legend.text = element_text(size = 30),  # Adjust legend text size
     axis.text = element_text(size = 20),
     axis.title = element_text(size = 30),
     axis.text.y = element_text(size = 20),
     axis.title.y = element_text(size = 30),
     axis.ticks.y = element_line(size = 1)
   )
+
+
+
 #### Beta Diversity Z-score ####
 
 #Getting average richness per iteration for bootstrapped dataframe
