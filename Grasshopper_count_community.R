@@ -1,6 +1,6 @@
 #BPBG grasshopper count and community metrics
 #Authors: Joshua Ajowele
-#Started: 26 May 2022 last modified: 12 May 2024
+#Started: 26 May 2022 last modified: 16 June 2024
 
 #load library
 library(tidyverse)
@@ -12,6 +12,7 @@ library(readr)
 library(performance)
 library(car)
 library(lme4)
+library(lmerTest)
 library(see)
 library(patchwork)
 library(phia)
@@ -75,7 +76,7 @@ Watershed_key2<-tibble(Watershed=levels(factor(grasshopperspcomp_df$Watershed)),
 print(Watershed_key2)
 #converting all repsite into uppercase
 grasshopperspcomp_df$Repsite=toupper(grasshopperspcomp_df$Repsite)
-unique(grassh_count_df$spe)
+
 #merging key with dataset
 grassh_count_df <- grasshopperspcomp_df%>%
   full_join(watershed_key, by = "Watershed")%>%
@@ -102,13 +103,13 @@ grassh_count_df$Watershed=as.factor(grassh_count_df$Watershed)
 grassh_count_df$Repsite=as.factor(grassh_count_df$Repsite)
 grassh_count_df$FireGrzTrt=as.factor(grassh_count_df$FireGrzTrt)
 grassh_count_df$RecYear=as.factor(grassh_count_df$RecYear)
-#transect model for total count
+#transect model for total count####
 grassh_count_tnst_model<-lmer(log(Tcount)~FireGrzTrt*RecYear+(1|Unit/Watershed),
                               data=grassh_count_df)#issingular
 check_model(grassh_count_tnst_model)
 qqnorm(residuals(grassh_count_tnst_model))
 Anova(grassh_count_tnst_model, type=3)
-
+anova(grassh_count_tnst_model)
 testInteractions(grassh_count_tnst_model, fixed="RecYear",
                  across = "FireGrzTrt", adjustment="BH")
 #using mean estimate from post-hoc to create figure as a comparison to raw data
@@ -528,7 +529,7 @@ grassh_comm_metrics_df<-grassh_comm_df%>%
   left_join(richness_evar, by="yr_trt_unit")%>%
   left_join(diversity, by="yr_trt_unit")
 
-#message Yang about South PBG transect A C3B
+
 
 ####bootstrap for community metrics####
 #extract PBG and separate into Unit
@@ -1134,6 +1135,7 @@ grassh_rich_diver$FireGrzTrt<-as.factor(grassh_rich_diver$FireGrzTrt)
 gh_diver_model<-lmer(log(Shannon)~FireGrzTrt*RecYear+(1|Unit),
                      data=grassh_rich_diver)
 Anova(gh_diver_model, type=3)
+anova(gh_diver_model)
 qqnorm(resid(gh_diver_model))
 
 
@@ -1172,9 +1174,11 @@ ggplot(ghdiver_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
 ghrich_model<-lmer(log(richness)~FireGrzTrt*RecYear+(1|Unit),
                    data=grassh_rich_diver)
 Anova(ghrich_model, type=3)
+anova(ghrich_model)
+summary(ghrich_model)
 qqnorm(resid(ghrich_model))
 check_model(ghrich_model)
-#multiple comparison
+#multiple comparison-not necessary since no interaction difference
 testInteractions(ghrich_model, pairwise="FireGrzTrt", fixed="RecYear",
                  adjustment="BH")
 #using mean estimate to create figure 
@@ -1207,12 +1211,13 @@ ggplot(ghrich_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
   scale_fill_manual(values=c( "#F0E442", "#009E73"))
 
 #evenness model
-ghevenness_model<-lmer(log(Evar)~FireGrzTrt*RecYear+(1|Unit),
+ghevenness_model<-lmer(Evar~FireGrzTrt*RecYear+(1|Unit),
                    data=grassh_rich_diver)
 Anova(ghevenness_model, type=3)
+anova(ghevenness_model)
 qqnorm(resid(ghevenness_model))
 check_model(ghevenness_model)
-#multiple comparison
+#multiple comparison-not needed
 testInteractions(ghevenness_model, pairwise="FireGrzTrt", fixed="RecYear",
                  adjustment="BH")
 #using mean estimate to create figure 
@@ -1221,9 +1226,9 @@ gheven_interact<-interactionMeans(ghevenness_model)
 names(gheven_interact)<-str_replace_all(names(gheven_interact), " ","_")
 #df for visuals from model estimates
 gheven_interact_viz<-gheven_interact%>%
-  mutate(ghevenness_mean=exp(adjusted_mean),
-         gheven_upper=exp(adjusted_mean+SE_of_link),
-         gheven_lower=exp(adjusted_mean-SE_of_link))
+  mutate(ghevenness_mean=adjusted_mean,
+         gheven_upper=adjusted_mean+SE_of_link,
+         gheven_lower=adjusted_mean-SE_of_link)
 #visual
 ggplot(gheven_interact_viz,aes(RecYear, ghevenness_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
   geom_point(size=3)+
@@ -1231,6 +1236,22 @@ ggplot(gheven_interact_viz,aes(RecYear, ghevenness_mean, col=FireGrzTrt, linetyp
   geom_errorbar(aes(ymin=gheven_lower,
                     ymax=gheven_upper),width=0.2,linetype=1)+
   scale_colour_manual(values=c( "#F0E442", "#009E73"))
+#checking if creating figures from raw data will be more appropriate for the model result
+gh_metric_raw<-grassh_rich_diver%>%
+  group_by(RecYear, FireGrzTrt)%>%
+  summarise(Shannon_avg=mean(Shannon, na.rm=T),
+            se_shan=SE_function(Shannon),
+            Evar_avg=mean(Evar,na.rm=T),
+            se_evar=SE_function(Evar),
+            richness_avg=mean(richness, na.rm=T),
+            se_rich=SE_function(richness))
+#visual
+ggplot(gh_metric_raw,aes(RecYear, Evar_avg, col=FireGrzTrt, linetype=FireGrzTrt))+
+  geom_point(size=3)+
+  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
+  geom_errorbar(aes(ymin=Evar_avg-se_evar,
+                    ymax=Evar_avg+se_evar),width=0.2,linetype=1)+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))#not diff in info from using the phia interaction mean function
 
 #average across years for simplification
 gheven_interact_bar<-gheven_interact_viz%>%
