@@ -673,7 +673,7 @@ NMDS_ABG_VS_PBG
 #### Simper Analysis ####
 
 # Perform SIMPER analysis
-simper_results <- simper(Abundance_Data[, 8:139], group = Abundance_Data$TreatmentSB, permutations = 999)
+simper_results <- simper(Abundance_Data[, 8:87], group = Abundance_Data$TreatmentSB, permutations = 999)
 
 # Print SIMPER results
 print(simper_results)
@@ -914,20 +914,21 @@ Axis_Text_Size <- 20 #Text on axislike abuandance, richness etc
 # Boxplot for Richness
 richness_below <- ggplot(Joined, aes(x=TreatmentSB, y=richness, fill=TreatmentSB)) +
   geom_boxplot() +
-  labs(title="Richness Comparison for Treatments with Years Since Burned", x="Treatment", y="Richness") +
+  labs(title="", x="Years Since Burned", y="Richness") +
   scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   theme_minimal() +
-#  annotate("text", x = -Inf, y = Inf, label = "P value: 0.453", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
-  theme(legend.position = "none", plot.title = element_text(size = 9),
-        axis.text.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis labels
-        axis.text.y = element_text(size = Axis_Label_Size_1),
-        axis.title.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis title
-        axis.title.y = element_text(size = Axis_Label_Size_1)) + # Increase the size of y-axis title
+  theme(
+    legend.position = "none", 
+    plot.title = element_text(size = 9),
+    axis.text.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis labels
+    axis.text.y = element_text(size = Axis_Label_Size_1),
+    axis.title.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis title
+    axis.title.y = element_text(size = Axis_Label_Size_1), # Increase the size of y-axis title
+    panel.grid.major = element_blank(), # Remove major gridlines
+    panel.grid.minor = element_blank()  # Remove minor gridlines
+  ) +
   scale_x_discrete(labels = c("ABG_0" = "ABG 0", "PBG_0" = "PBG 0", "PBG_1" = "PBG 1", "PBG_2" = "PBG 2")) + # Set custom axis labels
-  theme(legend.position = "none", plot.title = element_text(size = 9),
-        axis.text.x = element_text(angle = 0, hjust = 0.5)) # Adjust x-axis text angle for
-
-
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5)) # Adjust x-axis text angle
 
 # Display the plot
 richness_below
@@ -938,18 +939,21 @@ richness_below
 
 Evar_below <- ggplot(Joined, aes(x=TreatmentSB, y=Evar, fill=TreatmentSB)) +
   geom_boxplot() +
-  labs(title="Evenness Comparison for Treatments with Years Since Burned", x="Treatment", y="Evenness") +
+  labs(title="", x="Years Since Burning", y="Evenness") +
   scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   theme_minimal() +
-#  annotate("text", x = -Inf, y = Inf, label = "P value: 0.672", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
-  theme(legend.position = "none", plot.title = element_text(size = 9),
-        axis.text.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis labels
-        axis.text.y = element_text(size = Axis_Label_Size_1),
-        axis.title.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis title
-        axis.title.y = element_text(size = Axis_Label_Size_1)) + # Increase the size of y-axis title
+  theme(
+    legend.position = "none", 
+    plot.title = element_text(size = 9),
+    axis.text.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis labels
+    axis.text.y = element_text(size = Axis_Label_Size_1),
+    axis.title.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis title
+    axis.title.y = element_text(size = Axis_Label_Size_1), # Increase the size of y-axis title
+    panel.grid.major = element_blank(), # Remove major gridlines
+    panel.grid.minor = element_blank()  # Remove minor gridlines
+  ) +
   scale_x_discrete(labels = c("ABG_0" = "ABG 0", "PBG_0" = "PBG 0", "PBG_1" = "PBG 1", "PBG_2" = "PBG 2")) + # Set custom axis labels
-  theme(legend.position = "none", plot.title = element_text(size = 9),
-        axis.text.x = element_text(angle = 0, hjust = 0.5)) # Adjust x-axis text angle for
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5)) # Adjust x-axis text angle
 
 # Display the plot
 Evar_below
@@ -961,20 +965,24 @@ Evar_below
 # Count graph here
 Count_below <- ggplot(total_counts2, aes(x=TreatmentSB, y=Count, fill=TreatmentSB)) +
   geom_boxplot() +
-  labs(title="Abundance Comparison for Treatments with Years Since Burned", x="Treatment", y="Abundance") +
+  labs(title="", x="Years Since Burning", y="Abundance") +
   scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   theme_minimal() +
- # annotate("text", x = -Inf, y = Inf, label = "P value: 0.466", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
-  theme(legend.position = "none", plot.title = element_text(size = 9),
-        axis.text.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis labels
-        axis.text.y = element_text(size = Axis_Label_Size_1),
-        axis.title.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis title
-        axis.title.y = element_text(size = Axis_Label_Size_1)) + # Increase the size of y-axis title
+  theme(
+    legend.position = "none", 
+    plot.title = element_text(size = 9),
+    axis.text.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis labels
+    axis.text.y = element_text(size = Axis_Label_Size_1),
+    axis.title.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis title
+    axis.title.y = element_text(size = Axis_Label_Size_1), # Increase the size of y-axis title
+    panel.grid.major = element_blank(), # Remove major gridlines
+    panel.grid.minor = element_blank()  # Remove minor gridlines
+  ) +
   scale_x_discrete(labels = c("ABG_0" = "ABG 0", "PBG_0" = "PBG 0", "PBG_1" = "PBG 1", "PBG_2" = "PBG 2")) + # Set custom axis labels
-  theme(legend.position = "none", plot.title = element_text(size = 9),
-        axis.text.x = element_text(angle = 0, hjust = 0.5)) # Adjust x-axis text angle for
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5)) # Adjust x-axis text angle
 
 Count_below
+
 # numDF denDF   F-value p-value
 # (Intercept)     1    50 231.04818  <.0001
 # TreatmentSB     3    50   0.86496  0.4655
