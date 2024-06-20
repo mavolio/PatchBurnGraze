@@ -35,36 +35,36 @@ Invertebrate_Herbivory_2023 <- Invertebrate_Herbivory_2023 %>%
          block = ifelse(grepl("S", Sample), "North", "South"))
 
 #### Bootstrapping ####
-num_bootstrap <- 1000
-
-#Remove plant, species
-
-Invertebrate_Herbivory_2023_New <- Invertebrate_Herbivory_2023 %>% 
-  select(-Plant, -Gensus, -Species, -Herbivory, -Notes) %>% 
-  unique() %>%
-  filter(Treatment == "PBG") %>% 
-  mutate(plot_index=1:length(block)) 
-
-bootstrap_vector <- 1:num_bootstrap
-PBG_rep_master_2023 <- data.frame()  # Initialize an empty dataframe
-
-for (BOOT in bootstrap_vector) {
-  Joined_New_2023 <- Invertebrate_Herbivory_2023_New %>%
-    dplyr::select(1:9) %>%
-    unique() %>%
-    group_by(Block) %>%
-    sample_n(24, replace = TRUE) %>%
-    dplyr::select(plot_index) %>%
-    ungroup()
-  
-  # Join the sampled rows back to the original dataframe
-  PBG_plot_ready_2023 <- Invertebrate_Herbivory_2023_New %>%
-    right_join(Joined_New_2023, by = c("Block", "plot_index")) %>%
-    mutate(iteration = BOOT)
-  
-  # Append the results to the master dataframe
-  PBG_rep_master_2023 <- rbind(PBG_rep_master_2023, PBG_plot_ready_2023)
-}
+# num_bootstrap <- 1000
+# 
+# #Remove plant, species
+# 
+# Invertebrate_Herbivory_2023_New <- Invertebrate_Herbivory_2023 %>% 
+#   select(-Plant, -Gensus, -Species, -Herbivory, -Notes) %>% 
+#   unique() %>%
+#   filter(Treatment == "PBG") %>% 
+#   mutate(plot_index=1:length(block)) 
+# 
+# bootstrap_vector <- 1:num_bootstrap
+# PBG_rep_master_2023 <- data.frame()  # Initialize an empty dataframe
+# 
+# for (BOOT in bootstrap_vector) {
+#   Joined_New_2023 <- Invertebrate_Herbivory_2023_New %>%
+#     dplyr::select(1:9) %>%
+#     unique() %>%
+#     group_by(Block) %>%
+#     sample_n(24, replace = TRUE) %>%
+#     dplyr::select(plot_index) %>%
+#     ungroup()
+#   
+#   # Join the sampled rows back to the original dataframe
+#   PBG_plot_ready_2023 <- Invertebrate_Herbivory_2023_New %>%
+#     right_join(Joined_New_2023, by = c("Block", "plot_index")) %>%
+#     mutate(iteration = BOOT)
+#   
+#   # Append the results to the master dataframe
+#   PBG_rep_master_2023 <- rbind(PBG_rep_master_2023, PBG_plot_ready_2023)
+# }
 
 
 #Merge Output with original full join?
@@ -151,7 +151,7 @@ Damage_2023 <- Invertebrate_Herbivory_2023 %>% filter(Damage == 1)
 summary(cont_model <- lmer(log(Herbivory) ~ TreatmentSB*Plant + (1|Block),
                            data = Damage_2023))
 Anova(cont_model) 
-back.emmeans(emmeans(cont_model, ~Treatment), transform='log')
+back.emmeans(emmeans(cont_model, ~TreatmentSB), transform='log')
 back.emmeans(emmeans(cont_model, ~Plant), transform='log')
 
 
