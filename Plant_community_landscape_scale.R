@@ -1,7 +1,7 @@
 #Patch-Burn Synthesis Project
 #Plant community data at the landscape scale
 #Author: Joshua Adedayo Ajowele joshuaajowele@gmail.com
-#Started: May 13, 2024
+#Started: May 13, 2024 last modified: June 20, 2024
 
 #load library
 library(tidyverse)
@@ -13,6 +13,7 @@ library(readr)
 library(performance)
 library(car)
 library(lme4)
+library(lmerTest)
 library(see)
 library(patchwork)
 library(phia)
@@ -114,6 +115,7 @@ pl_rich_diver$FireGrzTrt<-as.factor(pl_rich_diver$FireGrzTrt)
 pl_diver_model<-lmer(log(Shannon)~FireGrzTrt*RecYear+(1|Unit),
                      data=pl_rich_diver)
 Anova(pl_diver_model, type=3)
+anova(pl_diver_model)
 qqnorm(resid(pl_diver_model))
 check_model(pl_diver_model)
 
@@ -151,6 +153,7 @@ ggplot(pldiver_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
 plrich_model<-lmer(log(richness)~FireGrzTrt*RecYear+(1|Unit),
                    data=pl_rich_diver)
 Anova(plrich_model, type=3)
+anova(plrich_model)
 qqnorm(resid(plrich_model))
 check_model(plrich_model)
 #multiple comparison
@@ -188,12 +191,10 @@ ggplot(plrich_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
 #evenness model
 plevenness_model<-lmer(Evar~FireGrzTrt*RecYear+(1|Unit),
                        data=pl_rich_diver)#is.singular
-Anova(plevenness_model, type=3)#compare Anova and anova
+Anova(plevenness_model, type=3)
+anova(plevenness_model)
 qqnorm(resid(plevenness_model))
 check_model(plevenness_model)
-anova(plevenness_model)
-library(lmerTest)
-?lmerTest
 summary(plevenness_model)
 
 #multiple comparison
@@ -347,10 +348,37 @@ for(YEAR in 1:length(year_vec_pl)){
 write.csv(pl_beta, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/plant_betadiver.csv")
 write.csv(pl_perm, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/plant_permanova.csv")
 #model for betadiversity
-pl_beta$RecYear<-as.factor(pl_beta$RecYear)
+
+#calculating betadiversity by unit
+#creating a loop to do this
+year_vec_pl <- unique(pl_env_data$RecYear)
+pl_perm_unit <- {}
+pl_beta_unit <- {}
+
+
+for(YEAR in 1:length(year_vec_pl)){
+  vdist_temp_pl_unit <- vegdist(filter(pl_sp_data, pl_env_data$RecYear ==  year_vec_pl[YEAR]))
+  permanova_temp_pl_unit <- adonis(vdist_temp_pl_unit ~ subset(pl_env_data, RecYear == year_vec_pl[YEAR])$unit_trt)
+  permanova_out_temp_pl_unit <- data.frame(RecYear = year_vec_pl[YEAR], 
+                                      DF = permanova_temp_pl_unit$aov.tab[1,1],
+                                      F_value = permanova_temp_pl_unit$aov.tab[1,4],
+                                      P_value = permanova_temp_pl_unit$aov.tab[1,6])
+  pl_perm_unit <- rbind(pl_perm_unit,permanova_out_temp_pl_unit)
+  
+  bdisp_temp_pl_unit <- betadisper(vdist_temp_pl_unit, filter(pl_env_data, RecYear==year_vec_pl[YEAR])$unit_trt, type = "centroid")
+  bdisp_out_temp_pl_unit <- data.frame(filter(pl_env_data, RecYear==year_vec_pl[YEAR]), distance = bdisp_temp_pl_unit$distances)
+  pl_beta_unit <- rbind(pl_beta_unit, bdisp_out_temp_pl_unit)
+  
+  rm(vdist_temp_pl_unit, permanova_temp_pl_unit, permanova_out_temp_pl_unit, bdisp_temp_pl_unit, bdisp_out_temp_pl_unit)
+}
+write.csv(pl_beta_unit, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/plant_betadiver_sep_unit.csv")
+
+#model for betadiversity
+pl_beta_unit$RecYear<-as.factor(pl_beta_unit$RecYear)
 pl_beta_model<-lmer(log(distance)~FireGrzTrt*RecYear+(1|Unit),
-                    data=pl_beta)
+                    data=pl_beta_unit)
 Anova(pl_beta_model, type=3)
+anova(pl_beta_model)
 qqnorm(resid(pl_beta_model))
 check_model(pl_beta_model)
 #pairwise interaction 
