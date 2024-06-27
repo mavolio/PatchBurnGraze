@@ -97,18 +97,18 @@ Invertebrate_Herbivory_2023$Damage <- ifelse(Invertebrate_Herbivory_2023$Herbivo
 
 # Part 1: probability of zero damage
 
-summary(zero_model <- glmer(`Damage` ~ Treatment*Plant + (1|Block),
+summary(zero_model <- glmer(`Damage` ~ Treatment + (1|Plant),
                             data = Invertebrate_Herbivory_2023,
                             family = binomial))
 
 
 Anova(zero_model, type='III') 
-
+back.emmeans(emmeans(zero_model, ~Treatment), transform='log')
 # Part 2: distribution of the continuous, non-zero data
 
 Damage_2023 <- Invertebrate_Herbivory_2023 %>% filter(Damage == 1)
 
-summary(cont_model <- lmer(log(Herbivory) ~ Treatment*Plant + (1|Block),
+summary(cont_model <- lmer(log(Herbivory) ~ Treatment + (1|Plant),
                            data = Damage_2023))
 Anova(cont_model) 
 back.emmeans(emmeans(cont_model, ~Treatment), transform='log')
@@ -137,18 +137,19 @@ Invertebrate_Herbivory_2023$Damage <- ifelse(Invertebrate_Herbivory_2023$Herbivo
 
 # Part 1: probability of zero damage
 
-summary(zero_model <- glmer(`Damage` ~ TreatmentSB*Plant + (1|Block),
+summary(zero_model <- glmer(`Damage` ~ TreatmentSB + (1|Plant),
                             data = Invertebrate_Herbivory_2023,
                             family = binomial))
 
-
+back.emmeans(emmeans(zero_model, ~TreatmentSB), transform='log')
 Anova(zero_model, type='III') 
+
 
 # Part 2: distribution of the continuous, non-zero data
 
 Damage_2023 <- Invertebrate_Herbivory_2023 %>% filter(Damage == 1)
 
-summary(cont_model <- lmer(log(Herbivory) ~ TreatmentSB*Plant + (1|Block),
+summary(cont_model <- lmer(log(Herbivory) ~ TreatmentSB + (1|Plant),
                            data = Damage_2023))
 Anova(cont_model) 
 back.emmeans(emmeans(cont_model, ~TreatmentSB), transform='log')
