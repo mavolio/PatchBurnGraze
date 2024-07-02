@@ -1,7 +1,7 @@
 #Patch-Burn Synthesis Project
 #Plant community data at the landscape scale
 #Author: Joshua Adedayo Ajowele joshuaajowele@gmail.com
-#Started: May 13, 2024 last modified: June 20, 2024
+#Started: May 13, 2024 last modified: July 02, 2024
 
 #load library
 library(tidyverse)
@@ -481,9 +481,12 @@ theme_update(axis.title.x=element_text(size=10, vjust=-0.35), axis.text.x=elemen
              plot.title = element_text(size=14, vjust=2),
              panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
              legend.title=element_text(size=10), legend.text=element_text(size=10))
-ggplot(pl_cover_2021,aes(x=sp))+
+#reorder species by descending order
+ggplot(pl_cover_2021,aes(x=reorder(sp,-abund_ABG_PBG)))+
   geom_bar(stat = "identity",aes(y=abund_ABG_PBG),width = 0.5)+
-  scale_x_discrete(guide = guide_axis(angle = 90))
+  scale_x_discrete(guide = guide_axis(angle = 90))+
+  ylab("Difference in abundance (ABG-PBG)")+
+  xlab("Species")
 
 
 
