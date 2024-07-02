@@ -1,6 +1,6 @@
 #BPBG grasshopper count and community metrics
 #Authors: Joshua Ajowele
-#Started: 26 May 2022 last modified: 16 June 2024
+#Started: 26 May 2022 last modified: 7 July 2024
 
 #load library
 library(tidyverse)
@@ -1570,7 +1570,8 @@ gh_cover_2021<-grassh_cover_2021_df%>%
   group_by(spe,FireGrzTrt)%>%
   summarise(abundance=mean(abundance,na.rm=F))%>%
   pivot_wider(names_from = "FireGrzTrt", values_from = "abundance", values_fill = 0)%>%
-  mutate(abund_ABG_PBG=ABG-PBG)
+  mutate(abund_ABG_PBG=ABG-PBG)%>%
+  arrange(desc(abund_ABG_PBG))
 #ggplot 
 #reset theme for this figure
 #theme_set(theme_bw())
@@ -1579,9 +1580,11 @@ gh_cover_2021<-grassh_cover_2021_df%>%
 #             plot.title = element_text(size=14, vjust=2),
 #             panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
 #             legend.title=element_text(size=10), legend.text=element_text(size=10))
-ggplot(gh_cover_2021,aes(x=spe))+
+ggplot(gh_cover_2021,aes(x=reorder(spe,-abund_ABG_PBG)))+
   geom_bar(stat = "identity",aes(y=abund_ABG_PBG),width = 0.5)+
-  scale_x_discrete(guide = guide_axis(angle = 90))
+  scale_x_discrete(guide = guide_axis(angle = 90))+
+  xlab("species")+
+  ylab("Difference in abundance (ABG-PBG)")
 
 
 
