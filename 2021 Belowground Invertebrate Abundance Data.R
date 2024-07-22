@@ -98,6 +98,33 @@ Abundance_ID_Belowground_Reformated <- Abundance_ID_Belowground_Clean %>%
 #Remove NAs
 Abundance_ID_Belowground_Reformated <- na.omit(Abundance_ID_Belowground_Reformated)
 
+#### Unique Morpsospp ####
+
+### Unique in each ###
+
+# Filter for ABG and get unique morphospecies
+unique_ABG <- Abundance_ID_Belowground_Reformated %>%
+  filter(Treatment == "ABG") %>%
+  distinct(Morphospp)
+# 52 unique
+
+# Filter for PBG and get unique morphospecies
+unique_PBG <- Abundance_ID_Belowground_Reformated %>%
+  filter(Treatment == "PBG") %>%
+  distinct(Morphospp)
+# 104 unique
+
+# Find morphospecies that are unique to ABG
+only_ABG <- setdiff(unique_ABG$Morphospp, unique_PBG$Morphospp)
+only_ABG
+# 28 ABG has that PBG doesn't
+
+# Find morphospecies that are unique to PBG
+only_PBG <- setdiff(unique_PBG$Morphospp, unique_ABG$Morphospp)
+only_PBG
+# 80 ABG has that PBG doesn't
+
+
 #### CV Count Graph Prep  ####
 
 #Calculating CV for PBG and ABG
