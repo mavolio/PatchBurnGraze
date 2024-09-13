@@ -1503,6 +1503,7 @@ biomass_combine_mean_sd<-biomass_master_mean_sd_cv%>%
          pval_cv=2*pnorm(-abs(zscore_cv)))
 write.csv(biomass_combine_mean_sd, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/biomass_mean_sd_combined_unit.csv")
 
+
 #create visuals####
 #biomass average
 combo_biomass_geompoint_M<-biomass_combine_mean_sd%>%
@@ -1580,6 +1581,21 @@ ggplot(combo_biomass_geompoint_cv,aes(RecYear, biom_cv, col=treatment))+
   geom_errorbar(aes(ymax=biom_cv+1.96*(PBG_sd),
                     ymin=biom_cv-1.96*(PBG_sd)),width=.2)
 
+
+#load in precipitation data####
+library(tidyr)
+precip_data<-read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/Precipitation_1982_2023.csv")%>%
+  #separate date into components
+  separate_wider_delim(RecDate, delim="/", names=c("mth","day","year" ))
+#convert precipitation to numeric values
+precip_data$ppt<-as.numeric(precip_data$ppt)
+
+annual_ppt_data<-precip_data%>%
+  group_by(year)%>%
+  summarise(annual_ppt=sum(ppt, na.rm=T))%>%
+  mutate(ppt_avg=mean(annual_ppt))
+  
+
 #calculate mean of year since burn####
 #creating a key for year since fire
 YrSinceFire_key <- tibble(year_watershed= c("2011_C01A", "2011_C03A", "2011_C03B",
@@ -1624,7 +1640,7 @@ YrSinceFire_key <- tibble(year_watershed= c("2011_C01A", "2011_C03A", "2011_C03B
                                          "PBG1","PBG1","ABG0","ABG0","PBG0","PBG1","PBG2","PBG1",
                                          "PBG0","PBG2","ABG0","ABG0","PBG0","PBG2","PBG1","PBG1",
                                          "PBG2","PBG0","ABG0"))
-#merge with biomass data ####
+#merge with biomass data 
 yrs_biomass<-biomass_data%>%
   left_join(YrSinceFire_key, by="year_watershed")%>%
   group_by(RecYear,Unit, Watershed,yrsins_fire,FireGrzTrt,Transect,Plotnum)%>%
