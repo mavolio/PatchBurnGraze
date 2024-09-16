@@ -2,7 +2,7 @@
 ####Plant Biomass from diskpasture meter
 ###Author: Joshua Ajowele
 ###collaborators: PBG synthesis group
-###last update:4/21/2024
+###last update:9/16/2024
 
 #packages 
 library(tidyverse)
@@ -99,7 +99,7 @@ biomass_data <- Diskpast_data %>%
   filter(!RecYear=="2011")%>%
   left_join(watershed_key, by="Watershed")
 
-#averaging at plot scale
+#averaging at plot scale####
 biomass_plot_scale<-biomass_data%>%
   group_by(RecYear, Unit, Watershed, FireGrzTrt, Transect, Plotnum)%>%
   summarise(biomass_plot= mean(biomass, na.rm=T),
@@ -107,7 +107,7 @@ biomass_plot_scale<-biomass_data%>%
   ungroup()
   
 
-#filter for PBG to perform bootstrap
+#filter for PBG to perform bootstrap at plot scale####
 biomass_PBG_plot_index<-biomass_plot_scale%>%
   filter(FireGrzTrt=="PBG")%>%
   group_by(RecYear)%>%
@@ -144,7 +144,7 @@ write.csv(biomass_plot_master,"C:/Users/joshu/OneDrive - UNCG/UNCG PHD/PhD Wyomi
 biomass_plot_bootdata<-read_csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/biomass_plot_master.csv")%>%
   dplyr::select(-1)
 
-#mean and SD of PBG biomass at plot scale per iteration
+#mean and SD of PBG biomass at plot scale per iteration####
 PBG_biomass_plot<-biomass_plot_bootdata%>%
   group_by(RecYear, iteration)%>%
   mutate(PBG_plot_mean_dist=mean(biomass_plot, na.rm=T),
@@ -178,7 +178,7 @@ combo_plot_biomass<-ABG_biomass_plot%>%
   mutate(pvalue_mean=2*pnorm(-abs(Z_score_mean)),
          pvalue_sd=2*pnorm(-abs(Z_score_SD)))
 
-#create a visual of the distribution
+#create a visual of the distribution at plot scale####
 ggplot(combo_plot_biomass,aes(PBG_plot_mean_dist))+
   geom_density()+
   facet_wrap(~RecYear)+
@@ -194,7 +194,7 @@ ggplot(combo_plot_biomass,aes(PBG_plot_SD_dist))+
   geom_vline(aes(xintercept=ABG_plot_SD, col="Red"))
 
 
-####compare PBG mean and SD from actual observation to bootstrapped values
+####compare PBG mean and SD from actual observation to bootstrapped values####
 #cal mean and sd from PBG actual value
 PBG_actual_biomass<-biomass_plot_scale%>%
   filter(FireGrzTrt=="PBG")%>%
@@ -221,9 +221,9 @@ ggplot(PBG_boot_biom, aes(PBG_plot_mean, a_biom_mean))+
 ggplot(PBG_boot_biom, aes(PBG_plot_SD_mean, a_biom_sd))+
   geom_point()+
   geom_smooth(method="lm")
-#conclusion: There is no point bootstrapping!!!
+#conclusion:  bootstrapping adequately represents observed value!
 
-#####creating dataframe for all scale
+#####creating dataframe for all scale####
 #sd and cv among plots
 biomass_sd_cv_plot<-biomass_plot_scale%>%
   group_by(RecYear, Unit, Watershed, FireGrzTrt, Transect)%>%
@@ -273,7 +273,7 @@ biomass_temp_stab_watershed<-biomass_watershed_scale%>%
   ungroup()
 
          
-###Linear mixed models###
+###Linear mixed models####
 #convert all to factors
 biomass_plot_scale$RecYear<-as.factor(biomass_plot_scale$RecYear)
 biomass_plot_scale$Unit<-as.factor(biomass_plot_scale$Unit)
@@ -335,7 +335,7 @@ qqnorm(residuals(Biom_Plot_Cv_Model))
 testInteractions(Biom_Plot_Cv_Model, fixed="RecYear",
                  across = "FireGrzTrt", adjustment="BH")
 
-#model for temp stability 
+#model for temp stability plot scale ####
 #convert all to factors
 biomass_temp_stab_plot$Unit<-as.factor(biomass_temp_stab_plot$Unit)
 biomass_temp_stab_plot$Watershed<-as.factor(biomass_temp_stab_plot$Watershed)
@@ -349,7 +349,7 @@ check_model(Biom_Stab_Plot_Model)
 Anova(Biom_Stab_Plot_Model, type=3)#no difference
 qqnorm(residuals(Biom_Stab_Plot_Model))
 interactionMeans(Biom_Stab_Plot_Model)
-#run a linear mixed model at the transect scale
+#run a linear mixed model at the transect scale####
 #convert all to factors
 biomass_mean_transect_scale$Unit<-as.factor(biomass_mean_transect_scale$Unit)
 biomass_mean_transect_scale$Watershed<-as.factor(biomass_mean_transect_scale$Watershed)
@@ -397,7 +397,7 @@ check_model(Biom_Stab_Transect_model)#iffy normality
 Anova(Biom_Stab_Transect_model, type=3)#no difference
 qqnorm(residuals(Biom_Stab_Transect_model))
 
-###wrangle data for visualization
+###wrangle data for visualization####
 biomass_plot_scale_viz<-biomass_plot_scale%>%
   group_by(RecYear,FireGrzTrt)%>%
   summarise(biomass_plot_mean=mean(biomass_plot, na.rm=T),
@@ -515,7 +515,7 @@ ggplot(model_estimates_transect_cv_viz,aes(RecYear, biomass_transect_cv_mean, co
 
 
 
-###create a separate dataframe for plot and transect stability 
+###create a separate dataframe for plot and transect stability ####
 model_estimates_plot_stab<-interactionMeans(Biom_Stab_Plot_Model)%>%
   mutate(Scale="Plot")
 model_estimates_transect_stab<-interactionMeans(Biom_Stab_Transect_model)%>%
@@ -543,8 +543,7 @@ ggplot(model_estimates_stab,aes(Scale, biomass_stability, col=FireGrzTrt, linety
                     ymax=biomass_stab_upper),width=0.2,linetype=1)+
   scale_colour_manual(values=c( "#F0E442", "#009E73"))
 
-###Unit Scale
-####bootstrap
+###Unit Scale bootstrap separated by unit####
 #extract PBG and separate into Unit
 PBG_south_biomass<-biomass_data%>%
   filter(FireGrzTrt=="PBG" & Unit=="south")%>%
@@ -699,7 +698,7 @@ Combo_south_biomass<-PBG_south_mean%>%
          pvalue_stab=2*pnorm(-abs(z_score_SStab)))
 write.csv(Combo_south_biomass, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/south_biomass_boot_result.csv")
 
-#create a visual of the distribution
+#create a visual of the distribution unit scale by unit####
 ggplot(Combo_north_biomass,aes(biomass_PBGNth))+
   geom_density(size=.5)+
   facet_wrap(~RecYear, scales = "free")+
@@ -1376,7 +1375,7 @@ ggplot(Combo_Sth_biomass_same,aes(stab_PBGSth))+
 
 
 #Things to do, calculate PBG stability across unit and sd_cv####
-#compare growing season precip with sd
+#compare growing season precip with sd####
 ppt_data <- read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/annual and growing season precipitation_knzHQ_1983-2021.csv")
 #relationship between precipitation and biomass sd
 Combo_north_biomass_ppt<-Combo_north_biomass%>%
@@ -1582,19 +1581,7 @@ ggplot(combo_biomass_geompoint_cv,aes(RecYear, biom_cv, col=treatment))+
                     ymin=biom_cv-1.96*(PBG_sd)),width=.2)
 
 
-#load in precipitation data####
-library(tidyr)
-precip_data<-read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/Precipitation_1982_2023.csv")%>%
-  #separate date into components
-  separate_wider_delim(RecDate, delim="/", names=c("mth","day","year" ))
-#convert precipitation to numeric values
-precip_data$ppt<-as.numeric(precip_data$ppt)
 
-annual_ppt_data<-precip_data%>%
-  group_by(year)%>%
-  summarise(annual_ppt=sum(ppt, na.rm=T))%>%
-  mutate(ppt_avg=mean(annual_ppt))
-  
 
 #calculate mean of year since burn####
 #creating a key for year since fire
@@ -1653,7 +1640,7 @@ yrs_biomass$Unit=as.factor(yrs_biomass$Unit)
 yrs_biomass$Watershed=as.factor(yrs_biomass$Watershed)
 yrs_biomass$Transect=as.factor(yrs_biomass$Transect)
 
-#mixed anova
+#mixed anova year since burn####
 yrs_biomass_model<-lmer(log(biomass)~yrsins_fire*RecYear+(1|Unit/Watershed/Transect),
                         data=yrs_biomass)#issingular
 check_model(yrs_biomass_model)
@@ -1672,14 +1659,15 @@ yrs_interact_viz<-yrs_interact%>%
   mutate(yrs_interact_bt_mean=exp(adjusted_mean),
          yrs_interact_bt_upper=exp(adjusted_mean+SE_of_link),
          yrs_interact_bt_lower=exp(adjusted_mean-SE_of_link))
-#visual
-ggplot(yrs_interact_viz,aes(RecYear, yrs_interact_bt_mean, col=yrsins_fire, linetype=yrsins_fire))+
-  geom_point(size=3)+
-  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
-  geom_errorbar(aes(ymin=yrs_interact_bt_lower,
+#visual year since burn####
+ggplot(yrs_interact_viz,aes(RecYear,col=yrsins_fire))+
+  geom_point(size=3,aes(y=yrs_interact_bt_mean))+
+  geom_path(aes(as.numeric(RecYear),yrs_interact_bt_mean),linewidth=1)+
+  geom_errorbar(aes(x=as.numeric(RecYear),ymin=yrs_interact_bt_lower,
                     ymax=yrs_interact_bt_upper),width=0.2,linetype=1)+
-  scale_colour_manual(values=c( "#F0E442", "#009E73", "#999999", "#0072B2"))
-
+  scale_colour_manual(values=c( "#F0E442", "#994F00", "#999999", "#0072B2"))+
+  scale_y_continuous(limits=c(5,750))
+  
 #average across years for simplification
 
 yrs_interact_bar<-yrs_interact_viz%>%
@@ -1692,4 +1680,32 @@ ggplot(yrs_interact_bar,aes(x=yrsins_fire,fill=yrsins_fire))+
   geom_errorbar(aes(ymin=se_lower,
                     ymax=se_upper),width=0.2,linetype=1)+
   scale_fill_manual(values=c( "#F0E442", "#009E73", "#999999", "#0072B2"))
+
+#load in precipitation data####
+library(tidyr)
+precip_data<-read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/Precipitation_1982_2023.csv")%>%
+  #separate date into components
+  separate_wider_delim(RecDate, delim="/", names=c("mth","day","year" ))
+#convert precipitation to numeric values
+precip_data$ppt<-as.numeric(precip_data$ppt)
+
+annual_ppt_data<-precip_data%>%
+  select(mth,day,year,ppt)%>%
+  filter(year%in%2012:2021)%>%
+  group_by(year)%>%
+  mutate(annual_ppt=sum(ppt, na.rm=T))%>%
+  filter(mth%in% 4:9)%>%
+  group_by(year)%>%
+  mutate(gsppt=sum(ppt, na.rm=T))%>%
+  select(year,annual_ppt,gsppt)%>%
+  rename(RecYear=year)%>%
+  distinct()
+annual_ppt_data$RecYear=as.factor(annual_ppt_data$RecYear)
+
+
+#precipitation figure
+ggplot(annual_ppt_data, aes(x=RecYear))+
+  geom_bar(alpha=0.3,stat = "identity",aes(y=gsppt),width = 0.5)
+
+
 
