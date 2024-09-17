@@ -1730,4 +1730,5 @@ biom_stab_vs_heter<-biomass_temp_stability%>%
   left_join(biomass_spatial_hete, by="treatment")%>%
   mutate(spat_heter=spatial_hetero/sd(spatial_hetero),
          stab=stability/sd(stability))
+write.csv(biom_stab_vs_heter, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/biom_stab_vs_heter.csv")
 
