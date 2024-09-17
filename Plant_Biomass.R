@@ -1500,9 +1500,10 @@ biomass_combine_mean_sd<-biomass_master_mean_sd_cv%>%
          pval_sd=2*pnorm(-abs(zscore_sd)),
          zscore_cv=(biomass_ABG_cv-biom_PBG_cv_M)/biom_PBG_cv_sd,
          pval_cv=2*pnorm(-abs(zscore_cv)))
+#to avoid rerunning the bootstrap
 write.csv(biomass_combine_mean_sd, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/biomass_mean_sd_combined_unit.csv")
-
-
+#read in the saved file
+biomass_combine_mean_sd<-read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/biomass_mean_sd_combined_unit.csv")
 #create visuals####
 #biomass average
 combo_biomass_geompoint_M<-biomass_combine_mean_sd%>%
@@ -1555,6 +1556,7 @@ ggplot(combo_biomass_geompoint_sd,aes(RecYear, biom_sd, col=treatment))+
   scale_colour_manual(values=c( "#009E73","#F0E442"),labels=c("PBG","ABG"))+
   geom_errorbar(aes(ymax=biom_sd+1.96*(PBG_sd),
                     ymin=biom_sd-1.96*(PBG_sd)),width=.2)
+
 #cv biomass
 combo_biomass_geompoint_cv<-biomass_combine_mean_sd%>%
   pivot_longer(c(biom_PBG_cv_M,biomass_ABG_cv),
@@ -1579,8 +1581,6 @@ ggplot(combo_biomass_geompoint_cv,aes(RecYear, biom_cv, col=treatment))+
   scale_colour_manual(values=c( "#009E73","#F0E442"),labels=c("PBG","ABG"))+
   geom_errorbar(aes(ymax=biom_cv+1.96*(PBG_sd),
                     ymin=biom_cv-1.96*(PBG_sd)),width=.2)
-
-
 
 
 #calculate mean of year since burn####
@@ -1682,7 +1682,6 @@ ggplot(yrs_interact_bar,aes(x=yrsins_fire,fill=yrsins_fire))+
   scale_fill_manual(values=c( "#F0E442", "#009E73", "#999999", "#0072B2"))
 
 #load in precipitation data####
-library(tidyr)
 precip_data<-read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/Precipitation_1982_2023.csv")%>%
   #separate date into components
   separate_wider_delim(RecDate, delim="/", names=c("mth","day","year" ))
@@ -1708,4 +1707,27 @@ ggplot(annual_ppt_data, aes(x=RecYear))+
   geom_bar(alpha=0.3,stat = "identity",aes(y=gsppt),width = 0.5)
 
 
+
+
+###correlating spatial heterogeneity with temporal stability####
+biomass_spatial_hete<-combo_biomass_geompoint_sd%>%
+  group_by(treatment)%>%
+  summarise(spatial_hetero=mean(biom_sd, na.rm=T))%>%
+  mutate(variable= "plant_biomass")%>%
+  #change characters in a variable
+  mutate(treatment=case_when(treatment=="biom_PBG_sd_M"~"PBG",
+                             treatment=="biomass_ABG_sd"~"ABG"))
+#load in stability values
+biomass_temp_stability<-read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/biomass_stability_combined_unit.csv")%>%
+  select(biomass_ABG_stab,PBG_stab_M)%>%
+  distinct()%>%
+  pivot_longer(cols=1:2, names_to = "treatment", values_to = "stability")%>%
+  mutate(treatment=case_when(treatment=="biomass_ABG_stab"~"ABG",
+                             treatment=="PBG_stab_M"~"PBG"))
+
+#combine stability and heterogeneity
+biom_stab_vs_heter<-biomass_temp_stability%>%
+  left_join(biomass_spatial_hete, by="treatment")%>%
+  mutate(spat_heter=spatial_hetero/sd(spatial_hetero),
+         stab=stability/sd(stability))
 

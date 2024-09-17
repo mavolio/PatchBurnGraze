@@ -247,7 +247,7 @@ ggplot(model_estimates_wshed_stab_viz,aes(x=FireGrzTrt,fill=FireGrzTrt))+
                     ymax=count_wshed_stab_bt_upper),width=0.2,linetype=1)+
   scale_fill_manual(values=c( "#F0E442", "#009E73"))
 
-##unit scale count
+##unit scale count by each unit####
 ####bootstrap
 #extract PBG and separate into Unit
 PBG_south_count<-grassh_count_df%>%
@@ -393,7 +393,7 @@ Combo_south_count<-PBG_south_mean%>%
 write.csv(Combo_south_count, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/grassH_Scount.csv")
 
 
-#create a visual of the distribution
+#create a visual of the distribution####
 ggplot(Combo_north_count,aes(count_PBGNth))+
   geom_density(size=.5)+
   facet_wrap(~RecYear, scales = "free")+
@@ -869,7 +869,9 @@ ggplot(combo_ghcount_geompoint_M,aes(RecYear, count_M, col=treatment))+
   geom_errorbar(aes(ymax=count_M+1.96*(PBG_sd),
                     ymin=count_M-1.96*(PBG_sd)),width=.2)
 
-  
+#emergency use, ignore
+gh_combine_mean_sd<-read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/gh_count_mean_sd_combined_unit.csv")
+
 #grasshopper sd count
 combo_ghcount_geompoint_sd<-gh_combine_mean_sd%>%
   pivot_longer(c(gh_PBG_sd_M,ghcount_ABG_sd),
@@ -922,7 +924,7 @@ ggplot(combo_ghcount_geompoint_cv,aes(RecYear, count_cv, col=treatment))+
   geom_errorbar(aes(ymax=count_cv+1.96*(PBG_sd),
                     ymin=count_cv-1.96*(PBG_sd)),width=.2)
 
-#bootstrap for stability####
+#bootstrap for stability unit combined####
 num_bootstrap<-1000
 bootstrap_vector<-1:num_bootstrap
 ghcount_master_stab<-{}
@@ -967,7 +969,9 @@ ggplot(ghcount_master_combine_stab,aes(count_PBG_stab))+
   geom_vline(aes(xintercept=ghcount_ABG_stab), linetype=2,size=2, col="#F0E442")+
   xlab("Grasshopper count stability")
 
-#next step year since fire calculation
+
+
+#next step year since fire calculation####
 #creating a key for year since fire
 YrSinceFire_key <- tibble(year_watershed= c("2011_C01A", "2011_C03A", "2011_C03B",
                                             "2011_C03C", "2011_C1SB", "2011_C3SA",
@@ -1594,3 +1598,55 @@ ggplot(gh_cover_2021,aes(x=reorder(spe,-abund_ABG_PBG)))+
 #ff<-summary(indicator_abgvspbg)
 #none
 
+
+
+
+#correlate grasshopper count sd and temporal stability####
+#only run this section of the code after running the plant_biomass script
+#wrangle grasshopper count stability data frame
+grasshopper_temp_stab<-read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/gh_stability_combined_unit.csv")%>%
+  select(ghcount_ABG_stab,PBG_stab_M)%>%
+  distinct()%>%
+  pivot_longer(cols=1:2, names_to = "treatment", values_to = "stability")%>%
+  mutate(treatment=case_when(treatment=="ghcount_ABG_stab"~"ABG",
+                             treatment=="PBG_stab_M"~"PBG"))
+
+#wrangle grasshopper count spatial heterogeneity data
+grasshopper_count_spatial_heter<-combo_ghcount_geompoint_sd%>%
+  group_by(treatment)%>%
+  summarise(spatial_hetero=mean(count_sd, na.rm=T))%>%
+  mutate(variable= "grasshopper_count")%>%
+  #change characters in a variable
+  mutate(treatment=case_when(treatment=="gh_PBG_sd_M"~"PBG",
+                             treatment=="ghcount_ABG_sd"~"ABG"))
+
+#combine spatial heterogeneity and temporal stability
+gh_stab_vs_hetero<-grasshopper_count_spatial_heter%>%
+  left_join(grasshopper_temp_stab, by="treatment")%>%
+  #scaling
+  mutate(spat_heter=spatial_hetero/sd(spatial_hetero),
+         stab=stability/sd(stability))
+
+#load in biomass stability and heterogenity csv file
+biom_stab_vs_heter<-read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/biom_stab_vs_heter.csv")%>%
+  select(-1)
+combo_stab_vs_hetero<-gh_stab_vs_hetero%>%
+  bind_rows(biom_stab_vs_heter)
+
+stab_vs_hetero_lm<-lm(stab~spat_heter, data=combo_stab_vs_hetero)
+summary(stab_vs_hetero_lm)
+check_model(stab_vs_hetero_lm)#not significant #adjusted rsq=0.61
+
+ggplot(combo_stab_vs_hetero, aes(spat_heter, stab))+
+  geom_point(size=5,aes(col=variable))+
+  geom_smooth(method="lm")
+
+
+#what about using the unscaled values-probably not ideal!
+stab_vs_hetero_lm<-lm(stability~log(spatial_hetero), data=combo_stab_vs_hetero)
+summary(stab_vs_hetero_lm)
+check_model(stab_vs_hetero_lm)#adjusted rsq=0.98
+
+ggplot(combo_stab_vs_hetero, aes(log(spatial_hetero), stability))+
+  geom_point(size=5,aes(col=variable))+
+  geom_smooth(method="lm")
