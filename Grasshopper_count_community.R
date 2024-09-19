@@ -311,7 +311,7 @@ for(BOOT in 1:length(bootstrap_vector)){
 
 #extract ABG
 #extract ABG and separate into Unit
-ABG_south_count<-grass_count_df%>%
+ABG_south_count<-grassh_count_df%>%
   filter(FireGrzTrt=="ABG" & Unit=="south")%>%
   group_by(RecYear)%>%#calculate metrics at the unit level
   summarise(count_ABGSth=mean(Tcount, na.rm=T),
@@ -320,7 +320,7 @@ ABG_south_count<-grass_count_df%>%
   ungroup()%>%
   mutate(Stab_ABGSth=mean(count_ABGSth, na.rm =T)/sd(count_ABGSth))
 ABG_south_count$RecYear<-as.factor(ABG_south_count$RecYear)
-ABG_north_count<-grass_count_df%>%
+ABG_north_count<-grassh_count_df%>%
   filter(FireGrzTrt=="ABG" & Unit=="north")%>%
   group_by(RecYear)%>%#calculate metrics at the unit level
   summarise(count_ABGNth=mean(Tcount, na.rm=T),
@@ -1650,3 +1650,70 @@ check_model(stab_vs_hetero_lm)#adjusted rsq=0.98
 ggplot(combo_stab_vs_hetero, aes(log(spatial_hetero), stability))+
   geom_point(size=5,aes(col=variable))+
   geom_smooth(method="lm")
+
+#stability vs spatial heterogeneity separated by unit####
+north_count_stab_spat<-read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/grassH_Ncount.csv")%>%
+  select(Stab_ABGNth, count_ABGNth_sd, count_PBGNth_sd_M,RecYear,stab_PBGNm)%>%
+  distinct()%>%
+  pivot_longer(cols=2:3, names_to = "treatment", values_to = "sd")%>%
+  mutate(treatment=case_when(treatment=="count_ABGNth_sd"~"ABG",
+                             treatment=="count_PBGNth_sd_M"~"PBG"),
+         unit="North")%>%
+  group_by(treatment)%>%
+  mutate(sd=mean(sd,na.rm=T))%>%
+  select(-RecYear)%>%
+  distinct()%>%
+  pivot_longer(cols=1:2, names_to = "treat", values_to = "stability")%>%
+  ungroup()%>%
+  mutate(key=c("Y","N","N","Y"))%>%
+  filter(key!="N")%>%
+  select(-treat,-key)
+  
+south_count_stab_spat<-read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/grassH_Scount.csv")%>%
+  select(Stab_ABGSth, count_ABGSth_sd, count_PBGSth_sd_M,RecYear,stab_PBGSm)%>%
+  distinct()%>%
+  pivot_longer(cols=2:3, names_to = "treatment", values_to = "sd")%>%
+  mutate(treatment=case_when(treatment=="count_ABGSth_sd"~"ABG",
+                             treatment=="count_PBGSth_sd_M"~"PBG"),
+         unit="South")%>%
+  group_by(treatment)%>%
+  mutate(sd=mean(sd,na.rm=T))%>%
+  select(-RecYear)%>%
+  distinct()%>%
+  pivot_longer(cols=1:2, names_to = "treat", values_to = "stability")%>%
+  ungroup()%>%
+  mutate(key=c("Y","N","N","Y"))%>%
+  filter(key!="N")%>%
+  select(-treat,-key)
+#combine
+grassh_stab_spat_unit<-south_count_stab_spat%>%
+  bind_rows(north_count_stab_spat)%>%
+  mutate(sp="grasshopper")%>%
+  rename(spat_hetero=sd)%>%
+  mutate(sd_scaled=(spat_hetero-mean(spat_hetero))/sd(spat_hetero),
+         stab=stability-mean(stability))
+
+
+#regression
+count_stab_spat_lm<-lm(stab~sd_scaled, data=grassh_stab_spat_unit)
+summary(count_stab_spat_lm)#not significant
+
+ggplot(grassh_stab_spat_unit, aes(sd_scaled, stab))+
+  geom_point(size=5,aes(col=unit))+
+  geom_smooth(method="lm")
+
+#
+#load in biomass stability and heterogenity csv file
+biom_stab_vs_heter_unit<-read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/biom_stab_spat_unit.csv")%>%
+  select(-1)
+combo_stab_vs_hetero_unit<-grassh_stab_spat_unit%>%
+  bind_rows(biom_stab_vs_heter_unit)
+
+#regression
+combo_stab_vs_hetero_unit_lm<-lm(stab~sd_scaled, data=combo_stab_vs_hetero_unit)
+summary(combo_stab_vs_hetero_unit_lm)
+
+ggplot(combo_stab_vs_hetero_unit, aes(sd_scaled, stab))+
+  geom_point(size=5,aes(col=sp))#+
+  geom_smooth(method="lm")#not significant
+  

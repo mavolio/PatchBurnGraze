@@ -1732,3 +1732,58 @@ biom_stab_vs_heter<-biomass_temp_stability%>%
          stab=stability/sd(stability))
 write.csv(biom_stab_vs_heter, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/biom_stab_vs_heter.csv")
 
+#separating by unit stability vs Spatial hetero####
+#correlation btw stability and spatial heterogeneity
+#wrangle north unit
+north_stab_spat<-Combo_north_biomass%>%
+  select(Stab_ABGNth, biomass_ABGNth_sd, biomass_PBGNth_sd_M,RecYear,stab_PBGNm)%>%
+  distinct()%>%
+  pivot_longer(cols=2:3, names_to = "treatment", values_to = "sd")%>%
+  mutate(treatment=case_when(treatment=="biomass_ABGNth_sd"~"ABG",
+                             treatment=="biomass_PBGNth_sd_M"~"PBG"),
+         unit="North")%>%
+  group_by(treatment)%>%
+  mutate(sd=mean(sd,na.rm=T))%>%
+  select(-RecYear)%>%
+  distinct()%>%
+  pivot_longer(cols=1:2, names_to = "treat", values_to = "stability")%>%
+  ungroup()%>%
+  mutate(key=c("Y","N","N","Y"))%>%
+  filter(key!="N")%>%
+  select(-treat,-key)
+
+#wrangle south unit
+south_stab_spat<-Combo_south_biomass%>%
+  select(Stab_ABGSth, biomass_ABGSth_sd, biomass_PBGSth_sd_M,RecYear,stab_PBGSm)%>%
+  distinct()%>%
+  pivot_longer(cols=2:3, names_to = "treatment", values_to = "sd")%>%
+  mutate(treatment=case_when(treatment=="biomass_ABGSth_sd"~"ABG",
+                             treatment=="biomass_PBGSth_sd_M"~"PBG"),
+         unit="South")%>%
+  group_by(treatment)%>%
+  mutate(sd=mean(sd,na.rm=T))%>%
+  select(-RecYear)%>%
+  distinct()%>%
+  pivot_longer(cols=1:2, names_to = "treat", values_to = "stability")%>%
+  ungroup()%>%
+  mutate(key=c("Y","N","N","Y"))%>%
+  filter(key!="N")%>%
+  select(-treat,-key)
+
+#combine south and north
+biom_stab_spat_unit<-south_stab_spat%>%
+  bind_rows(north_stab_spat)%>%
+  mutate(sp="plant")%>%
+  rename(spat_hetero=sd)%>%
+  mutate(sd_scaled=(spat_hetero-mean(spat_hetero))/sd(spat_hetero),
+         stab=stability-mean(stability))
+write.csv(biom_stab_spat_unit, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/biom_stab_spat_unit.csv")
+
+#regression
+biom_stab_spat_lm<-lm(stability~sd_scaled, data=biom_stab_spat)
+summary(biom_stab_spat_lm)#not significant
+
+ggplot(biom_stab_spat, aes(sd_scaled, stability))+
+  geom_point(size=5,aes(col=unit))+
+  geom_smooth(method="lm")
+
