@@ -1447,12 +1447,29 @@ biomass_combine_stab<-biomass_master_stab%>%
   mutate(zscore=(biomass_ABG_stab-PBG_stab_M)/PBG_stab_sd)%>%
   mutate(pval=2*pnorm(-abs(zscore)))
 write.csv(biomass_combine_stab, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/biomass_stability_combined_unit.csv")
-
+#biomass_combine_stab<-read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/biomass_stability_combined_unit.csv")
 ggplot(biomass_combine_stab,aes(biomass_PBG_stab))+
   geom_density(size=2,col="#009E73")+
   #facet_grid("RecYear")+
   geom_vline(aes(xintercept=biomass_ABG_stab), linetype=2,size=2, col="#F0E442")+
   xlab("Biomass stability")+xlim(0,4.5) 
+
+#represent stability as a bar graph####
+biom_stability_df<-biomass_combine_stab%>%
+  select(PBG_stab_M,PBG_stab_sd, biomass_ABG_stab)%>%
+  distinct()%>%
+  rename(PBG=PBG_stab_M, ABG=biomass_ABG_stab)%>%
+  pivot_longer(cols=c(1,3), names_to = "treatment", values_to = "stability")%>%
+  mutate(PBG_stab_sd=case_when(treatment=="ABG"~"NA",
+                               treatment=="PBG"~"0.15"),
+         confit=as.numeric(PBG_stab_sd)*1.96)
+
+ggplot(biom_stability_df, aes(treatment, fill=treatment))+
+  geom_bar(stat = "identity",aes(y=stability),width = 0.5)+
+  geom_errorbar(aes(ymin=stability-confit,
+                    ymax=stability+confit), width=0.1)+
+  scale_fill_manual(values=c( "#F0E442", "#009E73"))
+
 
 #combined unit sd, mean, cv####
 #ABG mean, cv, sd

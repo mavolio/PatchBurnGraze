@@ -248,7 +248,7 @@ ggplot(model_estimates_wshed_stab_viz,aes(x=FireGrzTrt,fill=FireGrzTrt))+
   scale_fill_manual(values=c( "#F0E442", "#009E73"))
 
 ##unit scale count by each unit####
-####bootstrap
+####bootstrap separated  by unit
 #extract PBG and separate into Unit
 PBG_south_count<-grassh_count_df%>%
   filter(FireGrzTrt=="PBG" & Unit=="south")%>%
@@ -956,6 +956,7 @@ ghcount_master_combine_stab<-ghcount_master_stab%>%
   mutate(zscore=(ghcount_ABG_stab-PBG_stab_M)/PBG_stab_sd)%>%
   mutate(pval=2*pnorm(-abs(zscore)))
 write.csv(ghcount_master_combine_stab, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/gh_stability_combined_unit.csv")
+#ghcount_master_combine_stab<-read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/gh_stability_combined_unit.csv")
 #start from zero
 ggplot(ghcount_master_combine_stab,aes(count_PBG_stab))+
   geom_density(size=2,col="#009E73")+
@@ -969,7 +970,21 @@ ggplot(ghcount_master_combine_stab,aes(count_PBG_stab))+
   geom_vline(aes(xintercept=ghcount_ABG_stab), linetype=2,size=2, col="#F0E442")+
   xlab("Grasshopper count stability")
 
+#represent stability as a bar graph####
+gh_stability_df<-ghcount_master_combine_stab%>%
+  select(PBG_stab_M,PBG_stab_sd, ghcount_ABG_stab)%>%
+  distinct()%>%
+  rename(PBG=PBG_stab_M, ABG=ghcount_ABG_stab)%>%
+  pivot_longer(cols=c(1,3), names_to = "treatment", values_to = "stability")%>%
+  mutate(PBG_stab_sd=case_when(treatment=="ABG"~"NA",
+                               treatment=="PBG"~"0.14"),
+         confit=as.numeric(PBG_stab_sd)*1.96)
 
+ggplot(gh_stability_df, aes(treatment, fill=treatment))+
+  geom_bar(stat = "identity",aes(y=stability),width = 0.5)+
+  geom_errorbar(aes(ymin=stability-confit,
+                    ymax=stability+confit), width=0.1)+
+  scale_fill_manual(values=c( "#F0E442", "#009E73"))
 
 #next step year since fire calculation####
 #creating a key for year since fire
@@ -1269,7 +1284,7 @@ ggplot(gheven_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
                     ymax=se_upper),width=0.2,linetype=1)+
   scale_fill_manual(values=c( "#F0E442", "#009E73"))
 
-#perform permanova and calculate betadiversity####
+#perform permanova and calculate betadiversity###
 #create df with individual species abundance####
 grassh_permav_df <- grasshopperspcomp_df%>%
   full_join(watershed_key, by = "Watershed")%>%
@@ -1696,7 +1711,9 @@ grassh_stab_spat_unit<-south_count_stab_spat%>%
 
 #regression
 count_stab_spat_lm<-lm(stab~sd_scaled, data=grassh_stab_spat_unit)
-summary(count_stab_spat_lm)#not significant
+summary(count_stab_spat_lm)#not significant #negative trend
+ddd<-lm(stability~spat_hetero, data=grassh_stab_spat_unit)
+summary(ddd)
 
 ggplot(grassh_stab_spat_unit, aes(sd_scaled, stab))+
   geom_point(size=5,aes(col=unit))+
@@ -1706,6 +1723,7 @@ ggplot(grassh_stab_spat_unit, aes(sd_scaled, stab))+
 #load in biomass stability and heterogenity csv file
 biom_stab_vs_heter_unit<-read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/biom_stab_spat_unit.csv")%>%
   select(-1)
+#combine with grasshopper data
 combo_stab_vs_hetero_unit<-grassh_stab_spat_unit%>%
   bind_rows(biom_stab_vs_heter_unit)
 
@@ -1717,3 +1735,10 @@ ggplot(combo_stab_vs_hetero_unit, aes(sd_scaled, stab))+
   geom_point(size=5,aes(col=sp))#+
   geom_smooth(method="lm")#not significant
   
+#using raw stability score
+raw_stab_lm<-lm(stability~sd_scaled, data=combo_stab_vs_hetero_unit)
+summary(raw_stab_lm)
+
+ggplot(combo_stab_vs_hetero_unit, aes(sd_scaled, stability))+
+  geom_point(size=5,aes(col=sp))#+
+  geom_smooth(method="lm")
