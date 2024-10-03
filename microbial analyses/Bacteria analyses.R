@@ -18,8 +18,8 @@ setwd('C:\\Users\\mavolio2\\OneDrive - Johns Hopkins\\Olivia Avolio_Lab\\PBG\\IM
 # install and load package
 # if (!requireNamespace("devtools", quietly = TRUE)){install.packages("devtools")}
 #
-# library(devtools)
-# devtools::install_github("jbisanz/qiime2R")
+library(devtools)
+devtools::install_github("jbisanz/qiime2R")
 library(qiime2R)
 library(performance)
 library(PerformanceAnalytics)
