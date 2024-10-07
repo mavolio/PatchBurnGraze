@@ -15,12 +15,22 @@ setwd('C:\\Users\\livyh\\OneDrive - Johns Hopkins\\Arbogast_Avolio\\PBG\\IMR Ret
 #Meghan
 #setwd('C:\\Users\\mavolio2\\OneDrive - Johns Hopkins\\Olivia Avolio_Lab\\PBG\\IMR Return\\KomatsuJul2024with2023_analysis\\')
 
-if (!requireNamespace("devtools", quietly = TRUE)){install.packages("devtools")}
-library(devtools)
-devtools::install_github("jbisanz/qiime2R", force = TRUE)
+# install packages
+#install.libarary('devtools')
+# library(devtools)
+# install.packages('BiocManager')
+# library(BiocManager)
+# BiocManager::install('biomformat')
+# BiocManager::install('GenomeInfoDB')
+# BiocManager::install('phyloseq')
+# BiocManager::install('SummarizedExperiment')
+# BiocManager::install('SingleCellExperiment')
+# BiocManager::install('TreeSummarizedExperiment')
+# devtools::install_github("jbisanz/qiime2R")
+
 library(qiime2R)
-library(performance)
-library(PerformanceAnalytics)
+#library(performance)
+#library(PerformanceAnalytics)
 library(car)
 library(vegan)
 library(grid)
