@@ -10,16 +10,14 @@
 
 #set working directory
 #Olivia
-setwd('C:\\Users\\livyh\\OneDrive - Johns Hopkins\\Avolio_Lab\\PBG')
+setwd('C:\\Users\\livyh\\OneDrive - Johns Hopkins\\Arbogast_Avolio\\PBG\\IMR Return\\KomatsuJul2024with2023_analysis\\')
 
 #Meghan
-setwd('C:\\Users\\mavolio2\\OneDrive - Johns Hopkins\\Olivia Avolio_Lab\\PBG\\IMR Return\\KomatsuJul2024with2023_analysis\\')
+#setwd('C:\\Users\\mavolio2\\OneDrive - Johns Hopkins\\Olivia Avolio_Lab\\PBG\\IMR Return\\KomatsuJul2024with2023_analysis\\')
 
-# install and load package
-# if (!requireNamespace("devtools", quietly = TRUE)){install.packages("devtools")}
-#
-# library(devtools)
-# devtools::install_github("jbisanz/qiime2R")
+if (!requireNamespace("devtools", quietly = TRUE)){install.packages("devtools")}
+library(devtools)
+devtools::install_github("jbisanz/qiime2R", force = TRUE)
 library(qiime2R)
 library(performance)
 library(PerformanceAnalytics)
@@ -30,6 +28,7 @@ library(tidyverse)
 library(codyn)
 library(lme4)
 library(lmerTest)
+
 
 '%notin%' <- negate('%in%')
 
@@ -83,7 +82,7 @@ relabund<-bactdat %>%
   mutate(relabund=abund/totabund)
 
 ##I can't get this to work
-parse_taxonomy(bactread$data)
+#parse_taxonomy(bactread$data)
 
 #richness and evenness
 richeven<-community_structure(relabund, abundance.var = 'relabund', replicate.var = 'SampleID') %>% 
@@ -91,29 +90,29 @@ richeven<-community_structure(relabund, abundance.var = 'relabund', replicate.va
 
 #is there a richness difference?
 
-hist(richeven$richness)#very normal
-hist(richeven$Evar)#very normal
+hist(richeven$richness, main = "richness histogram")#very normal
+hist(richeven$Evar, main = "evenness histogram")#very normal
 
 #diff in richness by year and by PBG but no interaction
 #no diff for years since burn
-m1<-lmer(richness~PBGTrt*Year + (1|unid), data=richeven)
-anova(m1, ddf="Kenward-Roger")
-m2<-lmer(richness~YrsBurn*Year + (1|unid), data=richeven)
-anova(m2, ddf="Kenward-Roger")
+#m1<-lmer(richness ~ PBGTrt*Year + (1|unid), data=richeven)
+#anova(m1, ddf="Kenward-Roger")
+#m2<-lmer(richness ~ Years-Since-Burn*Year + (1|unid), data=richeven)
+#anova(m2, ddf="Kenward-Roger")
 
 #diff in evenness by year and PBG but no interaction
 #no diff years since burn
-m3<-lmer(Evar~PBGTrt*Year + (1|unid), data=richeven)
-anova(m3, ddf="Kenward-Roger")
-m4<-lmer(Evar~YrsBurn*Year + (1|unid), data=richeven)
-anova(m4, ddf="Kenward-Roger")
+#m3<-lmer(Evar ~ PBGTrt*Year + (1|unid), data=richeven)
+#anova(m3, ddf="Kenward-Roger")
+#m4<-lmer(Evar ~ YrsBurn*Year + (1|unid), data=richeven)
+#anova(m4, ddf="Kenward-Roger")
 
 #diff in faithsPD by year and PBG but no interaction
 #no diff years since burn
-m5<-lmer(FaithPD~PBGTrt*Year + (1|unid), data=bactPD)
-anova(m5, ddf="Kenward-Roger")
-m6<-lmer(FaithPD~YrsBurn*Year + (1|unid), data=bactPD)
-anova(m6, ddf="Kenward-Roger")
+#m5<-lmer(FaithPD~PBGTrt*Year + (1|unid), data=bactPD)
+#anova(m5, ddf="Kenward-Roger")
+#m6<-lmer(FaithPD~YrsBurn*Year + (1|unid), data=bactPD)
+#anova(m6, ddf="Kenward-Roger")
 
 #graph richness by year
 ggplot(data=barGraphStats(data=richeven, variable="richness", byFactorNames="Year"), aes(x=Year, y=mean)) +
@@ -149,13 +148,13 @@ wide_dat<-relabund %>%
   pivot_wider(names_from = Feature.ID, values_from = relabund, values_fill = 0)
 sites<-wide_dat[,1:9]
 
-mds<-metaMDS(wide_dat[9:19014], trymax = 100)
+mds<-metaMDS(wide_dat[9:19014], trymax = 20)
 
 scores<-as.data.frame(mds$points) %>%
   bind_cols(sites)
 
-ggplot(data=scores, aes(x=MDS1, y=MDS2, color=Watershed, shape=Year))+
-  geom_point(size=3)
+ggplot(data=scores, aes(x=MDS1, y=MDS2, title = "Bacteria NMDS", color=Watershed, shape=Year))+
+  geom_point(size=2)
 #watershed C1SB is just different from the other - this will overwhelm any other signal
 
 
@@ -166,8 +165,8 @@ ggplot(data=scores, aes(x=MDS1, y=MDS2, color=Watershed, shape=Year))+
 
 ##### Multi-Variate Analysis #####
 #Distance matrix
-bunifraqDistance <- as.matrix(read_qza('KomatsuV6V8\\diversity\\weighted_unifrac_distance_matrix.qza')$data)
-funifraqDistance <- as.matrix(read_qza('KomatsuITS2\\diversity\\weighted_unifrac_distance_matrix.qza')$data)
+bunifraqDistance <- as.matrix(read_qza('V6V8\\diversity\\weighted_unifrac_distance_matrix.qza')$data)
+funifraqDistance <- as.matrix(read_qza('ITS2\\diversity\\weighted_unifrac_distance_matrix.qza')$data)
 
 bunifracDistanceTrt <- as.data.frame(bunifraqDistance) %>%
   rownames_to_column("SampleID") %>%
