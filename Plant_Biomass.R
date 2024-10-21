@@ -2,7 +2,7 @@
 ####Plant Biomass from diskpasture meter
 ###Author: Joshua Ajowele
 ###collaborators: PBG synthesis group
-###last update:9/16/2024
+###last update:10/21/2024
 
 #packages 
 library(tidyverse)
@@ -1675,23 +1675,29 @@ names(yrs_interact)<-str_replace_all(names(yrs_interact), " ","_")
 yrs_interact_viz<-yrs_interact%>%
   mutate(yrs_interact_bt_mean=exp(adjusted_mean),
          yrs_interact_bt_upper=exp(adjusted_mean+SE_of_link),
-         yrs_interact_bt_lower=exp(adjusted_mean-SE_of_link))
+         yrs_interact_bt_lower=exp(adjusted_mean-SE_of_link))%>%
+  #including 2011 for graphical purpose-so the graph will align with other data that has 2011
+  bind_rows(data_2011=(tibble(RecYear="2011", yrsins_fire="PBG0")))%>%
+  ungroup()
+  
+
+
 #visual year since burn####
-ggplot(yrs_interact_viz,aes(RecYear,col=yrsins_fire))+
+ggplot(yrs_interact_viz,aes(as.numeric(RecYear),col=yrsins_fire))+
   geom_point(size=3,aes(y=yrs_interact_bt_mean))+
-  geom_path(aes(as.numeric(RecYear),yrs_interact_bt_mean),linewidth=1)+
+  geom_path(aes(x=as.numeric(RecYear),y=yrs_interact_bt_mean),linewidth=1)+
   geom_errorbar(aes(x=as.numeric(RecYear),ymin=yrs_interact_bt_lower,
                     ymax=yrs_interact_bt_upper),width=0.2,linetype=1)+
   scale_colour_manual(values=c( "#F0E442", "#994F00", "#999999", "#0072B2"))+
-  scale_y_continuous(limits=c(5,750))
-  
+  scale_y_continuous(limits=c(0,750))
+
 #average across years for simplification
 
 yrs_interact_bar<-yrs_interact_viz%>%
   group_by(yrsins_fire)%>%
-  summarise(biomass_mean=mean(yrs_interact_bt_mean),
-            se_upper=mean(yrs_interact_bt_upper),
-            se_lower=mean(yrs_interact_bt_lower))
+  summarise(biomass_mean=mean(yrs_interact_bt_mean, na.rm=T),
+            se_upper=mean(yrs_interact_bt_upper,na.rm=T),
+            se_lower=mean(yrs_interact_bt_lower,na.rm=T))
 ggplot(yrs_interact_bar,aes(x=yrsins_fire,fill=yrsins_fire))+
   geom_bar(stat = "identity",aes(y=biomass_mean),width = 0.5)+
   geom_errorbar(aes(ymin=se_lower,
@@ -1707,7 +1713,7 @@ precip_data$ppt<-as.numeric(precip_data$ppt)
 
 annual_ppt_data<-precip_data%>%
   select(mth,day,year,ppt)%>%
-  filter(year%in%2012:2021)%>%
+  filter(year%in%2011:2021)%>%
   group_by(year)%>%
   mutate(annual_ppt=sum(ppt, na.rm=T))%>%
   filter(mth%in% 4:9)%>%
@@ -1720,6 +1726,11 @@ annual_ppt_data$RecYear=as.factor(annual_ppt_data$RecYear)
 
 
 #precipitation figure
+#growing season ppt
+ggplot(annual_ppt_data, aes(x=RecYear))+
+  geom_bar(alpha=0.3,stat = "identity",aes(y=gsppt),width = 0.5)
+
+#annual precipitation
 ggplot(annual_ppt_data, aes(x=RecYear))+
   geom_bar(alpha=0.3,stat = "identity",aes(y=gsppt),width = 0.5)
 
