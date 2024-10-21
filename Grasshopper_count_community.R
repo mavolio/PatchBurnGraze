@@ -1,6 +1,6 @@
 #BPBG grasshopper count and community metrics
 #Authors: Joshua Ajowele
-#Started: 26 May 2022 last modified: 7 July 2024
+#Started: 26 May 2022 last modified: 21 October 2024
 
 #load library
 library(tidyverse)
@@ -1048,8 +1048,9 @@ yrs_ghcount_model<-lmer(log(Tcount)~yrsins_fire*RecYear+(1|Unit/Watershed),
                         data=ghcount_yrs)
 check_model(yrs_ghcount_model)
 Anova(yrs_ghcount_model, type=3)
+anova(yrs_ghcount_model)
 qqnorm(resid(yrs_ghcount_model))
-
+library(lmerTest)
 #multiple comparison
 testInteractions(yrs_ghcount_model, pairwise="yrsins_fire", fixed="RecYear",
                  adjustment="BH")
