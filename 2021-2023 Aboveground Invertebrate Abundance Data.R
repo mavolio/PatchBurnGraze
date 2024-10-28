@@ -379,9 +379,14 @@ abundanceWide <- abundanceWide %>%
   mutate(sum = rowSums(abundanceWide[, c(8:150)], na.rm = TRUE)) %>% 
   filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
 
+abundanceWide_2021 <- abundanceWide
 
 print(permanova <- adonis2(formula = abundanceWide[,8:150]~TreatmentSB, data=abundanceWide, permutations=999, method="bray"))
 #F=0.7814, df=3,57, p=0.86
+
+#pairwise
+
+pairwise_results <- pairwise.adonis(abundanceWide[, 8:150], abundanceWide$TreatmentSB)
 
 
 #betadisper
@@ -445,14 +450,14 @@ Years_Since_Burned_NMDS_2021 <- ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, co
   ) +
   ggtitle("2021 year since burned") + 
   annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = min(BC_NMDS_Graph$MDS2) + 0.06, 
-           label = 'Mean p = 0.864\nVariance p = 0.663', size = STATS_TEXT_SIZE, hjust = 'left')
+           label = 'Mean p = 0.069\nVariance p = 0.451', size = STATS_TEXT_SIZE, hjust = 'left')
 
 Years_Since_Burned_NMDS_2021
 
 Years_Since_Burned_NMDS_2021
 
-#PERMANOVA: F=0.7814, df=3,57, p=0.86
-#Betadisperion: #F=0.5209, df=3,57, p=0.663 
+#PERMANOVA: F=1.2983  , df=3,57, p=0.069 
+#Betadisperion: #F=0.8876    , df=3,57, p=0.451 
 
 
 #export at 1500x1000
@@ -510,21 +515,21 @@ abundanceWide <- Abundance_Data2021 %>%
   pivot_wider(names_from = 'ID', values_from = 'Count', values_fill = list(Count = 0)) 
 
 abundanceWide <- abundanceWide %>% 
-  mutate(sum = rowSums(abundanceWide[, c(8:91)], na.rm = TRUE)) %>% 
+  mutate(sum = rowSums(abundanceWide[, c(8:89)], na.rm = TRUE)) %>% 
   filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
 
 
 # PERMANOVA
-print(permanova <- adonis2(formula = abundanceWide[,8:91]~Treatment, data=abundanceWide, permutations=999, method="bray"))
+print(permanova <- adonis2(formula = abundanceWide[,8:89]~Treatment, data=abundanceWide, permutations=999, method="bray"))
 #F=1.9529 , df=1,28, p=0.013 *
 
 #betadisper
-veg <- vegdist(abundanceWide[,8:91], method = "bray")
+veg <- vegdist(abundanceWide[,8:89], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$Treatment)
 permutest(dispersion, pairwise=TRUE, permutations=999) 
 #F=23.434       , df=1,28, p=0.001 ***
 
-BC_Data <- metaMDS(abundanceWide[,8:91])
+BC_Data <- metaMDS(abundanceWide[,8:89])
 sites <- 1:nrow(abundanceWide)
 BC_Meta_Data <- abundanceWide[,1:7]
 plot(BC_Data$points, col=as.factor(BC_Meta_Data$Treatment))
@@ -605,6 +610,9 @@ abundanceWide <- abundanceWide %>%
   mutate(sum = rowSums(abundanceWide[, c(8:79)], na.rm = TRUE)) %>% 
   filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
 
+abundanceWide_2022 <- abundanceWide
+
+
 print(permanova <- adonis2(formula = abundanceWide[, 8:121] ~ TreatmentSB, data = abundanceWide, permutations = 999, method = "bray"))
 # F=2.1065, df=3,60, p=0.001 ***
 
@@ -614,7 +622,7 @@ print(permanova <- adonis2(formula = abundanceWide[, 8:121] ~ TreatmentSB, data 
 veg <- vegdist(abundanceWide[, 8:121], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$TreatmentSB)
 permutest(dispersion, pairwise = TRUE, permutations = 999) 
-# F=0.0811, df=3,60, p=0.975
+# F=0.0305, df=3,60, p=0.992
 
 BC_Data <- metaMDS(abundanceWide[, 8:121])
 sites <- 1:nrow(abundanceWide)
@@ -667,11 +675,11 @@ Years_Since_Burned_NMDS_2022 <- ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, co
         plot.title = element_text(size = 75)
   ) +
   ggtitle("2022 year since burned") + 
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = min(BC_NMDS_Graph$MDS2) + 0.06, 
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = min(BC_NMDS_Graph$MDS2) + 0.12, 
            label = 'Mean p = 0.001\nVariance p = 0.975', size = STATS_TEXT_SIZE, hjust = 'left')
 
-# Mean F=2.1065, df=3,60, p=0.001 ***
-# Variance F=0.0811, df=3,60, p=0.975
+# Mean F=2.4861, df=3,60, p=0.002 **
+# Variance F=0.0305, df=3,60, p=0.992
 
 Years_Since_Burned_NMDS_2022
 
@@ -684,9 +692,10 @@ ABG_Test <- full_join(Abundance_ID_aboveground, BurnInfo2022, by = "WS") %>%
 
 #Filter PBG
 PBG_Test <- full_join(Abundance_ID_aboveground, BurnInfo2022, by = "WS") %>% 
-  unite("TreatmentSB",c("Treatment","SB"), sep="_") %>% 
+  unite("TreatmentSB", c("Treatment", "SB"), sep = "_") %>% 
   filter(Date == "2022") %>%   
-  filter(TreatmentSB == c("PBG_0", "PBG_1", "PBG_2"))
+  filter(TreatmentSB %in% c("PBG_0", "PBG_1", "PBG_2"))
+
 
 
 # Set seed for reproducibility
@@ -790,7 +799,7 @@ ABG_VS_PBG_NMDS_2022  <- ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = g
         plot.title = element_text(size = 75)
   ) +
   ggtitle("2022 ABG vs PBG") +
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = min(BC_NMDS_Graph$MDS2) + 0, label = 'Variance p = 0.001', size = STATS_TEXT_SIZE, hjust = 'left') +
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = min(BC_NMDS_Graph$MDS2) + 0.12, label = 'Variance p = 0.001', size = STATS_TEXT_SIZE, hjust = 'left') +
   annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = min(BC_NMDS_Graph$MDS2) + 0.010, label = 'Mean p=0.001', size = STATS_TEXT_SIZE, hjust = 'left')
 
 
@@ -824,6 +833,9 @@ abundanceWide <- Abundance_Data2023 %>%
 abundanceWide <- abundanceWide %>% 
   mutate(sum = rowSums(abundanceWide[, c(8:75)], na.rm = TRUE)) %>% 
   filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
+
+abundanceWide_2023  <- abundanceWide
+
 
 print(permanova <- adonis2(formula = abundanceWide[, 8:75] ~ TreatmentSB, data = abundanceWide, permutations = 999, method = "bray"))
 # F=1.3803, df=3,60, p=0.094 
@@ -2051,9 +2063,9 @@ richModel <- #stores the model output into a named list
 anova.lme(richModel, type='sequential') #this gives you the ANOVA output from the model, where "sequential" tells it to do a type III anova
 emmeans(richModel, pairwise~TreatmentSB, adjust="tukey") #this gives you contrasts (means and confidence intervals) for each possible pairwise comparison of treatments to know whether they are different or not (overlapping confidence intervals means not different)
 
-# numDF denDF  F-value p-value
-# (Intercept)     1    56 52.75320  <.0001
-# TreatmentSB     3    56  0.43999  0.7253
+# numDF denDF   F-value p-value
+# (Intercept)     1    56 197.02313  <.0001
+# TreatmentSB     3    56   0.36174  0.7809
 
 #### 2022 Richness Stats ####
 
@@ -3003,3 +3015,327 @@ multi_panel_graph <- grid.arrange(
 # Display the multipanel graph
 multi_panel_graph
 
+
+#### Beta Diversity 2021 ####
+set.seed(123)
+
+library(vegan)
+library(dplyr)
+
+
+#Caculating Beta Diversity for PBG
+
+Joined_New_2021 <- abundanceWide_2021 %>%
+  filter(Treatment == "PBG") %>%
+  group_by(block) %>%
+  mutate(plot_index = row_number()) # Corrected index generation
+
+num_bootstrap <- 1000
+PBG_plot_master_2021 <- data.frame(iteration = 1:num_bootstrap, beta_diversity = numeric(num_bootstrap))
+
+for (BOOT in 1:num_bootstrap) {
+  Joined_New_Key <- Joined_New_2021 %>%
+    sample_n(16, replace = TRUE) %>%
+    select(plot_index) %>%
+    ungroup()
+  
+  PBG_plot_ready <- Joined_New_2021 %>%
+    right_join(Joined_New_Key, by = "plot_index") %>%
+    mutate(iteration = BOOT)
+  
+  data_matrix <- PBG_plot_ready %>%
+    select(8:152) # Species column
+  
+  dissimilarity_matrix <- vegdist(data_matrix, method = "bray")
+  
+  beta_diversity_value <- mean(dissimilarity_matrix)
+  
+  PBG_plot_master_2021$beta_diversity[BOOT] <- beta_diversity_value
+}
+
+#Add Treatment column
+
+PBG_plot_master_2021$Treatment <- 'PBG'
+
+
+# Print the results
+print(PBG_plot_master_2021)
+
+ggplot(PBG_plot_master_2021, aes(x = beta_diversity)) +
+  geom_density() +
+  labs(title = "Density Plot of Beta Diversity",
+       x = "Beta Diversity",
+       y = "Density") +
+  theme_bw()
+
+
+
+#Calculating ABG betadiveristy
+
+Joined_New_2021_A <- abundanceWide_2021 %>%
+  filter(Treatment == "ABG")
+
+data_matrix_2 <- Joined_New_2021_A %>%
+  select(8:151) # Species column
+
+dissimilarity_matrix_2 <- vegdist(data_matrix, method = "bray")
+
+beta_diversity_value_2 <- mean(dissimilarity_matrix)
+
+#### Beta Diversity Graph 2021 ####
+
+
+# Beta Diversity Density plot
+ggplot(PBG_plot_master_2021, aes(x = beta_diversity)) +
+  geom_density(aes(y = ..scaled.., color = "PBG"), alpha = 0.5) +
+  geom_vline(aes(xintercept = beta_diversity_value_2, color = "ABG"), linetype = "dashed", size = 1) +
+  labs(title = "Density Plot of Beta Diversity",
+       x = "Mean Beta Diversity",
+       y = "Density") +
+  scale_color_manual(values = c("PBG" = "red", "ABG" = "blue"), name = "Legend") +
+  theme_bw() +
+  theme(
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(), 
+    legend.position = c(0.1, 0.8), 
+    legend.text = element_text(size = 30),  # Adjust legend text size
+    axis.text = element_text(size = 20),
+    axis.title = element_text(size = 30),
+    axis.text.y = element_text(size = 20),
+    axis.title.y = element_text(size = 30),
+    axis.ticks.y = element_line(size = 1)
+  )
+
+
+
+#### Beta Diversity Z-score 2021 ####
+
+#Getting average richness per iteration for bootstrapped dataframe
+PBG_average_beta <- PBG_plot_master_2021 %>%
+  summarize(mean_beta = mean(beta_diversity))
+
+
+# Z-Score for richness 
+
+Z_B <- ((beta_diversity_value_2) - (PBG_average_beta$mean_beta))/(sd(PBG_plot_master_2021$beta_diversity))
+Z_B
+
+
+p_value_B <- 1 - pnorm(Z_B)
+
+#lower.tail = FALSE
+
+print(p_value_B)
+
+#Z-score = 0.2103348, p = 0.4167032
+
+
+
+
+
+#### Beta Diversity 2022 ####
+set.seed(123)
+
+library(vegan)
+library(dplyr)
+
+# Calculating Beta Diversity for PBG
+
+Joined_New_2022 <- abundanceWide_2022 %>%
+  filter(Treatment == "PBG") %>%
+  group_by(block) %>%
+  mutate(plot_index = row_number()) # Corrected index generation
+
+num_bootstrap <- 1000
+PBG_plot_master_2022 <- data.frame(iteration = 1:num_bootstrap, beta_diversity = numeric(num_bootstrap))
+
+for (BOOT in 1:num_bootstrap) {
+  Joined_New_Key <- Joined_New_2022 %>%
+    sample_n(16, replace = TRUE) %>%
+    select(plot_index) %>%
+    ungroup()
+  
+  PBG_plot_ready <- Joined_New_2022 %>%
+    right_join(Joined_New_Key, by = "plot_index") %>%
+    mutate(iteration = BOOT)
+  
+  data_matrix <- PBG_plot_ready %>%
+    select(8:122) # Species column
+  
+  dissimilarity_matrix <- vegdist(data_matrix, method = "bray")
+  
+  beta_diversity_value <- mean(dissimilarity_matrix)
+  
+  PBG_plot_master_2022$beta_diversity[BOOT] <- beta_diversity_value
+}
+
+# Add Treatment column
+PBG_plot_master_2022$Treatment <- 'PBG'
+
+# Print the results
+print(PBG_plot_master)
+
+ggplot(PBG_plot_master_2022, aes(x = beta_diversity)) +
+  geom_density() +
+  labs(title = "Density Plot of Beta Diversity",
+       x = "Beta Diversity",
+       y = "Density") +
+  theme_bw()
+
+# Calculating ABG beta diversity
+
+Joined_New_2022_A <- abundanceWide_2022 %>%
+  filter(Treatment == "ABG")
+
+data_matrix_2 <- Joined_New_2022_A %>%
+  select(8:121) # Species column
+
+dissimilarity_matrix_2 <- vegdist(data_matrix_2, method = "bray")
+
+beta_diversity_value_2 <- mean(dissimilarity_matrix_2)
+
+#### Beta Diversity Graph 2022 ####
+
+# Beta Diversity Density plot
+ggplot(PBG_plot_master_2022, aes(x = beta_diversity)) +
+  geom_density(aes(y = ..scaled.., color = "PBG"), alpha = 0.5) +
+  geom_vline(aes(xintercept = beta_diversity_value_2, color = "ABG"), linetype = "dashed", size = 1) +
+  labs(title = "Density Plot of Beta Diversity",
+       x = "Mean Beta Diversity",
+       y = "Density") +
+  scale_color_manual(values = c("PBG" = "red", "ABG" = "blue"), name = "Legend") +
+  theme_bw() +
+  theme(
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(), 
+    legend.position = c(0.1, 0.8), 
+    legend.text = element_text(size = 30),  # Adjust legend text size
+    axis.text = element_text(size = 20),
+    axis.title = element_text(size = 30),
+    axis.text.y = element_text(size = 20),
+    axis.title.y = element_text(size = 30),
+    axis.ticks.y = element_line(size = 1)
+  )
+
+#### Beta Diversity Z-score 2022 ####
+
+# Getting average richness per iteration for bootstrapped dataframe
+PBG_average_beta <- PBG_plot_master_2022 %>%
+  summarize(mean_beta = mean(beta_diversity))
+
+# Z-Score for richness 
+
+Z_B <- ((beta_diversity_value_2) - (PBG_average_beta$mean_beta))/(sd(PBG_plot_master_2022$beta_diversity))
+Z_B
+
+p_value_B <- 1 - pnorm(Z_B, lower.tail =  F)
+
+# lower.tail = FALSE
+
+print(p_value_B)
+
+# Z-score = -0.01087649, p = 0.495661
+
+#### Beta Diversity 2023 ####
+set.seed(123)
+
+library(vegan)
+library(dplyr)
+
+# Calculating Beta Diversity for PBG
+
+Joined_New_2023 <- abundanceWide_2023 %>%
+  filter(Treatment == "PBG") %>%
+  group_by(block) %>%
+  mutate(plot_index = row_number()) # Corrected index generation
+
+num_bootstrap <- 1000
+PBG_plot_master_2023 <- data.frame(iteration = 1:num_bootstrap, beta_diversity = numeric(num_bootstrap))
+
+for (BOOT in 1:num_bootstrap) {
+  Joined_New_Key <- Joined_New_2023 %>%
+    sample_n(16, replace = TRUE) %>%
+    select(plot_index) %>%
+    ungroup()
+  
+  PBG_plot_ready <- Joined_New_2023 %>%
+    right_join(Joined_New_Key, by = "plot_index") %>%
+    mutate(iteration = BOOT)
+  
+  data_matrix <- PBG_plot_ready %>%
+    select(8:77) # Species column
+  
+  dissimilarity_matrix <- vegdist(data_matrix, method = "bray")
+  
+  beta_diversity_value <- mean(dissimilarity_matrix)
+  
+  PBG_plot_master_2023$beta_diversity[BOOT] <- beta_diversity_value
+}
+
+# Add Treatment column
+PBG_plot_master_2023$Treatment <- 'PBG'
+
+# Print the results
+print(PBG_plot_master_2023)
+
+ggplot(PBG_plot_master_2023, aes(x = beta_diversity)) +
+  geom_density() +
+  labs(title = "Density Plot of Beta Diversity",
+       x = "Beta Diversity",
+       y = "Density") +
+  theme_bw()
+
+# Calculating ABG beta diversity
+
+Joined_New_2023_A <- abundanceWide_2023 %>%
+  filter(Treatment == "ABG")
+
+data_matrix_2 <- Joined_New_2023_A %>%
+  select(8:76) # Species column
+
+dissimilarity_matrix_2 <- vegdist(data_matrix_2, method = "bray")
+
+beta_diversity_value_2 <- mean(dissimilarity_matrix_2)
+
+#### Beta Diversity Graph 2023 ####
+
+# Beta Diversity Density plot
+ggplot(PBG_plot_master_2023, aes(x = beta_diversity)) +
+  geom_density(aes(y = ..scaled.., color = "PBG"), alpha = 0.5) +
+  geom_vline(aes(xintercept = beta_diversity_value_2, color = "ABG"), linetype = "dashed", size = 1) +
+  labs(title = "Density Plot of Beta Diversity",
+       x = "Mean Beta Diversity",
+       y = "Density") +
+  scale_color_manual(values = c("PBG" = "red", "ABG" = "blue"), name = "Legend") +
+  theme_bw() +
+  theme(
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(), 
+    legend.position = c(0.1, 0.8), 
+    legend.text = element_text(size = 30),  # Adjust legend text size
+    axis.text = element_text(size = 20),
+    axis.title = element_text(size = 30),
+    axis.text.y = element_text(size = 20),
+    axis.title.y = element_text(size = 30),
+    axis.ticks.y = element_line(size = 1)
+  )
+
+#### Beta Diversity Z-score 2023 ####
+
+# Getting average richness per iteration for bootstrapped dataframe
+PBG_average_beta <- PBG_plot_master_2023 %>%
+  summarize(mean_beta = mean(beta_diversity))
+
+# Z-Score for richness 
+
+Z_B <- ((beta_diversity_value_2) - (PBG_average_beta$mean_beta))/(sd(PBG_plot_master_2023$beta_diversity))
+Z_B
+
+p_value_B <- 1 - pnorm(Z_B)
+
+# lower.tail = FALSE
+
+print(p_value_B)
+
+# Z-score = 2.477193, p = 0.006621016
+ 

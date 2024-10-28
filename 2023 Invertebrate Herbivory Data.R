@@ -112,7 +112,7 @@ summary(cont_model <- lmer(log(Herbivory) ~ Treatment + (1|Plant),
                            data = Damage_2023))
 Anova(cont_model) 
 back.emmeans(emmeans(cont_model, ~Treatment), transform='log')
-back.emmeans(emmeans(cont_model, ~Plant), transform='log')
+#back.emmeans(emmeans(cont_model, ~Plant), transform='log')
 
 
 ## Figure ##
@@ -140,9 +140,8 @@ Invertebrate_Herbivory_2023$Damage <- ifelse(Invertebrate_Herbivory_2023$Herbivo
 summary(zero_model <- glmer(`Damage` ~ TreatmentSB + (1|Plant),
                             data = Invertebrate_Herbivory_2023,
                             family = binomial))
-
-back.emmeans(emmeans(zero_model, ~TreatmentSB), transform='log')
 Anova(zero_model, type='III') 
+back.emmeans(emmeans(zero_model, ~TreatmentSB), transform='log')
 
 
 # Part 2: distribution of the continuous, non-zero data
@@ -153,8 +152,9 @@ summary(cont_model <- lmer(log(Herbivory) ~ TreatmentSB + (1|Plant),
                            data = Damage_2023))
 Anova(cont_model) 
 back.emmeans(emmeans(cont_model, ~TreatmentSB), transform='log')
-back.emmeans(emmeans(cont_model, ~Plant), transform='log')
-
+#back.emmeans(emmeans(cont_model, ~Plant), transform='log')
+pairwise_results <- emmeans(cont_model, pairwise ~ TreatmentSB, adjust = "tukey")
+pairwise_results
 
 ## Figure ##
 
@@ -162,3 +162,72 @@ ggplot(data=Invertebrate_Herbivory_2023, aes(x=TreatmentSB, y=Herbivory, fill=Pl
   geom_violin(aes(fill=Plant, color=Plant,
                   fill=after_scale(colorspace::lighten(fill, .3))),
               size=1, bw=.3)
+
+
+#### New Graphs ####
+
+ggplot(data=Invertebrate_Herbivory_2023, aes(x=Treatment, y=Herbivory)) +  
+  geom_boxplot(aes(fill=Treatment), width=0.1, position=position_dodge(width=0.9), outlier.shape=NA) + 
+  geom_violin(aes(fill=Treatment), size=1, bw=.3, position=position_dodge(width=0.9)) +
+  geom_jitter(position=position_jitter(width=0.2, height=0, seed=123), alpha=0.5) +
+  theme_minimal() +
+  theme(
+    panel.grid = element_blank(), 
+    legend.position = c(0.1, 0.9),
+    legend.text = element_text(size = 15),     # Increases legend text size
+    legend.title = element_text(size = 18),    # Increases legend title size
+    axis.title = element_text(size = 20),      # Increases axis titles size
+    axis.text = element_text(size = 15)        # Increases axis text size
+  ) +
+  scale_fill_manual(values=c("ABG"="blue", "PBG"="red"))
+
+
+
+
+
+ggplot(data=Invertebrate_Herbivory_2023, aes(x=TreatmentSB, y=Herbivory, fill=TreatmentSB)) + 
+  geom_violin(color="black", size=1, bw=.3) +
+  geom_boxplot(width=0.1, position=position_dodge(width=0.9), outlier.shape=NA) + 
+  geom_jitter(position=position_jitter(width=0.2, height=0, seed=123), alpha=0.5) +
+  theme_minimal() +
+  scale_fill_manual(
+    values=c("ABG_0"="blue", "PBG_0"="red", "PBG_1"="red", "PBG_2"="red"),
+    labels=c("ABG_0"="ABG 0", "PBG_0"="PBG 0", "PBG_1"="PBG 1", "PBG_2"="PBG 2")  # Custom labels for the legend
+  ) +
+  scale_x_discrete(labels=c("ABG_0"="ABG 0", "PBG_0"="PBG 0", "PBG_1"="PBG 1", "PBG_2"="PBG 2")) +  # Custom labels for the x-axis
+  labs(fill="Treatment") +   # Changes legend title to "Treatment"
+  theme(
+    panel.grid = element_blank(), 
+    legend.position = c(0.1, 0.9),        # Moves legend to upper left corner
+    legend.text = element_text(size = 15),     # Increases legend text size
+    legend.title = element_text(size = 18),    # Increases legend title size
+    axis.title = element_text(size = 20),      # Increases axis titles size
+    axis.text = element_text(size = 15)        # Increases axis text (tick labels) size
+  )
+
+
+
+#### Percent Damage ####
+# Total number of rows
+total_rows <- nrow(Invertebrate_Herbivory_2023)
+
+# Number of rows with damage
+damage_rows <- nrow(Invertebrate_Herbivory_2023 %>% filter(Damage > 0))
+
+# Percentage of rows with damage
+percentage_damage <- (damage_rows / total_rows) * 100
+
+percentage_damage
+
+
+# Calculate total damage and percent damage by species
+damage_by_species <- Invertebrate_Herbivory_2023 %>%
+  group_by(Species) %>%
+  summarise(
+    Total_Damage = sum(Damage, na.rm = TRUE),
+    Herbivory_Records = n()
+  ) %>%
+  mutate(Percent_Damage = (Total_Damage / Herbivory_Records) * 100)
+
+# View the results
+print(damage_by_species)
