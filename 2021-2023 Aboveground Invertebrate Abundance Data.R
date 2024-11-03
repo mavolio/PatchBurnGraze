@@ -9,7 +9,7 @@ library(vegan)
 library(nlme)
 library(cowplot)
 library(emmeans)
-
+library(openxlsx)
 #### Seed Set ####
 set.seed(123)
 
@@ -3339,3 +3339,171 @@ print(p_value_B)
 
 # Z-score = 2.477193, p = 0.006621016
  
+
+#### Functional Traits Unique Species Pull ####
+
+#Grab unique species
+
+# Get unique families
+unique_families <- unique(Abundance_ID_aboveground$Family)
+
+# Convert to data frame
+unique_families_df <- data.frame(Family = unique_families)
+
+# Write to Excel
+write.xlsx(unique_families_df, file = "unique_families_aboveground.xlsx")
+
+#### Functional Traits Cleanup Code ####
+Functional_Groups <- read_excel("2021-2023 Aboveground PBG Inv Functional Groups.xlsx")
+
+merged_data <- Abundance_ID_aboveground %>%
+  left_join(Functional_Groups, by = c("Order", "Family"))
+
+cleaned_data <- merged_data %>% filter(!is.na(Functional_Group))
+
+#### Functional Trait Bootstrapping 2021 ####
+# Filter data for 2021
+data_2021 <- cleaned_data %>% filter(Date == 2021)
+
+# Group by Sample and Functional_Group for 2021
+abundance_summary_2021 <- data_2021 %>%
+  group_by(Sample, Functional_Group) %>%
+  summarise(Total_Abundance = sum(Count, na.rm = TRUE), .groups = 'drop')
+
+# Add block and plot_index columns
+abundance_summary_2021_block <- abundance_summary_2021 %>%
+  mutate(block = ifelse(grepl("s", Sample, ignore.case = TRUE), "North", "South"))
+
+sample_wide_2021 <- abundance_summary_2021_block %>%
+  pivot_wider(
+    names_from = Functional_Group,
+    values_from = Total_Abundance,
+    values_fill = 0  # Fill missing values with 0
+  )
+
+sample_compact_2021 <- sample_wide %>%
+  group_by(Sample, block) %>%
+  summarise(across(Detritivore:Pollinator, sum, na.rm = TRUE), .groups = 'drop')  %>% 
+  mutate(plot_index = 1:length(block))
+
+num_bootstrap <- 1000
+bootstrap_vector <- 1:num_bootstrap
+Plot_master_2021<- data.frame()  # Initialize an empty dataframe
+
+
+for (BOOT in bootstrap_vector) {
+  # Sample unique plot_index values within each block for 2022
+  New_Key_2021 <- sample_compact_2021 %>%
+    dplyr::select(1:9) %>%
+    unique() %>%
+    group_by(block) %>%
+    sample_n(16, replace = TRUE) %>%
+    dplyr::select(plot_index) %>%
+    ungroup()
+  
+  # Join the sampled rows back to the original dataframe
+  Plot_ready_2021 <- sample_compact_2021 %>%
+    right_join(New_Key_2021, by = c("block", "plot_index")) %>%
+    mutate(iteration = BOOT)
+  
+  # Append the results to the master dataframe for 2022
+  Plot_master_2021 <- rbind(Plot_master_2021, Plot_ready_2021)
+}
+#### Functional Trait Bootstrapping 2022 ####
+
+# Filter data for 2022
+data_2022 <- cleaned_data %>% filter(Date == 2022)
+
+# Group by Sample and Functional_Group for 2022
+abundance_summary_2022 <- data_2022 %>%
+  group_by(Sample, Functional_Group) %>%
+  summarise(Total_Abundance = sum(Count, na.rm = TRUE), .groups = 'drop')
+
+# Add block and plot_index columns
+abundance_summary_2022_block <- abundance_summary_2022 %>%
+  mutate(block = ifelse(grepl("s", Sample, ignore.case = TRUE), "North", "South"))
+
+sample_wide_2022 <- abundance_summary_2022_block %>%
+  pivot_wider(
+    names_from = Functional_Group,
+    values_from = Total_Abundance,
+    values_fill = 0  # Fill missing values with 0
+  )
+
+sample_compact_2022 <- sample_wide_2022 %>%
+  group_by(Sample, block) %>%
+  summarise(across(3:8, sum, na.rm = TRUE), .groups = 'drop') %>%
+  mutate(plot_index = 1:length(block))
+
+num_bootstrap <- 1000
+bootstrap_vector <- 1:num_bootstrap
+Plot_master_2022 <- data.frame()  # Initialize an empty dataframe
+
+for (BOOT in bootstrap_vector) {
+  # Sample unique plot_index values within each block for 2022
+  New_Key_2022 <- sample_compact_2022 %>%
+    dplyr::select(1:9) %>%
+    unique() %>%
+    group_by(block) %>%
+    sample_n(16, replace = TRUE) %>%
+    dplyr::select(plot_index) %>%
+    ungroup()
+  
+  # Join the sampled rows back to the original dataframe
+  Plot_ready_2022 <- sample_compact_2022 %>%
+    right_join(New_Key_2022, by = c("block", "plot_index")) %>%
+    mutate(iteration = BOOT)
+  
+  # Append the results to the master dataframe for 2022
+  Plot_master_2022 <- rbind(Plot_master_2022, Plot_ready_2022)
+}
+
+#### Functional Trait Bootstrapping 2023 ####
+
+# Filter data for 2023
+data_2023 <- cleaned_data %>% filter(Date == 2023)
+
+# Group by Sample and Functional_Group for 2023
+abundance_summary_2023 <- data_2023 %>%
+  group_by(Sample, Functional_Group) %>%
+  summarise(Total_Abundance = sum(Count, na.rm = TRUE), .groups = 'drop')
+
+# Add block and plot_index columns
+abundance_summary_2023_block <- abundance_summary_2023 %>%
+  mutate(block = ifelse(grepl("s", Sample, ignore.case = TRUE), "North", "South"))
+
+sample_wide_2023 <- abundance_summary_2023_block %>%
+  pivot_wider(
+    names_from = Functional_Group,
+    values_from = Total_Abundance,
+    values_fill = 0  # Fill missing values with 0
+  )
+
+sample_compact_2023 <- sample_wide_2023 %>%
+  group_by(Sample, block) %>%
+  summarise(across(Herbivore:Parasite, sum, na.rm = TRUE), .groups = 'drop') %>%
+  mutate(plot_index = 1:length(block))
+
+num_bootstrap <- 1000
+bootstrap_vector <- 1:num_bootstrap
+Plot_master_2023 <- data.frame()  # Initialize an empty dataframe
+
+for (BOOT in bootstrap_vector) {
+  # Sample unique plot_index values within each block for 2023
+  New_Key_2023 <- sample_compact_2023 %>%
+    dplyr::select(1:11) %>%
+    unique() %>%
+    group_by(block) %>%
+    sample_n(16, replace = TRUE) %>%
+    dplyr::select(plot_index) %>%
+    ungroup()
+  
+  # Join the sampled rows back to the original dataframe
+  Plot_ready_2023 <- sample_compact_2023 %>%
+    right_join(New_Key_2023, by = c("block", "plot_index")) %>%
+    mutate(iteration = BOOT)
+  
+  # Append the results to the master dataframe for 2023
+  Plot_master_2023 <- rbind(Plot_master_2023, Plot_ready_2023)
+}
+
