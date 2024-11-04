@@ -3391,7 +3391,7 @@ sample_wide_2021 <- abundance_summary_2021_block %>%
 sample_compact_2021 <- sample_wide_2021 %>%
   filter(Treatment == "PBG") %>% 
   group_by(Sample, block, Treatment) %>%
-  summarise(across(Detritivore:Pollinator, sum, na.rm = TRUE), .groups = 'drop') %>%
+  summarise(across(Detritivore:`Gall Former`, sum, na.rm = TRUE), .groups = 'drop') %>%
   mutate(plot_index = 1:length(block))
 
 
@@ -3403,7 +3403,7 @@ Plot_master_2021<- data.frame()  # Initialize an empty dataframe
 for (BOOT in bootstrap_vector) {
   # Sample unique plot_index values within each block for 2022
   New_Key_2021 <- sample_compact_2021 %>%
-    dplyr::select(1:10) %>%
+    dplyr::select(1:14) %>%
     unique() %>%
     group_by(block) %>%
     sample_n(16, replace = TRUE) %>%
@@ -3489,7 +3489,7 @@ abundance_summary_2023 <- data_2023 %>%
   summarise(Total_Abundance = sum(Count, na.rm = TRUE), .groups = 'drop')
 
 # Add block and Treatment columns
-abundance_summary_2022_block <- abundance_summary_2022 %>%
+abundance_summary_2023_block <- abundance_summary_2022 %>%
   mutate(
     block = ifelse(grepl("s", Sample, ignore.case = TRUE), "North", "South"),
     Treatment = case_when(
@@ -3500,7 +3500,7 @@ abundance_summary_2022_block <- abundance_summary_2022 %>%
   )
 
 # Pivot to wide format based on Functional_Group and fill missing values with 0
-sample_wide_2022 <- abundance_summary_2022_block %>%
+sample_wide_2023 <- abundance_summary_2022_block %>%
   pivot_wider(
     names_from = Functional_Group,
     values_from = Total_Abundance,
@@ -3508,10 +3508,10 @@ sample_wide_2022 <- abundance_summary_2022_block %>%
   )
 
 # Filter for PBG treatment and calculate sum across functional groups
-sample_compact_2022 <- sample_wide_2022 %>%
+sample_compact_2023 <- sample_wide_2022 %>%
   filter(Treatment == "PBG") %>% 
   group_by(Sample, block, Treatment) %>%
-  summarise(across(Detritivore:Pollinator, sum, na.rm = TRUE), .groups = 'drop') %>%
+  summarise(across(Fungivore:Parasite, sum, na.rm = TRUE), .groups = 'drop') %>%
   mutate(plot_index = 1:length(block))
 
 num_bootstrap <- 1000
@@ -3521,7 +3521,7 @@ Plot_master_2023 <- data.frame()  # Initialize an empty dataframe
 for (BOOT in bootstrap_vector) {
   # Sample unique plot_index values within each block for 2023
   New_Key_2023 <- sample_compact_2023 %>%
-    dplyr::select(1:11) %>%
+    dplyr::select(1:12) %>%
     unique() %>%
     group_by(block) %>%
     sample_n(16, replace = TRUE) %>%
@@ -3699,6 +3699,113 @@ p_value_D_C_pollinator_2021
 
 # Z = -1.566795
 # P = 0.1171625
+
+# Parasitoid
+parasitoid_average_total_count_2021 <- Plot_master_2021 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_parasitoid = mean(Parasitoid, na.rm = TRUE))
+
+parasitoid_mean_mean_total_count_2021 <- mean(parasitoid_average_total_count_2021$mean_count_parasitoid, na.rm = TRUE)
+
+D_total_counts_parasitoid_2021 <- sample_wide_2021 %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Parasitoid, na.rm = TRUE), .groups = 'drop')
+
+D_total_counts_parasitoid_ABG_2021 <- D_total_counts_parasitoid_2021 %>% filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_parasitoid_2021 <- mean(D_total_counts_parasitoid_ABG_2021$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Parasitoid
+D_C_parasitoid_2021 <- (D_ABG_mean_total_count_parasitoid_2021 - parasitoid_mean_mean_total_count_2021) /
+  sd(parasitoid_average_total_count_2021$mean_count_parasitoid)
+D_C_parasitoid_2021
+
+p_value_D_C_parasitoid_2021 <- 2 * pnorm(-abs(D_C_parasitoid_2021))
+p_value_D_C_parasitoid_2021
+
+# Z = -1.019089
+# p = 0.3081605
+
+
+# Parasite
+parasite_average_total_count_2021 <- Plot_master_2021 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_parasite = mean(Parasite, na.rm = TRUE))
+
+parasite_mean_mean_total_count_2021 <- mean(parasite_average_total_count_2021$mean_count_parasite, na.rm = TRUE)
+
+D_total_counts_parasite_2021 <- sample_wide_2021 %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Parasite, na.rm = TRUE), .groups = 'drop')
+
+D_total_counts_parasite_ABG_2021 <- D_total_counts_parasite_2021 %>% filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_parasite_2021 <- mean(D_total_counts_parasite_ABG_2021$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Parasite
+D_C_parasite_2021 <- (D_ABG_mean_total_count_parasite_2021 - parasite_mean_mean_total_count_2021) /
+  sd(parasite_average_total_count_2021$mean_count_parasite)
+D_C_parasite_2021
+
+p_value_D_C_parasite_2021 <- 2 * pnorm(-abs(D_C_parasite_2021))
+p_value_D_C_parasite_2021
+
+#Z = -1.439339
+#P = 0.1500544
+
+
+# Saprophagic
+saprophagic_average_total_count_2021 <- Plot_master_2021 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_saprophagic = mean(Saprophagic, na.rm = TRUE))
+
+saprophagic_mean_mean_total_count_2021 <- mean(saprophagic_average_total_count_2021$mean_count_saprophagic, na.rm = TRUE)
+
+D_total_counts_saprophagic_2021 <- sample_wide_2021 %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Saprophagic, na.rm = TRUE), .groups = 'drop')
+
+D_total_counts_saprophagic_ABG_2021 <- D_total_counts_saprophagic_2021 %>% filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_saprophagic_2021 <- mean(D_total_counts_saprophagic_ABG_2021$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Saprophagic
+D_C_saprophagic_2021 <- (D_ABG_mean_total_count_saprophagic_2021 - saprophagic_mean_mean_total_count_2021) /
+  sd(saprophagic_average_total_count_2021$mean_count_saprophagic)
+D_C_saprophagic_2021
+
+p_value_D_C_saprophagic_2021 <- 2 * pnorm(-abs(D_C_saprophagic_2021))
+p_value_D_C_saprophagic_2021
+
+# Z = -1.17403
+# P = 0.2403829
+
+# Gall Former
+gall_former_average_total_count_2021 <- Plot_master_2021 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_gall_former = mean(`Gall Former`, na.rm = TRUE))
+
+gall_former_mean_mean_total_count_2021 <- mean(gall_former_average_total_count_2021$mean_count_gall_former, na.rm = TRUE)
+
+D_total_counts_gall_former_2021 <- sample_wide_2021 %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(`Gall Former`, na.rm = TRUE), .groups = 'drop')
+
+D_total_counts_gall_former_ABG_2021 <- D_total_counts_gall_former_2021 %>% filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_gall_former_2021 <- mean(D_total_counts_gall_former_ABG_2021$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Gall Former
+D_C_gall_former_2021 <- (D_ABG_mean_total_count_gall_former_2021 - gall_former_mean_mean_total_count_2021) /
+  sd(gall_former_average_total_count_2021$mean_count_gall_former)
+D_C_gall_former_2021
+
+p_value_D_C_gall_former_2021 <- 2 * pnorm(-abs(D_C_gall_former_2021))
+p_value_D_C_gall_former_2021
+
+#Z = -0.8498405
+# P = 0.3954138
+
 #### 2022 Z-score Calculations ####
 
 # Detritivore
@@ -3915,18 +4022,24 @@ detritivore_average_total_count_2023 <- Plot_master_2023 %>%
 
 detritivore_mean_mean_total_count_2023 <- mean(detritivore_average_total_count_2023$mean_count_detritivore, na.rm = TRUE)
 
-D_total_counts_detritivore_2023 <- Plot_master_2023 %>%
-  group_by(Sample, block) %>%
-  summarise(Count = sum(Detritivore, na.rm = TRUE), .groups = 'drop')
+D_total_counts_detritivore_2023 <- sample_wide_2023 %>%
+  group_by(Sample, block,Treatment) %>%
+  summarise(Count = sum(Detritivore, na.rm = TRUE), .groups = 'drop') %>% 
+  filter(Treatment == "ABG")
 
 D_ABG_mean_total_count_detritivore_2023 <- mean(D_total_counts_detritivore_2023$Count, na.rm = TRUE)
+
 
 # Z-Score and p-value for Detritivore
 D_C_detritivore_2023 <- (D_ABG_mean_total_count_detritivore_2023 - detritivore_mean_mean_total_count_2023) /
   sd(detritivore_average_total_count_2023$mean_count_detritivore)
+D_C_detritivore_2023
 
 p_value_D_C_detritivore_2023 <- 2 * pnorm(-abs(D_C_detritivore_2023))
+p_value_D_C_detritivore_2023
 
+# Z = -0.4758728
+# P = 0.634165
 
 # Herbivore
 herbivore_average_total_count_2023 <- Plot_master_2023 %>%
@@ -3935,18 +4048,23 @@ herbivore_average_total_count_2023 <- Plot_master_2023 %>%
 
 herbivore_mean_mean_total_count_2023 <- mean(herbivore_average_total_count_2023$mean_count_herbivore, na.rm = TRUE)
 
-D_total_counts_herbivore_2023 <- Plot_master_2023 %>%
-  group_by(Sample, block) %>%
-  summarise(Count = sum(Herbivore, na.rm = TRUE), .groups = 'drop')
+D_total_counts_herbivore_2023 <- sample_wide_2023 %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Herbivore, na.rm = TRUE), .groups = 'drop') %>% 
+  filter(Treatment == "ABG")
 
 D_ABG_mean_total_count_herbivore_2023 <- mean(D_total_counts_herbivore_2023$Count, na.rm = TRUE)
 
 # Z-Score and p-value for Herbivore
 D_C_herbivore_2023 <- (D_ABG_mean_total_count_herbivore_2023 - herbivore_mean_mean_total_count_2023) /
   sd(herbivore_average_total_count_2023$mean_count_herbivore)
+D_C_herbivore_2023
 
 p_value_D_C_herbivore_2023 <- 2 * pnorm(-abs(D_C_herbivore_2023))
+p_value_D_C_herbivore_2023
 
+#Z = 5.654136
+#P = 1.566322e-08 *Higher in ABG
 
 # Omnivore
 omnivore_average_total_count_2023 <- Plot_master_2023 %>%
@@ -3955,18 +4073,23 @@ omnivore_average_total_count_2023 <- Plot_master_2023 %>%
 
 omnivore_mean_mean_total_count_2023 <- mean(omnivore_average_total_count_2023$mean_count_omnivore, na.rm = TRUE)
 
-D_total_counts_omnivore_2023 <- Plot_master_2023 %>%
-  group_by(Sample, block) %>%
-  summarise(Count = sum(Omnivore, na.rm = TRUE), .groups = 'drop')
+D_total_counts_omnivore_2023 <- sample_wide_2023 %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Omnivore, na.rm = TRUE), .groups = 'drop') %>% 
+  filter(Treatment == "ABG")
 
 D_ABG_mean_total_count_omnivore_2023 <- mean(D_total_counts_omnivore_2023$Count, na.rm = TRUE)
 
 # Z-Score and p-value for Omnivore
 D_C_omnivore_2023 <- (D_ABG_mean_total_count_omnivore_2023 - omnivore_mean_mean_total_count_2023) /
   sd(omnivore_average_total_count_2023$mean_count_omnivore)
+D_C_omnivore_2023
 
 p_value_D_C_omnivore_2023 <- 2 * pnorm(-abs(D_C_omnivore_2023))
+p_value_D_C_omnivore_2023
 
+#Z = 0.7874125
+#P = 0.4310404
 
 # Predator
 predator_average_total_count_2023 <- Plot_master_2023 %>%
@@ -3975,18 +4098,23 @@ predator_average_total_count_2023 <- Plot_master_2023 %>%
 
 predator_mean_mean_total_count_2023 <- mean(predator_average_total_count_2023$mean_count_predator, na.rm = TRUE)
 
-D_total_counts_predator_2023 <- Plot_master_2023 %>%
-  group_by(Sample, block) %>%
-  summarise(Count = sum(Predator, na.rm = TRUE), .groups = 'drop')
+D_total_counts_predator_2023 <- sample_wide_2023 %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Predator, na.rm = TRUE), .groups = 'drop') %>% 
+  filter(Treatment == "ABG")
 
 D_ABG_mean_total_count_predator_2023 <- mean(D_total_counts_predator_2023$Count, na.rm = TRUE)
 
 # Z-Score and p-value for Predator
 D_C_predator_2023 <- (D_ABG_mean_total_count_predator_2023 - predator_mean_mean_total_count_2023) /
   sd(predator_average_total_count_2023$mean_count_predator)
+D_C_predator_2023
 
 p_value_D_C_predator_2023 <- 2 * pnorm(-abs(D_C_predator_2023))
+p_value_D_C_predator_2023
 
+# Z = 1.144022
+# P = 0.2526144
 
 # Fungivore
 fungivore_average_total_count_2023 <- Plot_master_2023 %>%
@@ -3995,18 +4123,23 @@ fungivore_average_total_count_2023 <- Plot_master_2023 %>%
 
 fungivore_mean_mean_total_count_2023 <- mean(fungivore_average_total_count_2023$mean_count_fungivore, na.rm = TRUE)
 
-D_total_counts_fungivore_2023 <- Plot_master_2023 %>%
-  group_by(Sample, block) %>%
-  summarise(Count = sum(Fungivore, na.rm = TRUE), .groups = 'drop')
+D_total_counts_fungivore_2023 <- sample_wide_2023 %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Fungivore, na.rm = TRUE), .groups = 'drop') %>% 
+  filter(Treatment == "ABG")
 
 D_ABG_mean_total_count_fungivore_2023 <- mean(D_total_counts_fungivore_2023$Count, na.rm = TRUE)
 
 # Z-Score and p-value for Fungivore
 D_C_fungivore_2023 <- (D_ABG_mean_total_count_fungivore_2023 - fungivore_mean_mean_total_count_2023) /
   sd(fungivore_average_total_count_2023$mean_count_fungivore)
+D_C_fungivore_2023
 
 p_value_D_C_fungivore_2023 <- 2 * pnorm(-abs(D_C_fungivore_2023))
+p_value_D_C_fungivore_2023
 
+# Z = -1.277524
+# P = 0.2014173
 
 # Pollinator
 pollinator_average_total_count_2023 <- Plot_master_2023 %>%
@@ -4015,18 +4148,23 @@ pollinator_average_total_count_2023 <- Plot_master_2023 %>%
 
 pollinator_mean_mean_total_count_2023 <- mean(pollinator_average_total_count_2023$mean_count_pollinator, na.rm = TRUE)
 
-D_total_counts_pollinator_2023 <- Plot_master_2023 %>%
-  group_by(Sample, block) %>%
-  summarise(Count = sum(Pollinator, na.rm = TRUE), .groups = 'drop')
+D_total_counts_pollinator_2023 <- sample_wide_2023 %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Pollinator, na.rm = TRUE), .groups = 'drop') %>% 
+  filter(Treatment == "ABG")
 
 D_ABG_mean_total_count_pollinator_2023 <- mean(D_total_counts_pollinator_2023$Count, na.rm = TRUE)
 
 # Z-Score and p-value for Pollinator
 D_C_pollinator_2023 <- (D_ABG_mean_total_count_pollinator_2023 - pollinator_mean_mean_total_count_2023) /
   sd(pollinator_average_total_count_2023$mean_count_pollinator)
+D_C_pollinator_2023
 
 p_value_D_C_pollinator_2023 <- 2 * pnorm(-abs(D_C_pollinator_2023))
+p_value_D_C_pollinator_2023
 
+#Z = -1.275276
+# P = 0.2022117
 
 # Parasitoid
 parasitoid_average_total_count_2023 <- Plot_master_2023 %>%
@@ -4035,18 +4173,23 @@ parasitoid_average_total_count_2023 <- Plot_master_2023 %>%
 
 parasitoid_mean_mean_total_count_2023 <- mean(parasitoid_average_total_count_2023$mean_count_parasitoid, na.rm = TRUE)
 
-D_total_counts_parasitoid_2023 <- Plot_master_2023 %>%
-  group_by(Sample, block) %>%
-  summarise(Count = sum(Parasitoid, na.rm = TRUE), .groups = 'drop')
+D_total_counts_parasitoid_2023 <- sample_wide_2023 %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Parasitoid, na.rm = TRUE), .groups = 'drop') %>% 
+  filter(Treatment == "ABG")
 
 D_ABG_mean_total_count_parasitoid_2023 <- mean(D_total_counts_parasitoid_2023$Count, na.rm = TRUE)
 
 # Z-Score and p-value for Parasitoid
 D_C_parasitoid_2023 <- (D_ABG_mean_total_count_parasitoid_2023 - parasitoid_mean_mean_total_count_2023) /
   sd(parasitoid_average_total_count_2023$mean_count_parasitoid)
+D_C_parasitoid_2023
 
 p_value_D_C_parasitoid_2023 <- 2 * pnorm(-abs(D_C_parasitoid_2023))
+p_value_D_C_parasitoid_2023
 
+# Z = -1.255643
+# P = 0.2092454
 
 # Parasite
 parasite_average_total_count_2023 <- Plot_master_2023 %>%
@@ -4055,14 +4198,21 @@ parasite_average_total_count_2023 <- Plot_master_2023 %>%
 
 parasite_mean_mean_total_count_2023 <- mean(parasite_average_total_count_2023$mean_count_parasite, na.rm = TRUE)
 
-D_total_counts_parasite_2023 <- Plot_master_2023 %>%
-  group_by(Sample, block) %>%
-  summarise(Count = sum(Parasite, na.rm = TRUE), .groups = 'drop')
+D_total_counts_parasite_2023 <- sample_wide_2023 %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Parasite, na.rm = TRUE), .groups = 'drop') %>% 
+  filter(Treatment == "ABG")
 
 D_ABG_mean_total_count_parasite_2023 <- mean(D_total_counts_parasite_2023$Count, na.rm = TRUE)
 
 # Z-Score and p-value for Parasite
 D_C_parasite_2023 <- (D_ABG_mean_total_count_parasite_2023 - parasite_mean_mean_total_count_2023) /
   sd(parasite_average_total_count_2023$mean_count_parasite)
+D_C_parasite_2023
 
 p_value_D_C_parasite_2023 <- 2 * pnorm(-abs(D_C_parasite_2023))
+p_value_D_C_parasite_2023
+
+# Z = -0.8419705#
+# P = 0.3998045
+
