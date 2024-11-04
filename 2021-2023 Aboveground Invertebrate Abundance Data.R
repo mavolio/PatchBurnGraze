@@ -4216,3 +4216,63 @@ p_value_D_C_parasite_2023
 # Z = -0.8419705#
 # P = 0.3998045
 
+
+#### SIMPER ANALYSIS 2021 ####
+
+# Perform SIMPER analysis for years since burned
+simper_results_2021_TreatmentSB <- simper(abundanceWide_2021[, 8:150], group = abundanceWide_2021$TreatmentSB, permutations = 999)
+
+# Print SIMPER results
+print(simper_results_2021_TreatmentSB)
+
+# To view the contribution of each species, you can examine the output in detail
+summary(simper_results_2021_TreatmentSB)
+
+# Perform SIMPER analysis for ABG vs PBG
+simper_results_2021_Treatment <- simper(abundanceWide_2021[, 8:120], group = abundanceWide_2021$Treatment, permutations = 999)
+
+# Print SIMPER results
+print(simper_results_2021_Treatment)
+
+# To view the contribution of each species, you can examine the output in detail
+summary(simper_results_2021_Treatment)
+
+#### SIMPER ANALYSIS 2022 ####
+
+# Perform SIMPER analysis for years since burned (2022)
+simper_results_2022_TreatmentSB <- simper(abundanceWide_2022[, 8:120], group = abundanceWide_2022$TreatmentSB, permutations = 999)
+
+# Print SIMPER results for TreatmentSB
+print(simper_results_2022_TreatmentSB)
+
+# To view the contribution of each species in detail
+summary(simper_results_2022_TreatmentSB)
+
+# Perform SIMPER analysis for ABG vs PBG (2022)
+simper_results_2022_Treatment <- simper(abundanceWide_2022[, 8:120], group = abundanceWide_2022$Treatment, permutations = 999)
+
+# Print SIMPER results for Treatment
+print(simper_results_2022_Treatment)
+
+# To view the contribution of each species in detail
+summary(simper_results_2022_Treatment)
+
+#### SIMPER ANALYSIS 2023 ####
+
+# Perform SIMPER analysis for years since burned (2023)
+simper_results_2023_TreatmentSB <- simper(abundanceWide_2023[, 8:75], group = abundanceWide_2023$TreatmentSB, permutations = 999)
+
+# Print SIMPER results for TreatmentSB
+print(simper_results_2023_TreatmentSB)
+
+# To view the contribution of each species in detail
+summary(simper_results_2023_TreatmentSB)
+
+# Perform SIMPER analysis for ABG vs PBG (2023)
+simper_results_2023_Treatment <- simper(abundanceWide_2023[, 8:75], group = abundanceWide_2023$Treatment, permutations = 999)
+
+# Print SIMPER results for Treatment
+print(simper_results_2023_Treatment)
+
+# To view the contribution of each species in detail
+summary(simper_results_2023_Treatment)
