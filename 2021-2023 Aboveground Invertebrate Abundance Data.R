@@ -9,7 +9,10 @@ library(vegan)
 library(nlme)
 library(cowplot)
 library(emmeans)
-
+library(openxlsx)
+library(grid)
+library(cowplot)
+library(gtable)
 #### Seed Set ####
 set.seed(123)
 
@@ -379,9 +382,14 @@ abundanceWide <- abundanceWide %>%
   mutate(sum = rowSums(abundanceWide[, c(8:150)], na.rm = TRUE)) %>% 
   filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
 
+abundanceWide_2021 <- abundanceWide
 
 print(permanova <- adonis2(formula = abundanceWide[,8:150]~TreatmentSB, data=abundanceWide, permutations=999, method="bray"))
 #F=0.7814, df=3,57, p=0.86
+
+#pairwise
+
+pairwise_results <- pairwise.adonis(abundanceWide[, 8:150], abundanceWide$TreatmentSB)
 
 
 #betadisper
@@ -445,14 +453,14 @@ Years_Since_Burned_NMDS_2021 <- ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, co
   ) +
   ggtitle("2021 year since burned") + 
   annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = min(BC_NMDS_Graph$MDS2) + 0.06, 
-           label = 'Mean p = 0.864\nVariance p = 0.663', size = STATS_TEXT_SIZE, hjust = 'left')
+           label = 'Mean p = 0.069\nVariance p = 0.451', size = STATS_TEXT_SIZE, hjust = 'left')
 
 Years_Since_Burned_NMDS_2021
 
 Years_Since_Burned_NMDS_2021
 
-#PERMANOVA: F=0.7814, df=3,57, p=0.86
-#Betadisperion: #F=0.5209, df=3,57, p=0.663 
+#PERMANOVA: F=1.2983  , df=3,57, p=0.069 
+#Betadisperion: #F=0.8876    , df=3,57, p=0.451 
 
 
 #export at 1500x1000
@@ -510,21 +518,21 @@ abundanceWide <- Abundance_Data2021 %>%
   pivot_wider(names_from = 'ID', values_from = 'Count', values_fill = list(Count = 0)) 
 
 abundanceWide <- abundanceWide %>% 
-  mutate(sum = rowSums(abundanceWide[, c(8:91)], na.rm = TRUE)) %>% 
+  mutate(sum = rowSums(abundanceWide[, c(8:89)], na.rm = TRUE)) %>% 
   filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
 
 
 # PERMANOVA
-print(permanova <- adonis2(formula = abundanceWide[,8:91]~Treatment, data=abundanceWide, permutations=999, method="bray"))
+print(permanova <- adonis2(formula = abundanceWide[,8:89]~Treatment, data=abundanceWide, permutations=999, method="bray"))
 #F=1.9529 , df=1,28, p=0.013 *
 
 #betadisper
-veg <- vegdist(abundanceWide[,8:91], method = "bray")
+veg <- vegdist(abundanceWide[,8:89], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$Treatment)
 permutest(dispersion, pairwise=TRUE, permutations=999) 
 #F=23.434       , df=1,28, p=0.001 ***
 
-BC_Data <- metaMDS(abundanceWide[,8:91])
+BC_Data <- metaMDS(abundanceWide[,8:89])
 sites <- 1:nrow(abundanceWide)
 BC_Meta_Data <- abundanceWide[,1:7]
 plot(BC_Data$points, col=as.factor(BC_Meta_Data$Treatment))
@@ -605,6 +613,9 @@ abundanceWide <- abundanceWide %>%
   mutate(sum = rowSums(abundanceWide[, c(8:79)], na.rm = TRUE)) %>% 
   filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
 
+abundanceWide_2022 <- abundanceWide
+
+
 print(permanova <- adonis2(formula = abundanceWide[, 8:121] ~ TreatmentSB, data = abundanceWide, permutations = 999, method = "bray"))
 # F=2.1065, df=3,60, p=0.001 ***
 
@@ -614,7 +625,7 @@ print(permanova <- adonis2(formula = abundanceWide[, 8:121] ~ TreatmentSB, data 
 veg <- vegdist(abundanceWide[, 8:121], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$TreatmentSB)
 permutest(dispersion, pairwise = TRUE, permutations = 999) 
-# F=0.0811, df=3,60, p=0.975
+# F=0.0305, df=3,60, p=0.992
 
 BC_Data <- metaMDS(abundanceWide[, 8:121])
 sites <- 1:nrow(abundanceWide)
@@ -667,11 +678,11 @@ Years_Since_Burned_NMDS_2022 <- ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, co
         plot.title = element_text(size = 75)
   ) +
   ggtitle("2022 year since burned") + 
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = min(BC_NMDS_Graph$MDS2) + 0.06, 
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = min(BC_NMDS_Graph$MDS2) + 0.12, 
            label = 'Mean p = 0.001\nVariance p = 0.975', size = STATS_TEXT_SIZE, hjust = 'left')
 
-# Mean F=2.1065, df=3,60, p=0.001 ***
-# Variance F=0.0811, df=3,60, p=0.975
+# Mean F=2.4861, df=3,60, p=0.002 **
+# Variance F=0.0305, df=3,60, p=0.992
 
 Years_Since_Burned_NMDS_2022
 
@@ -684,9 +695,10 @@ ABG_Test <- full_join(Abundance_ID_aboveground, BurnInfo2022, by = "WS") %>%
 
 #Filter PBG
 PBG_Test <- full_join(Abundance_ID_aboveground, BurnInfo2022, by = "WS") %>% 
-  unite("TreatmentSB",c("Treatment","SB"), sep="_") %>% 
+  unite("TreatmentSB", c("Treatment", "SB"), sep = "_") %>% 
   filter(Date == "2022") %>%   
-  filter(TreatmentSB == c("PBG_0", "PBG_1", "PBG_2"))
+  filter(TreatmentSB %in% c("PBG_0", "PBG_1", "PBG_2"))
+
 
 
 # Set seed for reproducibility
@@ -790,7 +802,7 @@ ABG_VS_PBG_NMDS_2022  <- ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = g
         plot.title = element_text(size = 75)
   ) +
   ggtitle("2022 ABG vs PBG") +
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = min(BC_NMDS_Graph$MDS2) + 0, label = 'Variance p = 0.001', size = STATS_TEXT_SIZE, hjust = 'left') +
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = min(BC_NMDS_Graph$MDS2) + 0.12, label = 'Variance p = 0.001', size = STATS_TEXT_SIZE, hjust = 'left') +
   annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = min(BC_NMDS_Graph$MDS2) + 0.010, label = 'Mean p=0.001', size = STATS_TEXT_SIZE, hjust = 'left')
 
 
@@ -824,6 +836,9 @@ abundanceWide <- Abundance_Data2023 %>%
 abundanceWide <- abundanceWide %>% 
   mutate(sum = rowSums(abundanceWide[, c(8:75)], na.rm = TRUE)) %>% 
   filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
+
+abundanceWide_2023  <- abundanceWide
+
 
 print(permanova <- adonis2(formula = abundanceWide[, 8:75] ~ TreatmentSB, data = abundanceWide, permutations = 999, method = "bray"))
 # F=1.3803, df=3,60, p=0.094 
@@ -2051,9 +2066,9 @@ richModel <- #stores the model output into a named list
 anova.lme(richModel, type='sequential') #this gives you the ANOVA output from the model, where "sequential" tells it to do a type III anova
 emmeans(richModel, pairwise~TreatmentSB, adjust="tukey") #this gives you contrasts (means and confidence intervals) for each possible pairwise comparison of treatments to know whether they are different or not (overlapping confidence intervals means not different)
 
-# numDF denDF  F-value p-value
-# (Intercept)     1    56 52.75320  <.0001
-# TreatmentSB     3    56  0.43999  0.7253
+# numDF denDF   F-value p-value
+# (Intercept)     1    56 197.02313  <.0001
+# TreatmentSB     3    56   0.36174  0.7809
 
 #### 2022 Richness Stats ####
 
@@ -3002,4 +3017,1276 @@ multi_panel_graph <- grid.arrange(
 
 # Display the multipanel graph
 multi_panel_graph
+
+
+#### Beta Diversity 2021 ####
+set.seed(123)
+
+library(vegan)
+library(dplyr)
+
+
+#Caculating Beta Diversity for PBG
+
+Joined_New_2021 <- abundanceWide_2021 %>%
+  filter(Treatment == "PBG") %>%
+  group_by(block) %>%
+  mutate(plot_index = row_number()) # Corrected index generation
+
+num_bootstrap <- 1000
+PBG_plot_master_2021 <- data.frame(iteration = 1:num_bootstrap, beta_diversity = numeric(num_bootstrap))
+
+for (BOOT in 1:num_bootstrap) {
+  Joined_New_Key <- Joined_New_2021 %>%
+    sample_n(16, replace = TRUE) %>%
+    select(plot_index) %>%
+    ungroup()
+  
+  PBG_plot_ready <- Joined_New_2021 %>%
+    right_join(Joined_New_Key, by = "plot_index") %>%
+    mutate(iteration = BOOT)
+  
+  data_matrix <- PBG_plot_ready %>%
+    select(8:152) # Species column
+  
+  dissimilarity_matrix <- vegdist(data_matrix, method = "bray")
+  
+  beta_diversity_value <- mean(dissimilarity_matrix)
+  
+  PBG_plot_master_2021$beta_diversity[BOOT] <- beta_diversity_value
+}
+
+#Add Treatment column
+
+PBG_plot_master_2021$Treatment <- 'PBG'
+
+
+# Print the results
+print(PBG_plot_master_2021)
+
+ggplot(PBG_plot_master_2021, aes(x = beta_diversity)) +
+  geom_density() +
+  labs(title = "Density Plot of Beta Diversity",
+       x = "Beta Diversity",
+       y = "Density") +
+  theme_bw()
+
+
+
+#Calculating ABG betadiveristy
+
+Joined_New_2021_A <- abundanceWide_2021 %>%
+  filter(Treatment == "ABG")
+
+data_matrix_2 <- Joined_New_2021_A %>%
+  select(8:151) # Species column
+
+dissimilarity_matrix_2 <- vegdist(data_matrix, method = "bray")
+
+beta_diversity_value_2 <- mean(dissimilarity_matrix)
+
+#### Beta Diversity Graph 2021 ####
+
+
+# Beta Diversity Density plot
+Beta_2021 <- ggplot(PBG_plot_master_2021, aes(x = beta_diversity)) +
+  geom_density(aes(y = ..scaled.., color = "PBG"), alpha = 0.5) +
+  geom_vline(aes(xintercept = beta_diversity_value_2, color = "ABG"), linetype = "dashed", size = 1) +
+  labs(title = "2021 Density Plot of Beta Diversity",
+       x = "Mean Beta Diversity",
+       y = "Density") +
+  scale_color_manual(values = c("PBG" = "red", "ABG" = "blue"), name = "Legend") +
+  theme_bw() +
+  theme(
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(),
+    legend.position=c(0.01,0.99),   # Top left corner
+    legend.justification = c("left", "top"),  # Align legend at the top-left corner
+    legend.text = element_text(size = 20),    # Legend text size
+    legend.title = element_text(size = 20),   # Legend title size
+    axis.text = element_text(size = 20),
+    axis.title = element_text(size = 30),
+    axis.text.y = element_text(size = 20),
+    axis.title.y = element_text(size = 30),
+    axis.ticks.y = element_line(size = 1)
+  )
+
+
+
+
+#### Beta Diversity Z-score 2021 ####
+
+#Getting average richness per iteration for bootstrapped dataframe
+PBG_average_beta <- PBG_plot_master_2021 %>%
+  summarize(mean_beta = mean(beta_diversity))
+
+
+# Z-Score for richness 
+
+Z_B <- ((beta_diversity_value_2) - (PBG_average_beta$mean_beta))/(sd(PBG_plot_master_2021$beta_diversity))
+Z_B
+
+
+p_value_B <- 1 - pnorm(Z_B)
+
+#lower.tail = FALSE
+
+print(p_value_B)
+
+#Z-score = 0.2103348, p = 0.4167032
+
+
+
+
+
+#### Beta Diversity 2022 ####
+set.seed(123)
+
+library(vegan)
+library(dplyr)
+
+# Calculating Beta Diversity for PBG
+
+Joined_New_2022 <- abundanceWide_2022 %>%
+  filter(Treatment == "PBG") %>%
+  group_by(block) %>%
+  mutate(plot_index = row_number()) # Corrected index generation
+
+num_bootstrap <- 1000
+PBG_plot_master_2022 <- data.frame(iteration = 1:num_bootstrap, beta_diversity = numeric(num_bootstrap))
+
+for (BOOT in 1:num_bootstrap) {
+  Joined_New_Key <- Joined_New_2022 %>%
+    sample_n(16, replace = TRUE) %>%
+    select(plot_index) %>%
+    ungroup()
+  
+  PBG_plot_ready <- Joined_New_2022 %>%
+    right_join(Joined_New_Key, by = "plot_index") %>%
+    mutate(iteration = BOOT)
+  
+  data_matrix <- PBG_plot_ready %>%
+    select(8:122) # Species column
+  
+  dissimilarity_matrix <- vegdist(data_matrix, method = "bray")
+  
+  beta_diversity_value <- mean(dissimilarity_matrix)
+  
+  PBG_plot_master_2022$beta_diversity[BOOT] <- beta_diversity_value
+}
+
+# Add Treatment column
+PBG_plot_master_2022$Treatment <- 'PBG'
+
+# Print the results
+print(PBG_plot_master)
+
+ggplot(PBG_plot_master_2022, aes(x = beta_diversity)) +
+  geom_density() +
+  labs(title = "Density Plot of Beta Diversity",
+       x = "Beta Diversity",
+       y = "Density") +
+  theme_bw()
+
+# Calculating ABG beta diversity
+
+Joined_New_2022_A <- abundanceWide_2022 %>%
+  filter(Treatment == "ABG")
+
+data_matrix_2 <- Joined_New_2022_A %>%
+  select(8:121) # Species column
+
+dissimilarity_matrix_2 <- vegdist(data_matrix_2, method = "bray")
+
+beta_diversity_value_2 <- mean(dissimilarity_matrix_2)
+
+#### Beta Diversity Graph 2022 ####
+
+# Beta Diversity Density plot
+Beta_2022 <- ggplot(PBG_plot_master_2022, aes(x = beta_diversity)) +
+  geom_density(aes(y = ..scaled.., color = "PBG"), alpha = 0.5) +
+  geom_vline(aes(xintercept = beta_diversity_value_2, color = "ABG"), linetype = "dashed", size = 1) +
+  labs(title = "2022 Density Plot of Beta Diversity",
+       x = "Mean Beta Diversity",
+       y = "Density") +
+  scale_color_manual(values = c("PBG" = "red", "ABG" = "blue"), name = "Legend") +
+  theme_bw() +
+  theme(
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(), 
+    legend.position = "none", 
+    legend.text = element_text(size = 30),  # Adjust legend text size
+    axis.text = element_text(size = 20),
+    axis.title = element_text(size = 30),
+    axis.text.y = element_text(size = 20),
+    axis.title.y = element_text(size = 30),
+    axis.ticks.y = element_line(size = 1)
+  )
+
+#### Beta Diversity Z-score 2022 ####
+
+# Getting average richness per iteration for bootstrapped dataframe
+PBG_average_beta <- PBG_plot_master_2022 %>%
+  summarize(mean_beta = mean(beta_diversity))
+
+# Z-Score for richness 
+
+Z_B <- ((beta_diversity_value_2) - (PBG_average_beta$mean_beta))/(sd(PBG_plot_master_2022$beta_diversity))
+Z_B
+
+p_value_B <- 1 - pnorm(Z_B, lower.tail =  F)
+
+# lower.tail = FALSE
+
+print(p_value_B)
+
+# Z-score = -0.01087649, p = 0.495661
+
+#### Beta Diversity 2023 ####
+set.seed(123)
+
+library(vegan)
+library(dplyr)
+
+# Calculating Beta Diversity for PBG
+
+Joined_New_2023 <- abundanceWide_2023 %>%
+  filter(Treatment == "PBG") %>%
+  group_by(block) %>%
+  mutate(plot_index = row_number()) # Corrected index generation
+
+num_bootstrap <- 1000
+PBG_plot_master_2023 <- data.frame(iteration = 1:num_bootstrap, beta_diversity = numeric(num_bootstrap))
+
+for (BOOT in 1:num_bootstrap) {
+  Joined_New_Key <- Joined_New_2023 %>%
+    sample_n(16, replace = TRUE) %>%
+    select(plot_index) %>%
+    ungroup()
+  
+  PBG_plot_ready <- Joined_New_2023 %>%
+    right_join(Joined_New_Key, by = "plot_index") %>%
+    mutate(iteration = BOOT)
+  
+  data_matrix <- PBG_plot_ready %>%
+    select(8:77) # Species column
+  
+  dissimilarity_matrix <- vegdist(data_matrix, method = "bray")
+  
+  beta_diversity_value <- mean(dissimilarity_matrix)
+  
+  PBG_plot_master_2023$beta_diversity[BOOT] <- beta_diversity_value
+}
+
+# Add Treatment column
+PBG_plot_master_2023$Treatment <- 'PBG'
+
+# Print the results
+print(PBG_plot_master_2023)
+
+ggplot(PBG_plot_master_2023, aes(x = beta_diversity)) +
+  geom_density() +
+  labs(title = "Density Plot of Beta Diversity",
+       x = "Beta Diversity",
+       y = "Density") +
+  theme_bw()
+
+# Calculating ABG beta diversity
+
+Joined_New_2023_A <- abundanceWide_2023 %>%
+  filter(Treatment == "ABG")
+
+data_matrix_2 <- Joined_New_2023_A %>%
+  select(8:76) # Species column
+
+dissimilarity_matrix_2 <- vegdist(data_matrix_2, method = "bray")
+
+beta_diversity_value_2 <- mean(dissimilarity_matrix_2)
+
+#### Beta Diversity Graph 2023 ####
+
+# Beta Diversity Density plot
+Beta_2023 <- ggplot(PBG_plot_master_2023, aes(x = beta_diversity)) +
+  geom_density(aes(y = ..scaled.., color = "PBG"), alpha = 0.5) +
+  geom_vline(aes(xintercept = beta_diversity_value_2, color = "ABG"), linetype = "dashed", size = 1) +
+  labs(title = "2023 Density Plot of Beta Diversity",
+       x = "Mean Beta Diversity",
+       y = "Density") +
+  scale_color_manual(values = c("PBG" = "red", "ABG" = "blue"), name = "Legend") +
+  theme_bw() +
+  theme(
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(), 
+    legend.position = "none", 
+    legend.text = element_text(size = 30),  # Adjust legend text size
+    axis.text = element_text(size = 20),
+    axis.title = element_text(size = 30),
+    axis.text.y = element_text(size = 20),
+    axis.title.y = element_text(size = 30),
+    axis.ticks.y = element_line(size = 1)
+  )
+
+#### Beta Diversity Z-score 2023 ####
+
+# Getting average richness per iteration for bootstrapped dataframe
+PBG_average_beta <- PBG_plot_master_2023 %>%
+  summarize(mean_beta = mean(beta_diversity))
+
+# Z-Score for richness 
+
+Z_B <- ((beta_diversity_value_2) - (PBG_average_beta$mean_beta))/(sd(PBG_plot_master_2023$beta_diversity))
+Z_B
+
+p_value_B <- 1 - pnorm(Z_B)
+
+# lower.tail = FALSE
+
+print(p_value_B)
+
+# Z-score = 2.477193, p = 0.006621016
+ 
+
+#### Functional Traits Unique Species Pull ####
+
+#Grab unique species
+
+# Get unique families
+unique_families <- unique(Abundance_ID_aboveground$Family)
+
+# Convert to data frame
+unique_families_df <- data.frame(Family = unique_families)
+
+# Write to Excel
+write.xlsx(unique_families_df, file = "unique_families_aboveground.xlsx")
+
+#### Functional Traits Cleanup Code ####
+Functional_Groups <- read_excel("2021-2023 Aboveground PBG Inv Functional Groups.xlsx")
+
+merged_data <- Abundance_ID_aboveground %>%
+  left_join(Functional_Groups, by = c("Order", "Family"))
+
+cleaned_data <- merged_data %>% filter(!is.na(Functional_Group))
+
+#### Functional Trait Bootstrapping 2021 ####
+# Filter data for 2021
+data_2021 <- cleaned_data %>% filter(Date == 2021)
+
+# Group by Sample and Functional_Group for 2021
+abundance_summary_2021 <- data_2021 %>%
+  group_by(Sample, Functional_Group) %>%
+  summarise(Total_Abundance = sum(Count, na.rm = TRUE), .groups = 'drop')
+
+# Add block and plot_index columns
+abundance_summary_2021_block <- abundance_summary_2021 %>%
+  mutate(
+    block = ifelse(grepl("s", Sample, ignore.case = TRUE), "North", "South"),
+    Treatment = case_when(
+      grepl("1", Sample) ~ "ABG",
+      grepl("3", Sample) ~ "PBG",
+      TRUE ~ NA_character_
+    )
+  )
+
+sample_wide_2021 <- abundance_summary_2021_block %>%
+  pivot_wider(
+    names_from = Functional_Group,
+    values_from = Total_Abundance,
+    values_fill = 0  # Fill missing values with 0
+  )
+
+sample_compact_2021 <- sample_wide_2021 %>%
+  filter(Treatment == "PBG") %>% 
+  group_by(Sample, block, Treatment) %>%
+  summarise(across(Detritivore:`Gall Former`, sum, na.rm = TRUE), .groups = 'drop') %>%
+  mutate(plot_index = 1:length(block))
+
+
+num_bootstrap <- 1000
+bootstrap_vector <- 1:num_bootstrap
+Plot_master_2021<- data.frame()  # Initialize an empty dataframe
+
+
+for (BOOT in bootstrap_vector) {
+  # Sample unique plot_index values within each block for 2022
+  New_Key_2021 <- sample_compact_2021 %>%
+    dplyr::select(1:14) %>%
+    unique() %>%
+    group_by(block) %>%
+    sample_n(16, replace = TRUE) %>%
+    dplyr::select(plot_index) %>%
+    ungroup()
+  
+  # Join the sampled rows back to the original dataframe
+  Plot_ready_2021 <- sample_compact_2021 %>%
+    right_join(New_Key_2021, by = c("block", "plot_index")) %>%
+    mutate(iteration = BOOT)
+  
+  # Append the results to the master dataframe for 2022
+  Plot_master_2021 <- rbind(Plot_master_2021, Plot_ready_2021)
+}
+#### Functional Trait Bootstrapping 2022 ####
+
+# Filter data for 2022
+data_2022 <- cleaned_data %>% filter(Date == 2022)
+
+# Group by Sample and Functional_Group for 2022
+abundance_summary_2022 <- data_2022 %>%
+  group_by(Sample, Functional_Group) %>%
+  summarise(Total_Abundance = sum(Count, na.rm = TRUE), .groups = 'drop')
+
+# Add block and Treatment columns
+abundance_summary_2022_block <- abundance_summary_2022 %>%
+  mutate(
+    block = ifelse(grepl("s", Sample, ignore.case = TRUE), "North", "South"),
+    Treatment = case_when(
+      grepl("1", Sample) ~ "ABG",
+      grepl("3", Sample) ~ "PBG",
+      TRUE ~ NA_character_
+    )
+  )
+
+# Pivot to wide format based on Functional_Group and fill missing values with 0
+sample_wide_2022 <- abundance_summary_2022_block %>%
+  pivot_wider(
+    names_from = Functional_Group,
+    values_from = Total_Abundance,
+    values_fill = 0
+  )
+
+# Filter for PBG treatment and calculate sum across functional groups
+sample_compact_2022 <- sample_wide_2022 %>%
+  filter(Treatment == "PBG") %>% 
+  group_by(Sample, block, Treatment) %>%
+  summarise(across(Fungivore:Parasite, sum, na.rm = TRUE), .groups = 'drop') %>%
+  mutate(plot_index = 1:length(block))
+
+
+num_bootstrap <- 1000
+bootstrap_vector <- 1:num_bootstrap
+Plot_master_2022 <- data.frame()  # Initialize an empty dataframe
+
+for (BOOT in bootstrap_vector) {
+  # Sample unique plot_index values within each block for 2022
+  New_Key_2022 <- sample_compact_2022 %>%
+    dplyr::select(1:12) %>%
+    unique() %>%
+    group_by(block) %>%
+    sample_n(16, replace = TRUE) %>%
+    dplyr::select(plot_index) %>%
+    ungroup()
+  
+  # Join the sampled rows back to the original dataframe
+  Plot_ready_2022 <- sample_compact_2022 %>%
+    right_join(New_Key_2022, by = c("block", "plot_index")) %>%
+    mutate(iteration = BOOT)
+  
+  # Append the results to the master dataframe for 2022
+  Plot_master_2022 <- rbind(Plot_master_2022, Plot_ready_2022)
+}
+
+#### Functional Trait Bootstrapping 2023 ####
+
+# Filter data for 2023
+data_2023 <- cleaned_data %>% filter(Date == 2023)
+
+# Group by Sample and Functional_Group for 2023
+abundance_summary_2023 <- data_2023 %>%
+  group_by(Sample, Functional_Group) %>%
+  summarise(Total_Abundance = sum(Count, na.rm = TRUE), .groups = 'drop')
+
+# Add block and Treatment columns
+abundance_summary_2023_block <- abundance_summary_2022 %>%
+  mutate(
+    block = ifelse(grepl("s", Sample, ignore.case = TRUE), "North", "South"),
+    Treatment = case_when(
+      grepl("1", Sample) ~ "ABG",
+      grepl("3", Sample) ~ "PBG",
+      TRUE ~ NA_character_
+    )
+  )
+
+# Pivot to wide format based on Functional_Group and fill missing values with 0
+sample_wide_2023 <- abundance_summary_2022_block %>%
+  pivot_wider(
+    names_from = Functional_Group,
+    values_from = Total_Abundance,
+    values_fill = 0
+  )
+
+# Filter for PBG treatment and calculate sum across functional groups
+sample_compact_2023 <- sample_wide_2022 %>%
+  filter(Treatment == "PBG") %>% 
+  group_by(Sample, block, Treatment) %>%
+  summarise(across(Fungivore:Parasite, sum, na.rm = TRUE), .groups = 'drop') %>%
+  mutate(plot_index = 1:length(block))
+
+num_bootstrap <- 1000
+bootstrap_vector <- 1:num_bootstrap
+Plot_master_2023 <- data.frame()  # Initialize an empty dataframe
+
+for (BOOT in bootstrap_vector) {
+  # Sample unique plot_index values within each block for 2023
+  New_Key_2023 <- sample_compact_2023 %>%
+    dplyr::select(1:12) %>%
+    unique() %>%
+    group_by(block) %>%
+    sample_n(16, replace = TRUE) %>%
+    dplyr::select(plot_index) %>%
+    ungroup()
+  
+  # Join the sampled rows back to the original dataframe
+  Plot_ready_2023 <- sample_compact_2023 %>%
+    right_join(New_Key_2023, by = c("block", "plot_index")) %>%
+    mutate(iteration = BOOT)
+  
+  # Append the results to the master dataframe for 2023
+  Plot_master_2023 <- rbind(Plot_master_2023, Plot_ready_2023)
+}
+
+
+#### 2021 Z-Score Calculations ####
+detritivore_average_total_count_2021 <- Plot_master_2021 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_detritivore = mean(Detritivore, na.rm = TRUE))
+
+detritivore_mean_mean_total_count_2021 <- mean(detritivore_average_total_count_2021$mean_count_detritivore, na.rm = TRUE)
+
+D_total_counts_2021 <- sample_wide_2021 %>%
+  filter(str_ends(Sample, "2") | str_ends(Sample, "4")) %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Detritivore, na.rm = TRUE), .groups = 'drop')
+
+D_total_counts_ABG_2021 <- D_total_counts_2021 %>% filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_2021 <- mean(D_total_counts_ABG_2021$Count, na.rm = TRUE)
+
+
+# Z-Score for total count 
+D_C_2021 <- ((D_ABG_mean_total_count_2021) - (detritivore_mean_mean_total_count_2021))/(sd(detritivore_average_total_count_2021$mean_count_detritivore))
+D_C_2021
+
+p_value_D_C_2021 <- 2*pnorm(-abs(D_C_2021))
+p_value_D_C_2021
+
+#Z = -1.550103
+#P = 0.1211169
+
+# Herbivore
+herbivore_average_total_count_2021 <- Plot_master_2021 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_herbivore = mean(Herbivore, na.rm = TRUE))
+
+herbivore_mean_mean_total_count_2021 <- mean(herbivore_average_total_count_2021$mean_count_herbivore, na.rm = TRUE)
+
+D_total_counts_herbivore_2021 <- sample_wide_2021 %>%
+  filter(str_ends(Sample, "2") | str_ends(Sample, "4")) %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Herbivore, na.rm = TRUE), .groups = 'drop')
+
+D_total_counts_herbivore_ABG_2021 <- D_total_counts_herbivore_2021 %>% filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_herbivore_2021 <- mean(D_total_counts_herbivore_ABG_2021$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Herbivore
+D_C_herbivore_2021 <- (D_ABG_mean_total_count_herbivore_2021 - herbivore_mean_mean_total_count_2021) /
+  sd(herbivore_average_total_count_2021$mean_count_herbivore)
+D_C_herbivore_2021
+
+p_value_D_C_herbivore_2021 <- 2 * pnorm(-abs(D_C_herbivore_2021))
+p_value_D_C_herbivore_2021
+
+#Z = 1.375491
+#P =  0.1689794
+
+# Omnivore
+omnivore_average_total_count_2021 <- Plot_master_2021 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_omnivore = mean(Omnivore, na.rm = TRUE))
+
+omnivore_mean_mean_total_count_2021 <- mean(omnivore_average_total_count_2021$mean_count_omnivore, na.rm = TRUE)
+
+D_total_counts_omnivore_2021 <- sample_wide_2021 %>%
+  filter(str_ends(Sample, "2") | str_ends(Sample, "4")) %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Omnivore, na.rm = TRUE), .groups = 'drop')
+
+D_total_counts_omnivore_ABG_2021 <- D_total_counts_omnivore_2021 %>% filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_omnivore_2021 <- mean(D_total_counts_omnivore_ABG_2021$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Omnivore
+D_C_omnivore_2021 <- (D_ABG_mean_total_count_omnivore_2021 - omnivore_mean_mean_total_count_2021) /
+  sd(omnivore_average_total_count_2021$mean_count_omnivore)
+D_C_omnivore_2021
+
+p_value_D_C_omnivore_2021 <- 2 * pnorm(-abs(D_C_omnivore_2021))
+p_value_D_C_omnivore_2021
+
+#Z = 1.966422
+#p = 0.04924985 *ABG Higher
+
+# Predator
+predator_average_total_count_2021 <- Plot_master_2021 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_predator = mean(Predator, na.rm = TRUE))
+
+predator_mean_mean_total_count_2021 <- mean(predator_average_total_count_2021$mean_count_predator, na.rm = TRUE)
+
+D_total_counts_predator_2021 <- sample_wide_2021 %>%
+  filter(str_ends(Sample, "2") | str_ends(Sample, "4")) %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Predator, na.rm = TRUE), .groups = 'drop')
+
+D_total_counts_predator_ABG_2021 <- D_total_counts_predator_2021 %>% filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_predator_2021 <- mean(D_total_counts_predator_ABG_2021$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Predator
+D_C_predator_2021 <- (D_ABG_mean_total_count_predator_2021 - predator_mean_mean_total_count_2021) /
+  sd(predator_average_total_count_2021$mean_count_predator)
+D_C_predator_2021
+
+p_value_D_C_predator_2021 <- 2 * pnorm(-abs(D_C_predator_2021))
+p_value_D_C_predator_2021
+
+# Z = 1.407006
+# P = 0.1594256
+
+# Fungivore
+fungivore_average_total_count_2021 <- Plot_master_2021 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_fungivore = mean(Fungivore, na.rm = TRUE))
+
+fungivore_mean_mean_total_count_2021 <- mean(fungivore_average_total_count_2021$mean_count_fungivore, na.rm = TRUE)
+
+D_total_counts_fungivore_2021 <- sample_wide_2021 %>%
+  filter(str_ends(Sample, "2") | str_ends(Sample, "4")) %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Fungivore, na.rm = TRUE), .groups = 'drop')
+
+D_total_counts_fungivore_ABG_2021 <- D_total_counts_fungivore_2021 %>% filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_fungivore_2021 <- mean(D_total_counts_fungivore_ABG_2021$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Fungivore
+D_C_fungivore_2021 <- (D_ABG_mean_total_count_fungivore_2021 - fungivore_mean_mean_total_count_2021) /
+  sd(fungivore_average_total_count_2021$mean_count_fungivore)
+D_C_fungivore_2021
+
+p_value_D_C_fungivore_2021 <- 2 * pnorm(-abs(D_C_fungivore_2021))
+p_value_D_C_fungivore_2021
+
+# Z = -0.03054093
+# P = 0.9756356
+
+# Pollinator
+pollinator_average_total_count_2021 <- Plot_master_2021 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_pollinator = mean(Pollinator, na.rm = TRUE))
+
+pollinator_mean_mean_total_count_2021 <- mean(pollinator_average_total_count_2021$mean_count_pollinator, na.rm = TRUE)
+
+D_total_counts_pollinator_2021 <- sample_wide_2021 %>%
+  filter(str_ends(Sample, "2") | str_ends(Sample, "4")) %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Pollinator, na.rm = TRUE), .groups = 'drop')
+
+D_total_counts_pollinator_ABG_2021 <- D_total_counts_pollinator_2021 %>% filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_pollinator_2021 <- mean(D_total_counts_pollinator_ABG_2021$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Pollinator
+D_C_pollinator_2021 <- (D_ABG_mean_total_count_pollinator_2021 - pollinator_mean_mean_total_count_2021) /
+  sd(pollinator_average_total_count_2021$mean_count_pollinator)
+D_C_pollinator_2021
+
+p_value_D_C_pollinator_2021 <- 2 * pnorm(-abs(D_C_pollinator_2021))
+p_value_D_C_pollinator_2021
+
+# Z = -1.566795
+# P = 0.1171625
+
+# Parasitoid
+parasitoid_average_total_count_2021 <- Plot_master_2021 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_parasitoid = mean(Parasitoid, na.rm = TRUE))
+
+parasitoid_mean_mean_total_count_2021 <- mean(parasitoid_average_total_count_2021$mean_count_parasitoid, na.rm = TRUE)
+
+D_total_counts_parasitoid_2021 <- sample_wide_2021 %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Parasitoid, na.rm = TRUE), .groups = 'drop')
+
+D_total_counts_parasitoid_ABG_2021 <- D_total_counts_parasitoid_2021 %>% filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_parasitoid_2021 <- mean(D_total_counts_parasitoid_ABG_2021$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Parasitoid
+D_C_parasitoid_2021 <- (D_ABG_mean_total_count_parasitoid_2021 - parasitoid_mean_mean_total_count_2021) /
+  sd(parasitoid_average_total_count_2021$mean_count_parasitoid)
+D_C_parasitoid_2021
+
+p_value_D_C_parasitoid_2021 <- 2 * pnorm(-abs(D_C_parasitoid_2021))
+p_value_D_C_parasitoid_2021
+
+# Z = -1.019089
+# p = 0.3081605
+
+
+# Parasite
+parasite_average_total_count_2021 <- Plot_master_2021 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_parasite = mean(Parasite, na.rm = TRUE))
+
+parasite_mean_mean_total_count_2021 <- mean(parasite_average_total_count_2021$mean_count_parasite, na.rm = TRUE)
+
+D_total_counts_parasite_2021 <- sample_wide_2021 %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Parasite, na.rm = TRUE), .groups = 'drop')
+
+D_total_counts_parasite_ABG_2021 <- D_total_counts_parasite_2021 %>% filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_parasite_2021 <- mean(D_total_counts_parasite_ABG_2021$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Parasite
+D_C_parasite_2021 <- (D_ABG_mean_total_count_parasite_2021 - parasite_mean_mean_total_count_2021) /
+  sd(parasite_average_total_count_2021$mean_count_parasite)
+D_C_parasite_2021
+
+p_value_D_C_parasite_2021 <- 2 * pnorm(-abs(D_C_parasite_2021))
+p_value_D_C_parasite_2021
+
+#Z = -1.439339
+#P = 0.1500544
+
+
+# Saprophagic
+saprophagic_average_total_count_2021 <- Plot_master_2021 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_saprophagic = mean(Saprophagic, na.rm = TRUE))
+
+saprophagic_mean_mean_total_count_2021 <- mean(saprophagic_average_total_count_2021$mean_count_saprophagic, na.rm = TRUE)
+
+D_total_counts_saprophagic_2021 <- sample_wide_2021 %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Saprophagic, na.rm = TRUE), .groups = 'drop')
+
+D_total_counts_saprophagic_ABG_2021 <- D_total_counts_saprophagic_2021 %>% filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_saprophagic_2021 <- mean(D_total_counts_saprophagic_ABG_2021$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Saprophagic
+D_C_saprophagic_2021 <- (D_ABG_mean_total_count_saprophagic_2021 - saprophagic_mean_mean_total_count_2021) /
+  sd(saprophagic_average_total_count_2021$mean_count_saprophagic)
+D_C_saprophagic_2021
+
+p_value_D_C_saprophagic_2021 <- 2 * pnorm(-abs(D_C_saprophagic_2021))
+p_value_D_C_saprophagic_2021
+
+# Z = -1.17403
+# P = 0.2403829
+
+# Gall Former
+gall_former_average_total_count_2021 <- Plot_master_2021 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_gall_former = mean(`Gall Former`, na.rm = TRUE))
+
+gall_former_mean_mean_total_count_2021 <- mean(gall_former_average_total_count_2021$mean_count_gall_former, na.rm = TRUE)
+
+D_total_counts_gall_former_2021 <- sample_wide_2021 %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(`Gall Former`, na.rm = TRUE), .groups = 'drop')
+
+D_total_counts_gall_former_ABG_2021 <- D_total_counts_gall_former_2021 %>% filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_gall_former_2021 <- mean(D_total_counts_gall_former_ABG_2021$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Gall Former
+D_C_gall_former_2021 <- (D_ABG_mean_total_count_gall_former_2021 - gall_former_mean_mean_total_count_2021) /
+  sd(gall_former_average_total_count_2021$mean_count_gall_former)
+D_C_gall_former_2021
+
+p_value_D_C_gall_former_2021 <- 2 * pnorm(-abs(D_C_gall_former_2021))
+p_value_D_C_gall_former_2021
+
+#Z = -0.8498405
+# P = 0.3954138
+
+#### 2022 Z-score Calculations ####
+
+# Detritivore
+detritivore_average_total_count_2022 <- Plot_master_2022 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_detritivore = mean(Detritivore, na.rm = TRUE))
+
+detritivore_mean_mean_total_count_2022 <- mean(detritivore_average_total_count_2022$mean_count_detritivore, na.rm = TRUE)
+
+D_total_counts_detritivore_2022 <- sample_wide_2022 %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Detritivore, na.rm = TRUE), .groups = 'drop')
+
+D_total_counts_detritivore_ABG_2022 <- D_total_counts_detritivore_2022 %>% filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_detritivore_2022 <- mean(D_total_counts_detritivore_ABG_2022$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Detritivore
+D_C_detritivore_2022 <- (D_ABG_mean_total_count_detritivore_2022 - detritivore_mean_mean_total_count_2022) /
+  sd(detritivore_average_total_count_2022$mean_count_detritivore)
+D_C_detritivore_2022
+p_value_D_C_detritivore_2022 <- 2 * pnorm(-abs(D_C_detritivore_2022))
+p_value_D_C_detritivore_2022
+
+#Z = -0.4957635
+#P = 0.6200612
+
+# Herbivore
+herbivore_average_total_count_2022 <- Plot_master_2022 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_herbivore = mean(Herbivore, na.rm = TRUE))
+
+herbivore_mean_mean_total_count_2022 <- mean(herbivore_average_total_count_2022$mean_count_herbivore, na.rm = TRUE)
+
+D_total_counts_herbivore_2022 <- sample_wide_2022 %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Herbivore, na.rm = TRUE), .groups = 'drop')
+
+D_total_counts_herbivore_ABG_2022 <- D_total_counts_herbivore_2022 %>% filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_herbivore_2022 <- mean(D_total_counts_herbivore_ABG_2022$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Herbivore
+D_C_herbivore_2022 <- (D_ABG_mean_total_count_herbivore_2022 - herbivore_mean_mean_total_count_2022) /
+  sd(herbivore_average_total_count_2022$mean_count_herbivore)
+D_C_herbivore_2022
+
+p_value_D_C_herbivore_2022 <- 2 * pnorm(-abs(D_C_herbivore_2022))
+p_value_D_C_herbivore_2022
+
+#Z = 1.011356
+#P = 0.3118459
+
+# Omnivore
+omnivore_average_total_count_2022 <- Plot_master_2022 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_omnivore = mean(Omnivore, na.rm = TRUE))
+
+omnivore_mean_mean_total_count_2022 <- mean(omnivore_average_total_count_2022$mean_count_omnivore, na.rm = TRUE)
+
+D_total_counts_omnivore_2022 <- sample_wide_2022 %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Omnivore, na.rm = TRUE), .groups = 'drop')
+
+D_total_counts_omnivore_ABG_2022 <- D_total_counts_omnivore_2022 %>% filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_omnivore_2022 <- mean(D_total_counts_omnivore_ABG_2022$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Omnivore
+D_C_omnivore_2022 <- (D_ABG_mean_total_count_omnivore_2022 - omnivore_mean_mean_total_count_2022) /
+  sd(omnivore_average_total_count_2022$mean_count_omnivore)
+D_C_omnivore_2022
+
+p_value_D_C_omnivore_2022 <- 2 * pnorm(-abs(D_C_omnivore_2022))
+p_value_D_C_omnivore_2022
+
+# Z = 0.7971701
+# P = 0.4253522
+
+# Predator
+predator_average_total_count_2022 <- Plot_master_2022 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_predator = mean(Predator, na.rm = TRUE))
+
+predator_mean_mean_total_count_2022 <- mean(predator_average_total_count_2022$mean_count_predator, na.rm = TRUE)
+
+D_total_counts_predator_2022 <- sample_wide_2022 %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Predator, na.rm = TRUE), .groups = 'drop')
+
+D_total_counts_predator_ABG_2022 <- D_total_counts_predator_2022 %>% filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_predator_2022 <- mean(D_total_counts_predator_ABG_2022$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Predator
+D_C_predator_2022 <- (D_ABG_mean_total_count_predator_2022 - predator_mean_mean_total_count_2022) /
+  sd(predator_average_total_count_2022$mean_count_predator)
+D_C_predator_2022
+
+p_value_D_C_predator_2022 <- 2 * pnorm(-abs(D_C_predator_2022))
+p_value_D_C_predator_2022
+
+#Z = 1.089409
+#P = 0.2759736s
+
+# Fungivore
+fungivore_average_total_count_2022 <- Plot_master_2022 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_fungivore = mean(Fungivore, na.rm = TRUE))
+
+fungivore_mean_mean_total_count_2022 <- mean(fungivore_average_total_count_2022$mean_count_fungivore, na.rm = TRUE)
+
+D_total_counts_fungivore_2022 <- sample_wide_2022 %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Fungivore, na.rm = TRUE), .groups = 'drop')
+
+D_total_counts_fungivore_ABG_2022 <- D_total_counts_fungivore_2022 %>% filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_fungivore_2022 <- mean(D_total_counts_fungivore_ABG_2022$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Fungivore
+D_C_fungivore_2022 <- (D_ABG_mean_total_count_fungivore_2022 - fungivore_mean_mean_total_count_2022) /
+  sd(fungivore_average_total_count_2022$mean_count_fungivore)
+D_C_fungivore_2022
+
+p_value_D_C_fungivore_2022 <- 2 * pnorm(-abs(D_C_fungivore_2022))
+p_value_D_C_fungivore_2022
+
+# Z = -1.273299
+# P = 0.2029119
+
+# Pollinator
+pollinator_average_total_count_2022 <- Plot_master_2022 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_pollinator = mean(Pollinator, na.rm = TRUE))
+
+pollinator_mean_mean_total_count_2022 <- mean(pollinator_average_total_count_2022$mean_count_pollinator, na.rm = TRUE)
+
+D_total_counts_pollinator_2022 <- sample_wide_2022 %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Pollinator, na.rm = TRUE), .groups = 'drop')
+
+D_total_counts_pollinator_ABG_2022 <- D_total_counts_pollinator_2022 %>% filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_pollinator_2022 <- mean(D_total_counts_pollinator_ABG_2022$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Pollinator
+D_C_pollinator_2022 <- (D_ABG_mean_total_count_pollinator_2022 - pollinator_mean_mean_total_count_2022) /
+  sd(pollinator_average_total_count_2022$mean_count_pollinator)
+D_C_pollinator_2022
+
+p_value_D_C_pollinator_2022 <- 2 * pnorm(-abs(D_C_pollinator_2022))
+p_value_D_C_pollinator_2022
+
+#Z = -1.307402
+#P = 0.1910761
+
+# Parasitoid
+parasitoid_average_total_count_2022 <- Plot_master_2022 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_parasitoid = mean(Parasitoid, na.rm = TRUE))
+
+parasitoid_mean_mean_total_count_2022 <- mean(parasitoid_average_total_count_2022$mean_count_parasitoid, na.rm = TRUE)
+
+D_total_counts_parasitoid_2022 <- sample_wide_2022 %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Parasitoid, na.rm = TRUE), .groups = 'drop')
+
+D_total_counts_parasitoid_ABG_2022 <- D_total_counts_parasitoid_2022 %>% filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_parasitoid_2022 <- mean(D_total_counts_parasitoid_ABG_2022$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Parasitoid
+D_C_parasitoid_2022 <- (D_ABG_mean_total_count_parasitoid_2022 - parasitoid_mean_mean_total_count_2022) /
+  sd(parasitoid_average_total_count_2022$mean_count_parasitoid)
+D_C_parasitoid_2022
+
+p_value_D_C_parasitoid_2022 <- 2 * pnorm(-abs(D_C_parasitoid_2022))
+p_value_D_C_parasitoid_2022
+
+# Z = -1.365106
+# P = 0.1722199
+
+# Parasite
+parasite_average_total_count_2022 <- Plot_master_2022 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_parasite = mean(Parasite, na.rm = TRUE))
+
+parasite_mean_mean_total_count_2022 <- mean(parasite_average_total_count_2022$mean_count_parasite, na.rm = TRUE)
+
+D_total_counts_parasite_2022 <- sample_wide_2022 %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Parasite, na.rm = TRUE), .groups = 'drop')
+
+D_total_counts_parasite_ABG_2022 <- D_total_counts_parasite_2022 %>% filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_parasite_2022 <- mean(D_total_counts_parasite_ABG_2022$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Parasite
+D_C_parasite_2022 <- (D_ABG_mean_total_count_parasite_2022 - parasite_mean_mean_total_count_2022) /
+  sd(parasite_average_total_count_2022$mean_count_parasite)
+D_C_parasite_2022
+
+p_value_D_C_parasite_2022 <- 2 * pnorm(-abs(D_C_parasite_2022))
+p_value_D_C_parasite_2022
+
+# Z = -0.8493654
+# P = 0.395678
+#### 2023 Z-score Calculations ####
+# Detritivore
+detritivore_average_total_count_2023 <- Plot_master_2023 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_detritivore = mean(Detritivore, na.rm = TRUE))
+
+detritivore_mean_mean_total_count_2023 <- mean(detritivore_average_total_count_2023$mean_count_detritivore, na.rm = TRUE)
+
+D_total_counts_detritivore_2023 <- sample_wide_2023 %>%
+  group_by(Sample, block,Treatment) %>%
+  summarise(Count = sum(Detritivore, na.rm = TRUE), .groups = 'drop') %>% 
+  filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_detritivore_2023 <- mean(D_total_counts_detritivore_2023$Count, na.rm = TRUE)
+
+
+# Z-Score and p-value for Detritivore
+D_C_detritivore_2023 <- (D_ABG_mean_total_count_detritivore_2023 - detritivore_mean_mean_total_count_2023) /
+  sd(detritivore_average_total_count_2023$mean_count_detritivore)
+D_C_detritivore_2023
+
+p_value_D_C_detritivore_2023 <- 2 * pnorm(-abs(D_C_detritivore_2023))
+p_value_D_C_detritivore_2023
+
+# Z = -0.4758728
+# P = 0.634165
+
+# Herbivore
+herbivore_average_total_count_2023 <- Plot_master_2023 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_herbivore = mean(Herbivore, na.rm = TRUE))
+
+herbivore_mean_mean_total_count_2023 <- mean(herbivore_average_total_count_2023$mean_count_herbivore, na.rm = TRUE)
+
+D_total_counts_herbivore_2023 <- sample_wide_2023 %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Herbivore, na.rm = TRUE), .groups = 'drop') %>% 
+  filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_herbivore_2023 <- mean(D_total_counts_herbivore_2023$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Herbivore
+D_C_herbivore_2023 <- (D_ABG_mean_total_count_herbivore_2023 - herbivore_mean_mean_total_count_2023) /
+  sd(herbivore_average_total_count_2023$mean_count_herbivore)
+D_C_herbivore_2023
+
+p_value_D_C_herbivore_2023 <- 2 * pnorm(-abs(D_C_herbivore_2023))
+p_value_D_C_herbivore_2023
+
+#Z = 5.654136
+#P = 1.566322e-08 *Higher in ABG
+
+# Omnivore
+omnivore_average_total_count_2023 <- Plot_master_2023 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_omnivore = mean(Omnivore, na.rm = TRUE))
+
+omnivore_mean_mean_total_count_2023 <- mean(omnivore_average_total_count_2023$mean_count_omnivore, na.rm = TRUE)
+
+D_total_counts_omnivore_2023 <- sample_wide_2023 %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Omnivore, na.rm = TRUE), .groups = 'drop') %>% 
+  filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_omnivore_2023 <- mean(D_total_counts_omnivore_2023$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Omnivore
+D_C_omnivore_2023 <- (D_ABG_mean_total_count_omnivore_2023 - omnivore_mean_mean_total_count_2023) /
+  sd(omnivore_average_total_count_2023$mean_count_omnivore)
+D_C_omnivore_2023
+
+p_value_D_C_omnivore_2023 <- 2 * pnorm(-abs(D_C_omnivore_2023))
+p_value_D_C_omnivore_2023
+
+#Z = 0.7874125
+#P = 0.4310404
+
+# Predator
+predator_average_total_count_2023 <- Plot_master_2023 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_predator = mean(Predator, na.rm = TRUE))
+
+predator_mean_mean_total_count_2023 <- mean(predator_average_total_count_2023$mean_count_predator, na.rm = TRUE)
+
+D_total_counts_predator_2023 <- sample_wide_2023 %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Predator, na.rm = TRUE), .groups = 'drop') %>% 
+  filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_predator_2023 <- mean(D_total_counts_predator_2023$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Predator
+D_C_predator_2023 <- (D_ABG_mean_total_count_predator_2023 - predator_mean_mean_total_count_2023) /
+  sd(predator_average_total_count_2023$mean_count_predator)
+D_C_predator_2023
+
+p_value_D_C_predator_2023 <- 2 * pnorm(-abs(D_C_predator_2023))
+p_value_D_C_predator_2023
+
+# Z = 1.144022
+# P = 0.2526144
+
+# Fungivore
+fungivore_average_total_count_2023 <- Plot_master_2023 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_fungivore = mean(Fungivore, na.rm = TRUE))
+
+fungivore_mean_mean_total_count_2023 <- mean(fungivore_average_total_count_2023$mean_count_fungivore, na.rm = TRUE)
+
+D_total_counts_fungivore_2023 <- sample_wide_2023 %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Fungivore, na.rm = TRUE), .groups = 'drop') %>% 
+  filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_fungivore_2023 <- mean(D_total_counts_fungivore_2023$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Fungivore
+D_C_fungivore_2023 <- (D_ABG_mean_total_count_fungivore_2023 - fungivore_mean_mean_total_count_2023) /
+  sd(fungivore_average_total_count_2023$mean_count_fungivore)
+D_C_fungivore_2023
+
+p_value_D_C_fungivore_2023 <- 2 * pnorm(-abs(D_C_fungivore_2023))
+p_value_D_C_fungivore_2023
+
+# Z = -1.277524
+# P = 0.2014173
+
+# Pollinator
+pollinator_average_total_count_2023 <- Plot_master_2023 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_pollinator = mean(Pollinator, na.rm = TRUE))
+
+pollinator_mean_mean_total_count_2023 <- mean(pollinator_average_total_count_2023$mean_count_pollinator, na.rm = TRUE)
+
+D_total_counts_pollinator_2023 <- sample_wide_2023 %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Pollinator, na.rm = TRUE), .groups = 'drop') %>% 
+  filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_pollinator_2023 <- mean(D_total_counts_pollinator_2023$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Pollinator
+D_C_pollinator_2023 <- (D_ABG_mean_total_count_pollinator_2023 - pollinator_mean_mean_total_count_2023) /
+  sd(pollinator_average_total_count_2023$mean_count_pollinator)
+D_C_pollinator_2023
+
+p_value_D_C_pollinator_2023 <- 2 * pnorm(-abs(D_C_pollinator_2023))
+p_value_D_C_pollinator_2023
+
+#Z = -1.275276
+# P = 0.2022117
+
+# Parasitoid
+parasitoid_average_total_count_2023 <- Plot_master_2023 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_parasitoid = mean(Parasitoid, na.rm = TRUE))
+
+parasitoid_mean_mean_total_count_2023 <- mean(parasitoid_average_total_count_2023$mean_count_parasitoid, na.rm = TRUE)
+
+D_total_counts_parasitoid_2023 <- sample_wide_2023 %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Parasitoid, na.rm = TRUE), .groups = 'drop') %>% 
+  filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_parasitoid_2023 <- mean(D_total_counts_parasitoid_2023$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Parasitoid
+D_C_parasitoid_2023 <- (D_ABG_mean_total_count_parasitoid_2023 - parasitoid_mean_mean_total_count_2023) /
+  sd(parasitoid_average_total_count_2023$mean_count_parasitoid)
+D_C_parasitoid_2023
+
+p_value_D_C_parasitoid_2023 <- 2 * pnorm(-abs(D_C_parasitoid_2023))
+p_value_D_C_parasitoid_2023
+
+# Z = -1.255643
+# P = 0.2092454
+
+# Parasite
+parasite_average_total_count_2023 <- Plot_master_2023 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_parasite = mean(Parasite, na.rm = TRUE))
+
+parasite_mean_mean_total_count_2023 <- mean(parasite_average_total_count_2023$mean_count_parasite, na.rm = TRUE)
+
+D_total_counts_parasite_2023 <- sample_wide_2023 %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Parasite, na.rm = TRUE), .groups = 'drop') %>% 
+  filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_parasite_2023 <- mean(D_total_counts_parasite_2023$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Parasite
+D_C_parasite_2023 <- (D_ABG_mean_total_count_parasite_2023 - parasite_mean_mean_total_count_2023) /
+  sd(parasite_average_total_count_2023$mean_count_parasite)
+D_C_parasite_2023
+
+p_value_D_C_parasite_2023 <- 2 * pnorm(-abs(D_C_parasite_2023))
+p_value_D_C_parasite_2023
+
+# Z = -0.8419705#
+# P = 0.3998045
+
+
+#### SIMPER ANALYSIS 2021 ####
+
+# Perform SIMPER analysis for years since burned
+simper_results_2021_TreatmentSB <- simper(abundanceWide_2021[, 8:150], group = abundanceWide_2021$TreatmentSB, permutations = 999)
+
+# Print SIMPER results
+print(simper_results_2021_TreatmentSB)
+
+# To view the contribution of each species, you can examine the output in detail
+summary(simper_results_2021_TreatmentSB)
+
+# Perform SIMPER analysis for ABG vs PBG
+simper_results_2021_Treatment <- simper(abundanceWide_2021[, 8:120], group = abundanceWide_2021$Treatment, permutations = 999)
+
+# Print SIMPER results
+print(simper_results_2021_Treatment)
+
+# To view the contribution of each species, you can examine the output in detail
+summary(simper_results_2021_Treatment)
+
+#### SIMPER ANALYSIS 2022 ####
+
+# Perform SIMPER analysis for years since burned (2022)
+simper_results_2022_TreatmentSB <- simper(abundanceWide_2022[, 8:120], group = abundanceWide_2022$TreatmentSB, permutations = 999)
+
+# Print SIMPER results for TreatmentSB
+print(simper_results_2022_TreatmentSB)
+
+# To view the contribution of each species in detail
+summary(simper_results_2022_TreatmentSB)
+
+# Perform SIMPER analysis for ABG vs PBG (2022)
+simper_results_2022_Treatment <- simper(abundanceWide_2022[, 8:120], group = abundanceWide_2022$Treatment, permutations = 999)
+
+# Print SIMPER results for Treatment
+print(simper_results_2022_Treatment)
+
+# To view the contribution of each species in detail
+summary(simper_results_2022_Treatment)
+
+#### SIMPER ANALYSIS 2023 ####
+
+# Perform SIMPER analysis for years since burned (2023)
+simper_results_2023_TreatmentSB <- simper(abundanceWide_2023[, 8:75], group = abundanceWide_2023$TreatmentSB, permutations = 999)
+
+# Print SIMPER results for TreatmentSB
+print(simper_results_2023_TreatmentSB)
+
+# To view the contribution of each species in detail
+summary(simper_results_2023_TreatmentSB)
+
+# Perform SIMPER analysis for ABG vs PBG (2023)
+simper_results_2023_Treatment <- simper(abundanceWide_2023[, 8:75], group = abundanceWide_2023$Treatment, permutations = 999)
+
+# Print SIMPER results for Treatment
+print(simper_results_2023_Treatment)
+
+# To view the contribution of each species in detail
+summary(simper_results_2023_Treatment)
+
+#### New Beta Diversity Graph ####
+
+
+multi_panel_graph <- grid.arrange(Beta_2021, Beta_2022, Beta_2023, 
+                                  nrow = 1 
+)
 

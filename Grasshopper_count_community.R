@@ -1,6 +1,6 @@
 #BPBG grasshopper count and community metrics
 #Authors: Joshua Ajowele
-#Started: 26 May 2022 last modified: 7 July 2024
+#Started: 26 May 2022 last modified: 21 October 2024
 
 #load library
 library(tidyverse)
@@ -1048,8 +1048,9 @@ yrs_ghcount_model<-lmer(log(Tcount)~yrsins_fire*RecYear+(1|Unit/Watershed),
                         data=ghcount_yrs)
 check_model(yrs_ghcount_model)
 Anova(yrs_ghcount_model, type=3)
+anova(yrs_ghcount_model)
 qqnorm(resid(yrs_ghcount_model))
-
+library(lmerTest)
 #multiple comparison
 testInteractions(yrs_ghcount_model, pairwise="yrsins_fire", fixed="RecYear",
                  adjustment="BH")
@@ -1063,12 +1064,12 @@ yrs_interact_viz<-yrs_interact%>%
          yrs_interact_bt_upper=exp(adjusted_mean+SE_of_link),
          yrs_interact_bt_lower=exp(adjusted_mean-SE_of_link))
 #visual
-ggplot(yrs_interact_viz,aes(RecYear, yrs_interact_bt_mean, col=yrsins_fire, linetype=yrsins_fire))+
+ggplot(yrs_interact_viz,aes(RecYear, yrs_interact_bt_mean, col=yrsins_fire))+
   geom_point(size=3)+
   geom_path(aes(as.numeric(RecYear)),linewidth=1)+
   geom_errorbar(aes(ymin=yrs_interact_bt_lower,
                     ymax=yrs_interact_bt_upper),width=0.2,linetype=1)+
-  scale_colour_manual(values=c( "#F0E442", "#009E73", "#999999", "#0072B2"))
+  scale_colour_manual(values=c( "#F0E442", "#994F00", "#999999", "#0072B2"))
 
 #average across years for simplification
 yrs_interact_bar<-yrs_interact_viz%>%
@@ -1080,7 +1081,7 @@ ggplot(yrs_interact_bar,aes(x=yrsins_fire,fill=yrsins_fire))+
   geom_bar(stat = "identity",aes(y=Grasshopper_count),width = 0.5)+
   geom_errorbar(aes(ymin=se_lower,
                     ymax=se_upper),width=0.2,linetype=1)+
-  scale_fill_manual(values=c( "#F0E442", "#009E73", "#999999", "#0072B2"))
+  scale_fill_manual(values=c( "#F0E442", "#994F00", "#999999", "#0072B2"))
 
 
 #create df with individual species abundance####

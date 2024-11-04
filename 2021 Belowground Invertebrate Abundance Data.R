@@ -10,6 +10,7 @@ library(gridExtra)
 library(ggplot2)
 library(boot)
 library(purrr)
+library(writexl)
 
 
 #### Pairwise Function ####
@@ -102,17 +103,35 @@ Abundance_ID_Belowground_Reformated <- na.omit(Abundance_ID_Belowground_Reformat
 
 ### Unique in each ###
 
+Abundance_South <- Abundance_ID_Belowground_Reformated %>% 
+mutate(Block = ifelse(grepl("S", WS), "North", "South"))
+
+
+unique_overall <- Abundance_South %>% 
+  distinct(Morphospp)
+
+write_xlsx(unique_overall, "unique_species.xlsx")
+
+# N = 133
+
+
 # Filter for ABG and get unique morphospecies
-unique_ABG <- Abundance_ID_Belowground_Reformated %>%
+unique_ABG <- Abundance_South %>%
   filter(Treatment == "ABG") %>%
   distinct(Morphospp)
+
+write_xlsx(unique_ABG, "ABG_species.xlsx")
+
+
 # 52 unique
 
 # Filter for PBG and get unique morphospecies
-unique_PBG <- Abundance_ID_Belowground_Reformated %>%
+unique_PBG <- Abundance_South %>%
   filter(Treatment == "PBG") %>%
   distinct(Morphospp)
 # 104 unique
+
+write_xlsx(unique_PBG, "PBG_species.xlsx")
 
 # Find morphospecies that are unique to ABG
 only_ABG <- setdiff(unique_ABG$Morphospp, unique_PBG$Morphospp)
@@ -122,7 +141,7 @@ only_ABG
 # Find morphospecies that are unique to PBG
 only_PBG <- setdiff(unique_PBG$Morphospp, unique_ABG$Morphospp)
 only_PBG
-# 80 ABG has that PBG doesn't
+# 80 PBG has that ABG doesn't
 
 
 #### CV Count Graph Prep  ####
@@ -499,17 +518,22 @@ CountGraph_Filtered <- CountGraph_New %>%
 
 # PERMANOVA
 
+set.seed(123)
+
+
 abundanceWide <- CountGraph_Filtered %>% 
   mutate(block = ifelse(grepl("S", Sample), "North", "South")) %>%
   select(Sample, block, WS, Trans, Dist., Treatment, TreatmentSB, Morphospp, Count) %>%
   group_by(Sample, block, WS, Trans, Dist., Treatment, TreatmentSB, Morphospp) %>% 
   summarise(Count = sum(Count)) %>% 
   ungroup() %>% 
-  pivot_wider(names_from = 'Morphospp', values_from = 'Count', values_fill = list(Count = 0)) 
+  pivot_wider(names_from = 'Morphospp', values_from = 'Count', values_fill = list(Count = 0))
 
 abundanceWide <- abundanceWide %>% 
   mutate(sum = rowSums(abundanceWide[, c(8:86)], na.rm = TRUE)) %>% 
-  filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
+  filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_A_16_PBG', 'C3SA_C_38_PBG'))) %>%
+  select(-sum)  # Drop the 'sum' column
+
 
 ###Defined in itself?
 #abundanceWide <- CountGraph  %>% 
@@ -524,7 +548,7 @@ abundanceWide <- abundanceWide %>%
 ###IMPORTANT: removing sample from C1A_A_38_ABG, which is a big outlier because of high values of endogenic worms and brown shrimp-like beetles, which no other plots had
 
 print(permanova <- adonis2(formula = abundanceWide[,8:86]~TreatmentSB, data=abundanceWide, permutations=999, method="bray"))
-#F=1.5242, df=3,49, p=0.042 
+#F=1.2401 , df=3,27, p=0.187
 
 pairwise_results <- pairwise.adonis(abundanceWide[, 8:86], abundanceWide$TreatmentSB)
 print(pairwise_results)
@@ -534,7 +558,7 @@ print(pairwise_results)
 veg <- vegdist(abundanceWide[,8:86], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$TreatmentSB)
 permutest(dispersion, pairwise=TRUE, permutations=999) 
-#F=0.773 , df=3,49, p=0.53
+#F=0.8866 , df=3,27, p=0.467
 
 BC_Data <- metaMDS(abundanceWide[,8:86])
 sites <- 1:nrow(abundanceWide)
@@ -598,7 +622,7 @@ NMDS_Years_Since_Burned
 
 ### by watershed
 #Subsampling
-set.seed(123)
+set.seed(322)
 
 ABG_Test <- abundanceWide %>% 
   filter(Treatment == "ABG")
@@ -624,13 +648,13 @@ Abundance_Data <- full_join(subsampled_data, ABG_Test)
 
 # PERMANOVA
 print(permanova <- adonis2(formula = Abundance_Data[,8:86]~Treatment, data=Abundance_Data, permutations=999, method="bray"))
-#F=1.0171  , df=1,31, p=0.373
+#F=1.5169 , df=1,21, p=0.146
 
 #betadisper
 veg <- vegdist(Abundance_Data[,8:86], method = "bray")
 dispersion <- betadisper(veg, Abundance_Data$Treatment)
 permutest(dispersion, pairwise=TRUE, permutations=999) 
-#F=0.1295, df=1,30, p=0.689
+#F=0.8234, df=1,30, p=0.369
 
 BC_Data <- metaMDS(Abundance_Data[,8:86])
 sites <- 1:nrow(Abundance_Data)
@@ -656,13 +680,15 @@ for(g in levels(as.factor(BC_NMDS$group))){
 }
 
 #Plot the data from BC_NMDS_Graph, where x=MDS1 and y=MDS2, make an ellipse based on "group"
-NMDS_ABG_VS_PBG <- ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = group)) +
+NMDS_ABG_VS_PBG_4 <- ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group, linetype = group, shape = group)) +
   geom_point(size=6) + 
   geom_path(data = BC_Ellipses, aes(x = NMDS1, y = NMDS2), size = 3) +
   labs(color="", linetype = "", shape = "") +
   scale_colour_manual(values=c("blue", "red"), name = "") +
   scale_linetype_manual(values = c("solid", "twodash"), name = "") +
   scale_shape_manual(values = c(19, 19)) +
+  scale_x_continuous(labels = scales::number_format(accuracy = 0.1)) +
+  scale_y_continuous(labels = scales::number_format(accuracy = 0.1)) +
   xlab("NMDS1") + 
   ylab("NMDS2") + 
   theme_bw() +
@@ -672,35 +698,47 @@ NMDS_ABG_VS_PBG <- ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetyp
         axis.title.y = element_text(size = 34, color = 'black'),
         legend.text = element_text(size = 34),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank()
-  )  
+  )
 
-NMDS_ABG_VS_PBG
+NMDS_ABG_VS_PBG_4
 #  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = min(BC_NMDS_Graph$MDS2) + 0.2, 
 #           label = 'Mean p = 0.206\nVariance p = 0.847', size = 10, hjust = 'left')
 
 
-# grid.arrange(NMDS_ABG_VS_PBG_1, NMDS_ABG_VS_PBG_2, NMDS_ABG_VS_PBG_3, NMDS_ABG_VS_PBG_4, ncol = 2, nrow = 2)
+grid.arrange(NMDS_ABG_VS_PBG_1, NMDS_ABG_VS_PBG_2, NMDS_ABG_VS_PBG_3, NMDS_ABG_VS_PBG_4, ncol = 2, nrow = 2)
 
 #NMDS_ABG_VS_PBG_1
-#Mean p = 0.373\nVariance p = 0.689
-#set.seed(123)
+#Mean F1-21 = 1.2598,p =0.251 \nVariance F1-21= 0.2716, p = 0.621
+#setseed(312)
 
 #NMDS_ABG_VS_PBG_2
-#Mean p = 0.206\nVariance p = 0.847
+#Mean F121 = 1.5035, p = 0.126\nVariance f1-21 = 0.5147, p = 0.492
 #set.seed(124)
 
 #NMDS_ABG_VS_PBG_3
-#Mean p = 0.195\nVariance p = 0.469
-#set.seed(125)
+#Mean F1-21 = 1.2668, p = 0.211\nVariance F1-21 =0.5754, p = 0.458
+#set.seed(321)
 
 #NMDS_ABG_VS_PBG_4
-#Mean p = 0.259\nVariance p = 0.457
-#set.seed(126)
+#Mean F1-21 = 1.7229,  p = 0.072 \nVariance F1-21 = 0.4678,  p = 0.500
+#set.seed(322)
 
 #### Simper Analysis ####
 
+write_xlsx(Abundance_Data, "For_SIMPER_ABG_VS_PBG.xlsx")
+
+
 # Perform SIMPER analysis
-simper_results <- simper(Abundance_Data[, 8:87], group = Abundance_Data$TreatmentSB, permutations = 999)
+simper_results <- simper(Abundance_Data[, 8:86], group = Abundance_Data$TreatmentSB, permutations = 999)
+
+# Print SIMPER results
+print(simper_results)
+
+# To view the contribution of each species, you can examine the output in detail
+summary(simper_results)
+
+# Perform SIMPER analysis
+simper_results <- simper(Abundance_Data[, 8:86], group = Abundance_Data$Treatment, permutations = 999)
 
 # Print SIMPER results
 print(simper_results)
@@ -941,6 +979,7 @@ Axis_Text_Size <- 20 #Text on axislike abuandance, richness etc
 # Boxplot for Richness
 richness_below <- ggplot(Joined, aes(x=TreatmentSB, y=richness, fill=TreatmentSB)) +
   geom_boxplot() +
+  geom_jitter(position = position_jitter(width = 0.2), size = 1, alpha = 0.5) + # Add geom_jitter
   labs(title="", x="Years Since Burned", y="Richness") +
   scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   theme_minimal() +
@@ -966,7 +1005,8 @@ richness_below
 
 Evar_below <- ggplot(Joined, aes(x=TreatmentSB, y=Evar, fill=TreatmentSB)) +
   geom_boxplot() +
-  labs(title="", x="Years Since Burning", y="Evenness") +
+  geom_jitter(position = position_jitter(width = 0.2), size = 1, alpha = 0.5) + # Add geom_jitter
+  labs(title="", x="Years Since Burned", y="Evenness") +
   scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   theme_minimal() +
   theme(
@@ -992,7 +1032,8 @@ Evar_below
 # Count graph here
 Count_below <- ggplot(total_counts2, aes(x=TreatmentSB, y=Count, fill=TreatmentSB)) +
   geom_boxplot() +
-  labs(title="", x="Years Since Burning", y="Abundance") +
+  geom_jitter(position = position_jitter(width = 0.2), size = 1, alpha = 0.5) + # Add geom_jitter
+  labs(title="", x="Years Since Burned", y="Abundance") +
   scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   theme_minimal() +
   theme(
@@ -1007,6 +1048,7 @@ Count_below <- ggplot(total_counts2, aes(x=TreatmentSB, y=Count, fill=TreatmentS
   ) +
   scale_x_discrete(labels = c("ABG_0" = "ABG 0", "PBG_0" = "PBG 0", "PBG_1" = "PBG 1", "PBG_2" = "PBG 2")) + # Set custom axis labels
   theme(axis.text.x = element_text(angle = 0, hjust = 0.5)) # Adjust x-axis text angle
+
 
 Count_below
 
@@ -1285,3 +1327,52 @@ print(p_value_B)
 
 
 
+
+#### Relative Abundance of Epigeic worms ####
+# Filter for Annelida_Clitellata_Opisthopora_Epigeic
+filtered_data <- CountGraph_Filtered %>%
+  filter(Morphospp == "Annelida_Clitellata_Opisthopora_Epigeic")
+  
+
+summary_data <- filtered_data %>%
+  group_by(TreatmentSB) %>%
+  summarize(total_count = sum(Count),
+            average_count = mean(Count))
+
+# Calculate relative abundance 
+total_counts <- sum(summary_data$total_count)
+summary_data <- summary_data %>%
+  mutate(relative_abundance = total_count / total_counts)
+
+# Display the result
+print(summary_data)
+
+# Redoing for ABG vs PBG 
+
+summary_data_1 <- filtered_data %>%
+  group_by(Treatment) %>%
+  summarize(total_count = sum(Count),
+            average_count = mean(Count))
+
+# Calculate relative abundance 
+total_counts_1 <- sum(summary_data_1$total_count)
+summary_data_1 <- summary_data_1 %>%
+  mutate(relative_abundance = total_count / total_counts_1)
+
+# Display the result
+print(summary_data_1)
+
+#
+
+#mean for outliars
+mean_count_opisthoptera <- CountGraph_New %>%
+  filter(Sample %in% c('C1A_A_38_ABG', 'C3SA_A_16_PBG', 'C3SA_C_38_PBG')) %>%
+  filter(Morphospp == "Annelida_Clitellata_Opisthopora_Endogeic") %>%
+  summarise(mean_count = mean(Count, na.rm = TRUE))
+mean_count_opisthoptera
+#28
+  
+mean_count_opisthoptera_overall <- CountGraph_New %>%
+  filter(Morphospp == "Annelida_Clitellata_Opisthopora_Endogeic") %>%
+  summarise(mean_count = mean(Count, na.rm = TRUE))
+mean_count_opisthoptera_overall
