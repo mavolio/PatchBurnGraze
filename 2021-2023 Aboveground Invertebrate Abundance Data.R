@@ -10,6 +10,9 @@ library(nlme)
 library(cowplot)
 library(emmeans)
 library(openxlsx)
+library(grid)
+library(cowplot)
+library(gtable)
 #### Seed Set ####
 set.seed(123)
 
@@ -3086,25 +3089,28 @@ beta_diversity_value_2 <- mean(dissimilarity_matrix)
 
 
 # Beta Diversity Density plot
-ggplot(PBG_plot_master_2021, aes(x = beta_diversity)) +
+Beta_2021 <- ggplot(PBG_plot_master_2021, aes(x = beta_diversity)) +
   geom_density(aes(y = ..scaled.., color = "PBG"), alpha = 0.5) +
   geom_vline(aes(xintercept = beta_diversity_value_2, color = "ABG"), linetype = "dashed", size = 1) +
-  labs(title = "Density Plot of Beta Diversity",
+  labs(title = "2021 Density Plot of Beta Diversity",
        x = "Mean Beta Diversity",
        y = "Density") +
   scale_color_manual(values = c("PBG" = "red", "ABG" = "blue"), name = "Legend") +
   theme_bw() +
   theme(
     panel.grid.major = element_blank(), 
-    panel.grid.minor = element_blank(), 
-    legend.position = c(0.1, 0.8), 
-    legend.text = element_text(size = 30),  # Adjust legend text size
+    panel.grid.minor = element_blank(),
+    legend.position=c(0.01,0.99),   # Top left corner
+    legend.justification = c("left", "top"),  # Align legend at the top-left corner
+    legend.text = element_text(size = 20),    # Legend text size
+    legend.title = element_text(size = 20),   # Legend title size
     axis.text = element_text(size = 20),
     axis.title = element_text(size = 30),
     axis.text.y = element_text(size = 20),
     axis.title.y = element_text(size = 30),
     axis.ticks.y = element_line(size = 1)
   )
+
 
 
 
@@ -3197,10 +3203,10 @@ beta_diversity_value_2 <- mean(dissimilarity_matrix_2)
 #### Beta Diversity Graph 2022 ####
 
 # Beta Diversity Density plot
-ggplot(PBG_plot_master_2022, aes(x = beta_diversity)) +
+Beta_2022 <- ggplot(PBG_plot_master_2022, aes(x = beta_diversity)) +
   geom_density(aes(y = ..scaled.., color = "PBG"), alpha = 0.5) +
   geom_vline(aes(xintercept = beta_diversity_value_2, color = "ABG"), linetype = "dashed", size = 1) +
-  labs(title = "Density Plot of Beta Diversity",
+  labs(title = "2022 Density Plot of Beta Diversity",
        x = "Mean Beta Diversity",
        y = "Density") +
   scale_color_manual(values = c("PBG" = "red", "ABG" = "blue"), name = "Legend") +
@@ -3208,7 +3214,7 @@ ggplot(PBG_plot_master_2022, aes(x = beta_diversity)) +
   theme(
     panel.grid.major = element_blank(), 
     panel.grid.minor = element_blank(), 
-    legend.position = c(0.1, 0.8), 
+    legend.position = "none", 
     legend.text = element_text(size = 30),  # Adjust legend text size
     axis.text = element_text(size = 20),
     axis.title = element_text(size = 30),
@@ -3300,10 +3306,10 @@ beta_diversity_value_2 <- mean(dissimilarity_matrix_2)
 #### Beta Diversity Graph 2023 ####
 
 # Beta Diversity Density plot
-ggplot(PBG_plot_master_2023, aes(x = beta_diversity)) +
+Beta_2023 <- ggplot(PBG_plot_master_2023, aes(x = beta_diversity)) +
   geom_density(aes(y = ..scaled.., color = "PBG"), alpha = 0.5) +
   geom_vline(aes(xintercept = beta_diversity_value_2, color = "ABG"), linetype = "dashed", size = 1) +
-  labs(title = "Density Plot of Beta Diversity",
+  labs(title = "2023 Density Plot of Beta Diversity",
        x = "Mean Beta Diversity",
        y = "Density") +
   scale_color_manual(values = c("PBG" = "red", "ABG" = "blue"), name = "Legend") +
@@ -3311,7 +3317,7 @@ ggplot(PBG_plot_master_2023, aes(x = beta_diversity)) +
   theme(
     panel.grid.major = element_blank(), 
     panel.grid.minor = element_blank(), 
-    legend.position = c(0.1, 0.8), 
+    legend.position = "none", 
     legend.text = element_text(size = 30),  # Adjust legend text size
     axis.text = element_text(size = 20),
     axis.title = element_text(size = 30),
@@ -4276,3 +4282,11 @@ print(simper_results_2023_Treatment)
 
 # To view the contribution of each species in detail
 summary(simper_results_2023_Treatment)
+
+#### New Beta Diversity Graph ####
+
+
+multi_panel_graph <- grid.arrange(Beta_2021, Beta_2022, Beta_2023, 
+                                  nrow = 1 
+)
+
