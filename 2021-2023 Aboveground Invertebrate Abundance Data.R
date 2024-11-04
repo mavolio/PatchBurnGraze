@@ -3372,7 +3372,14 @@ abundance_summary_2021 <- data_2021 %>%
 
 # Add block and plot_index columns
 abundance_summary_2021_block <- abundance_summary_2021 %>%
-  mutate(block = ifelse(grepl("s", Sample, ignore.case = TRUE), "North", "South"))
+  mutate(
+    block = ifelse(grepl("s", Sample, ignore.case = TRUE), "North", "South"),
+    Treatment = case_when(
+      grepl("1", Sample) ~ "ABG",
+      grepl("3", Sample) ~ "PBG",
+      TRUE ~ NA_character_
+    )
+  )
 
 sample_wide_2021 <- abundance_summary_2021_block %>%
   pivot_wider(
@@ -3381,10 +3388,12 @@ sample_wide_2021 <- abundance_summary_2021_block %>%
     values_fill = 0  # Fill missing values with 0
   )
 
-sample_compact_2021 <- sample_wide %>%
-  group_by(Sample, block) %>%
-  summarise(across(Detritivore:Pollinator, sum, na.rm = TRUE), .groups = 'drop')  %>% 
+sample_compact_2021 <- sample_wide_2021 %>%
+  filter(Treatment == "PBG") %>% 
+  group_by(Sample, block, Treatment) %>%
+  summarise(across(Detritivore:Pollinator, sum, na.rm = TRUE), .groups = 'drop') %>%
   mutate(plot_index = 1:length(block))
+
 
 num_bootstrap <- 1000
 bootstrap_vector <- 1:num_bootstrap
@@ -3394,7 +3403,7 @@ Plot_master_2021<- data.frame()  # Initialize an empty dataframe
 for (BOOT in bootstrap_vector) {
   # Sample unique plot_index values within each block for 2022
   New_Key_2021 <- sample_compact_2021 %>%
-    dplyr::select(1:9) %>%
+    dplyr::select(1:10) %>%
     unique() %>%
     group_by(block) %>%
     sample_n(16, replace = TRUE) %>%
@@ -3419,21 +3428,32 @@ abundance_summary_2022 <- data_2022 %>%
   group_by(Sample, Functional_Group) %>%
   summarise(Total_Abundance = sum(Count, na.rm = TRUE), .groups = 'drop')
 
-# Add block and plot_index columns
+# Add block and Treatment columns
 abundance_summary_2022_block <- abundance_summary_2022 %>%
-  mutate(block = ifelse(grepl("s", Sample, ignore.case = TRUE), "North", "South"))
+  mutate(
+    block = ifelse(grepl("s", Sample, ignore.case = TRUE), "North", "South"),
+    Treatment = case_when(
+      grepl("1", Sample) ~ "ABG",
+      grepl("3", Sample) ~ "PBG",
+      TRUE ~ NA_character_
+    )
+  )
 
+# Pivot to wide format based on Functional_Group and fill missing values with 0
 sample_wide_2022 <- abundance_summary_2022_block %>%
   pivot_wider(
     names_from = Functional_Group,
     values_from = Total_Abundance,
-    values_fill = 0  # Fill missing values with 0
+    values_fill = 0
   )
 
+# Filter for PBG treatment and calculate sum across functional groups
 sample_compact_2022 <- sample_wide_2022 %>%
-  group_by(Sample, block) %>%
-  summarise(across(3:8, sum, na.rm = TRUE), .groups = 'drop') %>%
+  filter(Treatment == "PBG") %>% 
+  group_by(Sample, block, Treatment) %>%
+  summarise(across(Detritivore:Pollinator, sum, na.rm = TRUE), .groups = 'drop') %>%
   mutate(plot_index = 1:length(block))
+
 
 num_bootstrap <- 1000
 bootstrap_vector <- 1:num_bootstrap
@@ -3468,20 +3488,30 @@ abundance_summary_2023 <- data_2023 %>%
   group_by(Sample, Functional_Group) %>%
   summarise(Total_Abundance = sum(Count, na.rm = TRUE), .groups = 'drop')
 
-# Add block and plot_index columns
-abundance_summary_2023_block <- abundance_summary_2023 %>%
-  mutate(block = ifelse(grepl("s", Sample, ignore.case = TRUE), "North", "South"))
+# Add block and Treatment columns
+abundance_summary_2022_block <- abundance_summary_2022 %>%
+  mutate(
+    block = ifelse(grepl("s", Sample, ignore.case = TRUE), "North", "South"),
+    Treatment = case_when(
+      grepl("1", Sample) ~ "ABG",
+      grepl("3", Sample) ~ "PBG",
+      TRUE ~ NA_character_
+    )
+  )
 
-sample_wide_2023 <- abundance_summary_2023_block %>%
+# Pivot to wide format based on Functional_Group and fill missing values with 0
+sample_wide_2022 <- abundance_summary_2022_block %>%
   pivot_wider(
     names_from = Functional_Group,
     values_from = Total_Abundance,
-    values_fill = 0  # Fill missing values with 0
+    values_fill = 0
   )
 
-sample_compact_2023 <- sample_wide_2023 %>%
-  group_by(Sample, block) %>%
-  summarise(across(Herbivore:Parasite, sum, na.rm = TRUE), .groups = 'drop') %>%
+# Filter for PBG treatment and calculate sum across functional groups
+sample_compact_2022 <- sample_wide_2022 %>%
+  filter(Treatment == "PBG") %>% 
+  group_by(Sample, block, Treatment) %>%
+  summarise(across(Detritivore:Pollinator, sum, na.rm = TRUE), .groups = 'drop') %>%
   mutate(plot_index = 1:length(block))
 
 num_bootstrap <- 1000
@@ -3507,3 +3537,165 @@ for (BOOT in bootstrap_vector) {
   Plot_master_2023 <- rbind(Plot_master_2023, Plot_ready_2023)
 }
 
+
+#### 2021 Z-Score Calculations ####
+detritivore_average_total_count_2021 <- Plot_master_2021 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_detritivore = mean(Detritivore, na.rm = TRUE))
+
+detritivore_mean_mean_total_count_2021 <- mean(detritivore_average_total_count_2021$mean_count_detritivore, na.rm = TRUE)
+
+D_total_counts_2021 <- sample_wide_2021 %>%
+  filter(str_ends(Sample, "2") | str_ends(Sample, "4")) %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Detritivore, na.rm = TRUE), .groups = 'drop')
+
+D_total_counts_ABG_2021 <- D_total_counts_2021 %>% filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_2021 <- mean(D_total_counts_ABG_2021$Count, na.rm = TRUE)
+
+
+# Z-Score for total count 
+D_C_2021 <- ((D_ABG_mean_total_count_2021) - (detritivore_mean_mean_total_count_2021))/(sd(detritivore_average_total_count_2021$mean_count_detritivore))
+D_C_2021
+
+p_value_D_C_2021 <- 2*pnorm(-abs(D_C_2021))
+p_value_D_C_2021
+
+#Z = -1.550103
+#P = 0.1211169
+
+# Herbivore
+herbivore_average_total_count_2021 <- Plot_master_2021 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_herbivore = mean(Herbivore, na.rm = TRUE))
+
+herbivore_mean_mean_total_count_2021 <- mean(herbivore_average_total_count_2021$mean_count_herbivore, na.rm = TRUE)
+
+D_total_counts_herbivore_2021 <- sample_wide_2021 %>%
+  filter(str_ends(Sample, "2") | str_ends(Sample, "4")) %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Herbivore, na.rm = TRUE), .groups = 'drop')
+
+D_total_counts_herbivore_ABG_2021 <- D_total_counts_herbivore_2021 %>% filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_herbivore_2021 <- mean(D_total_counts_herbivore_ABG_2021$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Herbivore
+D_C_herbivore_2021 <- (D_ABG_mean_total_count_herbivore_2021 - herbivore_mean_mean_total_count_2021) /
+  sd(herbivore_average_total_count_2021$mean_count_herbivore)
+D_C_herbivore_2021
+
+p_value_D_C_herbivore_2021 <- 2 * pnorm(-abs(D_C_herbivore_2021))
+p_value_D_C_herbivore_2021
+
+#Z = 1.375491
+#P =  0.1689794
+
+# Omnivore
+omnivore_average_total_count_2021 <- Plot_master_2021 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_omnivore = mean(Omnivore, na.rm = TRUE))
+
+omnivore_mean_mean_total_count_2021 <- mean(omnivore_average_total_count_2021$mean_count_omnivore, na.rm = TRUE)
+
+D_total_counts_omnivore_2021 <- sample_wide_2021 %>%
+  filter(str_ends(Sample, "2") | str_ends(Sample, "4")) %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Omnivore, na.rm = TRUE), .groups = 'drop')
+
+D_total_counts_omnivore_ABG_2021 <- D_total_counts_omnivore_2021 %>% filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_omnivore_2021 <- mean(D_total_counts_omnivore_ABG_2021$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Omnivore
+D_C_omnivore_2021 <- (D_ABG_mean_total_count_omnivore_2021 - omnivore_mean_mean_total_count_2021) /
+  sd(omnivore_average_total_count_2021$mean_count_omnivore)
+D_C_omnivore_2021
+
+p_value_D_C_omnivore_2021 <- 2 * pnorm(-abs(D_C_omnivore_2021))
+p_value_D_C_omnivore_2021
+
+#Z = 1.966422
+#p = 0.04924985 *ABG Higher
+
+# Predator
+predator_average_total_count_2021 <- Plot_master_2021 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_predator = mean(Predator, na.rm = TRUE))
+
+predator_mean_mean_total_count_2021 <- mean(predator_average_total_count_2021$mean_count_predator, na.rm = TRUE)
+
+D_total_counts_predator_2021 <- sample_wide_2021 %>%
+  filter(str_ends(Sample, "2") | str_ends(Sample, "4")) %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Predator, na.rm = TRUE), .groups = 'drop')
+
+D_total_counts_predator_ABG_2021 <- D_total_counts_predator_2021 %>% filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_predator_2021 <- mean(D_total_counts_predator_ABG_2021$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Predator
+D_C_predator_2021 <- (D_ABG_mean_total_count_predator_2021 - predator_mean_mean_total_count_2021) /
+  sd(predator_average_total_count_2021$mean_count_predator)
+D_C_predator_2021
+
+p_value_D_C_predator_2021 <- 2 * pnorm(-abs(D_C_predator_2021))
+p_value_D_C_predator_2021
+
+# Z = 1.407006
+# P = 0.1594256
+
+# Fungivore
+fungivore_average_total_count_2021 <- Plot_master_2021 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_fungivore = mean(Fungivore, na.rm = TRUE))
+
+fungivore_mean_mean_total_count_2021 <- mean(fungivore_average_total_count_2021$mean_count_fungivore, na.rm = TRUE)
+
+D_total_counts_fungivore_2021 <- sample_wide_2021 %>%
+  filter(str_ends(Sample, "2") | str_ends(Sample, "4")) %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Fungivore, na.rm = TRUE), .groups = 'drop')
+
+D_total_counts_fungivore_ABG_2021 <- D_total_counts_fungivore_2021 %>% filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_fungivore_2021 <- mean(D_total_counts_fungivore_ABG_2021$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Fungivore
+D_C_fungivore_2021 <- (D_ABG_mean_total_count_fungivore_2021 - fungivore_mean_mean_total_count_2021) /
+  sd(fungivore_average_total_count_2021$mean_count_fungivore)
+D_C_fungivore_2021
+
+p_value_D_C_fungivore_2021 <- 2 * pnorm(-abs(D_C_fungivore_2021))
+p_value_D_C_fungivore_2021
+
+# Z = -0.03054093
+# P = 0.9756356
+
+# Pollinator
+pollinator_average_total_count_2021 <- Plot_master_2021 %>%
+  group_by(iteration) %>%
+  summarize(mean_count_pollinator = mean(Pollinator, na.rm = TRUE))
+
+pollinator_mean_mean_total_count_2021 <- mean(pollinator_average_total_count_2021$mean_count_pollinator, na.rm = TRUE)
+
+D_total_counts_pollinator_2021 <- sample_wide_2021 %>%
+  filter(str_ends(Sample, "2") | str_ends(Sample, "4")) %>%
+  group_by(Sample, block, Treatment) %>%
+  summarise(Count = sum(Pollinator, na.rm = TRUE), .groups = 'drop')
+
+D_total_counts_pollinator_ABG_2021 <- D_total_counts_pollinator_2021 %>% filter(Treatment == "ABG")
+
+D_ABG_mean_total_count_pollinator_2021 <- mean(D_total_counts_pollinator_ABG_2021$Count, na.rm = TRUE)
+
+# Z-Score and p-value for Pollinator
+D_C_pollinator_2021 <- (D_ABG_mean_total_count_pollinator_2021 - pollinator_mean_mean_total_count_2021) /
+  sd(pollinator_average_total_count_2021$mean_count_pollinator)
+D_C_pollinator_2021
+
+p_value_D_C_pollinator_2021 <- 2 * pnorm(-abs(D_C_pollinator_2021))
+p_value_D_C_pollinator_2021
+
+# Z = -1.566795
+# P = 0.1171625
