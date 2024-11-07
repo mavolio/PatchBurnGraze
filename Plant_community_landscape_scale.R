@@ -1,7 +1,7 @@
 #Patch-Burn Synthesis Project
 #Plant community data at the landscape scale
 #Author: Joshua Adedayo Ajowele joshuaajowele@gmail.com
-#Started: May 13, 2024 last modified: July 02, 2024
+#Started: May 13, 2024 last modified: Nov 07, 2024
 
 #load library
 library(tidyverse)
@@ -496,3 +496,166 @@ indicator_abgvspbg<-multipatt(pl_sp_data_2021,pl_env_data_2021$FireGrzTrt)
 ff<-summary(indicator_abgvspbg)
 #There are!
 
+
+###community composition based on year since fire and watershed##
+#creating a key for year since fire####
+YrSinceFire_key <- tibble(year_watershed= c("2011_C01A", "2011_C03A", "2011_C03B",
+                                            "2011_C03C", "2011_C1SB", "2011_C3SA",
+                                            "2011_C3SB", "2011_C3SC",
+                                            "2012_C01A", "2012_C03A", "2012_C03B",
+                                            "2012_C03C", "2012_C1SB", "2012_C3SA",
+                                            "2012_C3SB", "2012_C3SC", "2013_C03A",
+                                            "2013_C03B", "2013_C03C", "2013_C1SB",
+                                            "2013_C3SA", "2013_C3SB", "2013_C01A",
+                                            "2013_C3SC", "2014_C01A", "2014_C03A",
+                                            "2014_C03B", "2014_C03C", "2014_C1SB",
+                                            "2014_C3SA", "2014_C3SB", "2014_C3SC",
+                                            "2015_C1SB", "2015_C03A", "2015_C03B",
+                                            "2015_C3SC", "2015_C3SA", "2015_C3SB",
+                                            "2015_C03C", "2015_C01A", "2016_C03A",
+                                            "2016_C03B", "2016_C3SC", "2016_C01A",
+                                            "2016_C03C", "2016_C1SB", "2016_C3SA",
+                                            "2016_C3SB", "2017_C3SA", "2017_C3SB",
+                                            "2017_C03C", "2017_C03A", "2017_C03B",
+                                            "2017_C1SB", "2017_C3SC", "2017_C01A",
+                                            "2018_C03A", "2018_C03B", "2018_C03C",
+                                            "2018_C01A", "2018_C3SA", "2018_C3SB",
+                                            "2018_C1SB", "2018_C3SC", "2019_C3SA",
+                                            "2019_C3SB", "2019_C1SB", "2019_C03A",
+                                            "2019_C03B", "2019_C03C", "2019_C3SC",
+                                            "2019_C01A", "2020_C1SB", "2020_C3SA",
+                                            "2020_C3SB", "2020_C3SC", "2020_C03A",
+                                            "2020_C03B", "2020_C03C", "2020_C01A",
+                                            "2021_C01A", "2021_C03C", "2021_C03A",
+                                            "2021_C03B", "2021_C3SA", "2021_C3SB",
+                                            "2021_C3SC", "2021_C1SB"),
+                          yrsins_fire= c("ABG0","PBG1","PBG0", "PBG2", "ABG0","PBG0","PBG1","PBG1",
+                                         "ABG0","PBG2","PBG1","PBG0","ABG0","PBG1","PBG2",
+                                         "PBG0","PBG0", "PBG2", "PBG1", "ABG0","PBG2", "PBG0",
+                                         "ABG0", "PBG1","ABG0","PBG1", "PBG0","PBG2","ABG0",
+                                         "PBG0","PBG1","PBG2","ABG0","PBG2","PBG1","PBG0","PBG1",
+                                         "PBG2","PBG0","ABG0","PBG0","PBG2","PBG1","ABG0","PBG1",
+                                         "ABG0","PBG2","PBG0","PBG0","PBG1","PBG2","PBG1","PBG0",
+                                         "ABG0","PBG2","ABG0","PBG2","PBG1","PBG0","ABG0","PBG1",
+                                         "PBG2","ABG0","PBG0","PBG2","PBG0","ABG0","PBG0","PBG2",
+                                         "PBG1","PBG1","ABG0","ABG0","PBG0","PBG1","PBG2","PBG1",
+                                         "PBG0","PBG2","ABG0","ABG0","PBG0","PBG2","PBG1","PBG1",
+                                         "PBG2","PBG0","ABG0"))
+
+
+#merging key with dataset####
+burn_time_sp_comp<-species_comp%>%
+  filter(RecYear%in%2016:2021)%>%
+  left_join(watershed_key,by="Watershed")%>%
+  left_join(Watershed_key2,by="Watershed")%>%
+  mutate(year_watershed=paste(RecYear,Watershed,sep="_"))%>%
+  left_join(YrSinceFire_key, by="year_watershed")%>%
+  group_by(RecYear,yrsins_fire,Unit,Watershed,FireGrzTrt,Transect,sp)%>%
+  summarise(abundance=mean(abundance, na.rm=T))%>%
+  mutate(abundance=abundance/100)%>%
+  pivot_wider(names_from = sp, values_from = abundance, values_fill = 0)
+  
+
+# Separate out spcomp and environmental columns (cols are species) #
+burn_time_sp_data <- burn_time_sp_comp %>%
+  ungroup()%>%
+  dplyr::select(-1:-6)
+burn_time_env_data <- burn_time_sp_comp%>%dplyr::select(1:6)
+
+#get nmds1 and 2
+burn_time_mds_all <- metaMDS(burn_time_sp_data, distance = "bray")
+#Run 20 stress 0.211
+
+#combine NMDS1 and 2 with factor columns and create centroids
+burn_time_mds_scores <- data.frame(burn_time_env_data, scores(burn_time_mds_all, display="sites"))%>%
+  group_by(RecYear, Unit,yrsins_fire,Watershed)%>%
+  mutate(NMDS1_mean=mean(NMDS1),
+         NMDS2_mean=mean(NMDS2))
+
+#plotting centroid through time
+ggplot(burn_time_mds_scores, aes(x=NMDS1_mean, y=NMDS2_mean, col=yrsins_fire, shape=Watershed))+
+  geom_point(size=8)+
+  geom_path()+
+  scale_shape_manual(values=c(15:18,0:2,5))+
+  scale_colour_manual(values=c("#F0E442", "#994F00", "#999999", "#0072B2"))#+
+  facet_wrap(~Unit, scales="free")
+
+#calculating permanova
+#creating a loop to do this
+burn_year_vec_pl <- unique(burn_time_env_data$RecYear)
+burn_pl_perm <- {}
+
+#by Year since fire
+for(YEAR in 1:length(burn_year_vec_pl)){
+  burn_vdist_temp_pl <- vegdist(filter(burn_time_sp_data, burn_time_env_data$RecYear ==  burn_year_vec_pl[YEAR]))
+  burn_permanova_temp_pl <- adonis(burn_vdist_temp_pl ~ subset(burn_time_env_data, RecYear == burn_year_vec_pl[YEAR])$yrsins_fire)
+  burn_permanova_out_temp_pl <- data.frame(RecYear = burn_year_vec_pl[YEAR], 
+                                      DF = burn_permanova_temp_pl$aov.tab[1,1],
+                                      F_value = burn_permanova_temp_pl$aov.tab[1,4],
+                                      P_value = burn_permanova_temp_pl$aov.tab[1,6])
+  burn_pl_perm <- rbind(burn_pl_perm,burn_permanova_out_temp_pl)
+  rm(burn_vdist_temp_pl, burn_permanova_temp_pl, burn_permanova_out_temp_pl)
+}
+
+write.csv(burn_pl_perm, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/plant_permanova_yearsincefire.csv")
+
+#compare by watershed
+burn_year_vec_pl <- unique(burn_time_env_data$RecYear)
+burn_pl_perm_watershed <- {}
+
+for(YEAR in 1:length(burn_year_vec_pl)){
+  burn_vdist_temp_pl <- vegdist(filter(burn_time_sp_data, burn_time_env_data$RecYear ==  burn_year_vec_pl[YEAR]))
+  burn_permanova_temp_pl <- adonis(burn_vdist_temp_pl ~ subset(burn_time_env_data, RecYear == burn_year_vec_pl[YEAR])$Watershed)
+  burn_permanova_out_temp_pl <- data.frame(RecYear = burn_year_vec_pl[YEAR], 
+                                           DF = burn_permanova_temp_pl$aov.tab[1,1],
+                                           F_value = burn_permanova_temp_pl$aov.tab[1,4],
+                                           P_value = burn_permanova_temp_pl$aov.tab[1,6])
+  burn_pl_perm_watershed <- rbind(burn_pl_perm_watershed,burn_permanova_out_temp_pl)
+  rm(burn_vdist_temp_pl, burn_permanova_temp_pl, burn_permanova_out_temp_pl)
+}
+
+write.csv(burn_pl_perm_watershed, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/plant_permanova_watershed.csv")
+
+#seems magnitude of diff in Unit>Watershed>Yrsins_fire
+#comparing watershed and time since burn within the same unit
+#merging key with dataset####
+burn_time_sp_comp_south<-species_comp%>%
+  filter(RecYear%in%2016:2021)%>%
+  left_join(watershed_key,by="Watershed")%>%
+  left_join(Watershed_key2,by="Watershed")%>%
+  mutate(year_watershed=paste(RecYear,Watershed,sep="_"))%>%
+  left_join(YrSinceFire_key, by="year_watershed")%>%
+  filter(Unit=="south")%>%
+  group_by(RecYear,yrsins_fire,Unit,Watershed,FireGrzTrt,Transect,sp)%>%
+  summarise(abundance=mean(abundance, na.rm=T))%>%
+  mutate(abundance=abundance/100)%>%
+  pivot_wider(names_from = sp, values_from = abundance, values_fill = 0)
+
+
+# Separate out spcomp and environmental columns (cols are species) #
+burn_time_sp_data_south <- burn_time_sp_comp_south %>%
+  ungroup()%>%
+  dplyr::select(-1:-6)
+burn_time_env_data_south <- burn_time_sp_comp_south%>%dplyr::select(1:6)
+#compare by watershed
+burn_year_vec_pl_s <- unique(burn_time_env_data_south$RecYear)
+burn_pl_perm_watershed_s <- {}
+
+for(YEAR in 1:length(burn_year_vec_pl_s)){
+  burn_vdist_temp_pl <- vegdist(filter(burn_time_sp_data_south, burn_time_env_data_south$RecYear ==  burn_year_vec_pl_s[YEAR]))
+  burn_permanova_temp_pl <- adonis(burn_vdist_temp_pl ~ subset(burn_time_env_data_south, RecYear == burn_year_vec_pl_s[YEAR])$yrsins_fire)
+  burn_permanova_out_temp_pl <- data.frame(RecYear = burn_year_vec_pl_s[YEAR], 
+                                           DF = burn_permanova_temp_pl$aov.tab[1,1],
+                                           F_value = burn_permanova_temp_pl$aov.tab[1,4],
+                                           P_value = burn_permanova_temp_pl$aov.tab[1,6])
+  burn_pl_perm_watershed_s <- rbind(burn_pl_perm_watershed_s,burn_permanova_out_temp_pl)
+  rm(burn_vdist_temp_pl, burn_permanova_temp_pl, burn_permanova_out_temp_pl)
+}
+
+write.csv(burn_pl_perm_watershed, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/plant_permanova_watershed.csv")
+#package for pERMANOVA pairwise comparison 
+library(devtools)
+devtools::install_github("pmartinezarbizu/pairwiseAdonis/pairwiseAdonis")
+library(pairwiseAdonis)
+pairwise.adonis2(burn_time_sp_data_south~subset(burn_time_env_data_south,RecYear==[2016])$yrsins_fire, data=burn_time_env_data_south)
+#figure out how to filter in base r
