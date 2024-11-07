@@ -653,9 +653,16 @@ for(YEAR in 1:length(burn_year_vec_pl_s)){
 }
 
 write.csv(burn_pl_perm_watershed, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/plant_permanova_watershed.csv")
+
+#subsetting by year
+burn_time_env_data_south_2016<-burn_time_env_data_south%>%
+  filter(RecYear==2016)
+burn_time_sp_data_south_2016<-burn_time_sp_data_south%>%
+  filter(burn_time_env_data_south$RecYear==2016)
+
 #package for pERMANOVA pairwise comparison 
 library(devtools)
 devtools::install_github("pmartinezarbizu/pairwiseAdonis/pairwiseAdonis")
 library(pairwiseAdonis)
-pairwise.adonis2(burn_time_sp_data_south~subset(burn_time_env_data_south,RecYear==[2016])$yrsins_fire, data=burn_time_env_data_south)
+pairwise.adonis2(burn_time_sp_data_south_2016~yrsins_fire, data=burn_time_env_data_south_2016)
 #figure out how to filter in base r
