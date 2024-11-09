@@ -349,7 +349,7 @@ write.csv(pl_beta, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG
 write.csv(pl_perm, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/plant_permanova.csv")
 #model for betadiversity
 
-#calculating betadiversity by unit
+#calculating betadiversity by unit####
 #creating a loop to do this
 year_vec_pl <- unique(pl_env_data$RecYear)
 pl_perm_unit <- {}
@@ -412,7 +412,7 @@ ggplot(plbeta_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
                     ymax=se_upper),width=0.2,linetype=1)+
   scale_fill_manual(values=c( "#F0E442", "#009E73"))
 
-#simper analysis to determine species contributing 80% of difference in compositioin
+#simper analysis to determine species contributing 80% of difference in composition####
 #2021
 pl_sp_data_2021 <- sp_comp_comm %>%
   filter(RecYear==2021)%>%
@@ -490,7 +490,7 @@ ggplot(pl_cover_2021,aes(x=reorder(sp,-abund_ABG_PBG)))+
 
 
 
-#just checking if any species is an indicator distinguishing treatment
+#just checking if any species is an indicator distinguishing treatment####
 library(indicspecies)
 indicator_abgvspbg<-multipatt(pl_sp_data_2021,pl_env_data_2021$FireGrzTrt)
 ff<-summary(indicator_abgvspbg)
@@ -599,7 +599,19 @@ for(YEAR in 1:length(burn_year_vec_pl)){
 
 write.csv(burn_pl_perm, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/plant_permanova_yearsincefire.csv")
 
-#compare by watershed
+#multiple comparison for significant years 2018 and 2020
+burn_time_sp_data_2018<-burn_time_sp_data%>%
+  filter(burn_time_env_data$RecYear==2018)
+burn_time_env_data_2018<-burn_time_env_data%>%
+  filter(RecYear==2018)
+#package for pERMANOVA pairwise comparison 
+#library(devtools)
+#devtools::install_github("pmartinezarbizu/pairwiseAdonis/pairwiseAdonis")
+library(pairwiseAdonis)
+pairwise.adonis2(burn_time_sp_data_2018~yrsins_fire, data=burn_time_env_data_2018)
+
+
+#compare by watershed####
 burn_year_vec_pl <- unique(burn_time_env_data$RecYear)
 burn_pl_perm_watershed <- {}
 
@@ -661,8 +673,5 @@ burn_time_sp_data_south_2016<-burn_time_sp_data_south%>%
   filter(burn_time_env_data_south$RecYear==2016)
 
 #package for pERMANOVA pairwise comparison 
-library(devtools)
-devtools::install_github("pmartinezarbizu/pairwiseAdonis/pairwiseAdonis")
-library(pairwiseAdonis)
 pairwise.adonis2(burn_time_sp_data_south_2016~yrsins_fire, data=burn_time_env_data_south_2016)
-#figure out how to filter in base r
+
