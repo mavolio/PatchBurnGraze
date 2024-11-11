@@ -675,3 +675,104 @@ burn_time_sp_data_south_2016<-burn_time_sp_data_south%>%
 #package for pERMANOVA pairwise comparison 
 pairwise.adonis2(burn_time_sp_data_south_2016~yrsins_fire, data=burn_time_env_data_south_2016)
 
+
+
+
+#get alpha richness and evenness (average by transect)####
+local_sp_comp<-species_comp%>%
+  left_join(watershed_key,by="Watershed")%>%
+  left_join(Watershed_key2,by="Watershed")%>%
+  mutate(year_watershed=paste(RecYear,Watershed,sep="_"))%>%
+  left_join(YrSinceFire_key, by="year_watershed")%>%
+  group_by(RecYear,Unit,Watershed,FireGrzTrt,Transect,sp)%>%
+  summarise(abundance=mean(abundance, na.rm=T))%>%
+  mutate(abundance=abundance/100)%>%
+  mutate(Rep_id=paste(Unit,FireGrzTrt,Watershed,Transect, sep="_"))
+
+#deriving richness and evenness using codyn at landscape scale
+local_rich <- community_structure(local_sp_comp, time.var = "RecYear", 
+                               abundance.var = "abundance",
+                               replicate.var = "Rep_id", metric = "Evar")
+
+
+
+#join datasets
+local_rich_ready<- local_sp_comp %>%
+  ungroup()%>%
+  dplyr::select(RecYear,Unit,Watershed,FireGrzTrt,Transect,Rep_id) %>%
+  distinct()%>%#remove repeated rows
+  left_join(local_rich, by=c("Rep_id","RecYear"))
+
+#convert to factors
+local_rich_ready$RecYear<-as.factor(local_rich_ready$RecYear)
+
+#mixed anova of local richness and evenness
+local_rich_model<-lmer(richness~FireGrzTrt*RecYear+(1|Unit/Watershed), 
+                       data=local_rich_ready)
+anova(local_rich_model)
+check_model(local_rich_model)#good enough
+qqnorm(resid(local_rich_model))
+
+#using mean estimate to create figure 
+local_rich_interact<-interactionMeans(local_rich_model)
+#replacing spaces in column names with underscore 
+names(local_rich_interact)<-str_replace_all(names(local_rich_interact), " ","_")
+#df for visuals from model estimates
+local_rich_interact_viz<-local_rich_interact%>%
+  mutate(local_rich_mean=adjusted_mean,
+         local_rich_upper=adjusted_mean+SE_of_link,
+         local_rich_lower=adjusted_mean-SE_of_link)
+#visual
+ggplot(local_rich_interact_viz,aes(RecYear, local_rich_mean, col=FireGrzTrt))+
+  geom_point(size=3)+
+  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
+  geom_errorbar(aes(ymin=local_rich_lower,
+                    ymax=local_rich_upper),width=0.2,linetype=1)+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))
+
+#average across years for simplification
+local_rich_interact_bar<-local_rich_interact_viz%>%
+  group_by(FireGrzTrt)%>%
+  summarise(local_mean=mean(local_rich_mean),
+            se_upper=mean(local_rich_upper),
+            se_lower=mean(local_rich_lower))
+ggplot(local_rich_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
+  geom_bar(stat = "identity",aes(y=local_mean),width = 0.5)+
+  geom_errorbar(aes(ymin=se_lower,
+                    ymax=se_upper),width=0.2,linetype=1)+
+  scale_fill_manual(values=c( "#F0E442", "#009E73"))
+
+local_evar_model<-lmer(Evar~FireGrzTrt*RecYear+(1|Unit/Watershed),
+                       data=local_rich_ready)
+anova(local_evar_model)
+check_model(local_evar_model)
+qqnorm(resid(local_evar_model))#good enough
+
+#using mean estimate to create figure 
+local_ever_interact<-interactionMeans(local_evar_model)
+#replacing spaces in column names with underscore 
+names(local_ever_interact)<-str_replace_all(names(local_ever_interact), " ","_")
+#df for visuals from model estimates
+local_ever_interact_viz<-local_ever_interact%>%
+  mutate(local_evar_mean=adjusted_mean,
+         local_evar_upper=adjusted_mean+SE_of_link,
+         local_evar_lower=adjusted_mean-SE_of_link)
+#visual
+ggplot(local_ever_interact_viz,aes(RecYear, local_evar_mean, col=FireGrzTrt))+
+  geom_point(size=3)+
+  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
+  geom_errorbar(aes(ymin=local_evar_lower,
+                    ymax=local_evar_upper),width=0.2,linetype=1)+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))
+
+#average across years for simplification
+local_evar_interact_bar<-local_ever_interact_viz%>%
+  group_by(FireGrzTrt)%>%
+  summarise(local_mean=mean(local_evar_mean),
+            se_upper=mean(local_evar_upper),
+            se_lower=mean(local_evar_lower))
+ggplot(local_evar_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
+  geom_bar(stat = "identity",aes(y=local_mean),width = 0.5)+
+  geom_errorbar(aes(ymin=se_lower,
+                    ymax=se_upper),width=0.2,linetype=1)+
+  scale_fill_manual(values=c( "#F0E442", "#009E73"))
