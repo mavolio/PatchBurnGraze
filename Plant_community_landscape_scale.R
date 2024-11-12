@@ -1,7 +1,7 @@
 #Patch-Burn Synthesis Project
 #Plant community data at the landscape scale
 #Author: Joshua Adedayo Ajowele joshuaajowele@gmail.com
-#Started: May 13, 2024 last modified: Nov 07, 2024
+#Started: May 13, 2024 last modified: Nov 12, 2024
 
 #load library
 library(tidyverse)
@@ -17,6 +17,7 @@ library(lmerTest)
 library(see)
 library(patchwork)
 library(phia)
+library(readxl)
 
 ## Set graphing parameters
 theme_set(theme_bw())
@@ -776,3 +777,58 @@ ggplot(local_evar_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
   geom_errorbar(aes(ymin=se_lower,
                     ymax=se_upper),width=0.2,linetype=1)+
   scale_fill_manual(values=c( "#F0E442", "#009E73"))
+
+#create abundance based on lifeforms####
+species_comp_abund<-species_comp_data%>%
+  left_join(cover_key, by="CoverClass")%>%
+  #create unique name for species by combining binomial nomenclature
+  mutate(sp=paste(Ab_genus,Ab_species, sep="_"))%>%
+  group_by(Watershed, RecYear,Transect,Plot,sp,SpeCode)%>%
+  #selecting the maximum cover for each species
+  summarise(abundance=max(abundance, na.rm=T))%>%
+  #removing unwanted years
+  filter(!RecYear%in%2008:2015)%>%
+  filter(RecYear!=2022)
+
+#import data as dataframe
+lifeforms_data<- read_excel("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/sp_list_update.xlsx")%>%
+  mutate(life_form=paste(growthform,lifeform, sep="_"))%>%
+  rename(SpeCode=code)
+
+#merging key with dataset
+sp_comp_abund<-species_comp_abund%>%
+  left_join(watershed_key,by="Watershed")%>%
+  left_join(Watershed_key2,by="Watershed")%>%
+  left_join(lifeforms_data, by="SpeCode")%>%
+  filter(Transect!="C" | Watershed!="C03C")%>%
+  filter(Watershed!="C03C" | Transect!="D")%>%
+  filter(Watershed!="C03B" | Transect!="A")%>%
+  filter(Watershed!="C03B" | Transect!="B")%>%
+  filter(Watershed!="C03B" | Transect!="C")%>%
+  filter(Watershed!="C03A" | Transect!="A")%>%
+  filter(Watershed!="C03A" | Transect!="B")%>%
+  filter(Watershed!="C03A" | Transect!="C")%>%
+  filter(Watershed!="C3SC" | Transect!="A")%>%
+  filter(Watershed!="C3SC" | Transect!="B")%>%
+  filter(Watershed!="C3SC" | Transect!="C")%>%
+  filter(Watershed!="C3SA" | Transect!="B")%>%
+  filter(Watershed!="C3SA" | Transect!="C")%>%
+  filter(Watershed!="C3SA" | Transect!="D")%>%
+  filter(Watershed!="C3SB" | Transect!="A")%>%
+  filter(Watershed!="C3SB" | Transect!="B")%>%
+  group_by(Unit,RecYear,FireGrzTrt,sp)%>%
+  mutate(abundance_avg=mean(abundance,na.rm=T))%>%
+  group_by(Unit,RecYear,FireGrzTrt)%>%
+  mutate(abundance_mean=(abundance_avg/sum(abundance_avg, na.rm=T)))%>%
+  group_by(Unit,RecYear,FireGrzTrt,life_form)%>%
+  summarise(abundance_m=sum(abundance_mean,na.rm=T))%>%
+  group_by(Unit,FireGrzTrt,life_form)%>%
+  summarise(abundance=mean(abundance_m,na.rm=T))
+
+#prepare data for figure 
+sp_comp_abund_viz<-sp_comp_abund%>%
+  group_by(FireGrzTrt,life_form)%>%
+  summarise(abundance=mean(abundance,na.rm=T))
+ggplot(sp_comp_abund_viz, aes(y=abundance,x=life_form,fill=FireGrzTrt))+
+  geom_bar(position = "fill", stat = "identity")+#position fill converts ABG,PBG to percenatge for each lifeform
+  scale_fill_manual(values=c("#F0E442", "#009E73"))
