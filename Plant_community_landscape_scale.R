@@ -1,7 +1,7 @@
 #Patch-Burn Synthesis Project
 #Plant community data at the landscape scale
 #Author: Joshua Adedayo Ajowele joshuaajowele@gmail.com
-#Started: May 13, 2024 last modified: Nov 12, 2024
+#Started: May 13, 2024 last modified: Nov 27, 2024
 
 #load library
 library(tidyverse)
@@ -677,7 +677,42 @@ burn_time_sp_data_south_2016<-burn_time_sp_data_south%>%
 pairwise.adonis2(burn_time_sp_data_south_2016~yrsins_fire, data=burn_time_env_data_south_2016)
 
 
+#comparing watershed and year since fire treatment without considering year
+dist_south<-vegdist(burn_time_sp_data_south)
+permanova_south<-adonis(dist_south~burn_time_env_data_south$yrsins_fire+burn_time_env_data_south$Watershed+as.factor(burn_time_env_data_south$RecYear))
+permanova_south$aov.tab
 
+pairwise.adonis2(burn_time_sp_data_south~yrsins_fire+Watershed+as.factor(RecYear), data=burn_time_env_data_south)
+pairwise.adonis2(burn_time_sp_data_south~Watershed+yrsins_fire+as.factor(RecYear), data=burn_time_env_data_south)
+
+#north unit
+burn_time_sp_comp_north<-species_comp%>%
+  filter(RecYear%in%2016:2021)%>%
+  left_join(watershed_key,by="Watershed")%>%
+  left_join(Watershed_key2,by="Watershed")%>%
+  mutate(year_watershed=paste(RecYear,Watershed,sep="_"))%>%
+  left_join(YrSinceFire_key, by="year_watershed")%>%
+  filter(Unit=="north")%>%
+  group_by(RecYear,yrsins_fire,Unit,Watershed,FireGrzTrt,Transect,sp)%>%
+  summarise(abundance=mean(abundance, na.rm=T))%>%
+  mutate(abundance=abundance/100)%>%
+  pivot_wider(names_from = sp, values_from = abundance, values_fill = 0)
+#subsetting environmental and sp data
+burn_time_sp_data_north<-burn_time_sp_comp_north%>%
+  ungroup()%>%
+  select(-1:-6)
+burn_time_env_data_north<-burn_time_sp_comp_north%>%
+  select(1:6)
+dist_north<-vegdist(burn_time_sp_data_north)
+permanova_north<-adonis(dist_north~burn_time_env_data_north$yrsins_fire+burn_time_env_data_north$Watershed+as.factor(burn_time_env_data_north$RecYear))
+permanova_north$aov.tab
+
+#pairwise comparisons
+pairwise.adonis2(burn_time_sp_data_north~yrsins_fire+Watershed+as.factor(RecYear), data=burn_time_env_data_north)
+
+pairwise.adonis2(burn_time_sp_data_north~Watershed+yrsins_fire+as.factor(RecYear), data=burn_time_env_data_north)
+
+pairwise.adonis2(burn_time_sp_data_north~FireGrzTrt+Watershed+as.factor(RecYear), data=burn_time_env_data_north)
 
 #get alpha richness and evenness (average by transect)####
 local_sp_comp<-species_comp%>%
@@ -787,7 +822,7 @@ species_comp_abund<-species_comp_data%>%
   #selecting the maximum cover for each species
   summarise(abundance=max(abundance, na.rm=T))%>%
   #removing unwanted years
-  filter(!RecYear%in%2008:2015)%>%
+  filter(!RecYear%in%2008:2010)%>%
   filter(RecYear!=2022)
 
 #import data as dataframe
@@ -832,3 +867,8 @@ sp_comp_abund_viz<-sp_comp_abund%>%
 ggplot(sp_comp_abund_viz, aes(y=abundance,x=life_form,fill=FireGrzTrt))+
   geom_bar(position = "fill", stat = "identity")+#position fill converts ABG,PBG to percenatge for each lifeform
   scale_fill_manual(values=c("#F0E442", "#009E73"))
+
+#alternative figure
+ggplot(sp_comp_abund_viz, aes(y=abundance,fill=life_form,x=FireGrzTrt))+
+  geom_bar(position = "stack", stat = "identity")+
+  scale_fill_bluebrown()
