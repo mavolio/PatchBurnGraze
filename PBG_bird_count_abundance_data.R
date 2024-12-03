@@ -1,6 +1,6 @@
 #PBG Bird count and community metrics
 #Authors: Joshua Ajowele
-#Started: 26 May 2022 last modified: 23 May 2024
+#Started: 26 May 2022 last modified: 05 Nov 2024
 
 #load library####
 library(tidyverse)
@@ -145,7 +145,7 @@ ggplot(yrsincef_bird_viz, aes(Year, total, col = yrsince_fire,
   geom_errorbar(aes(ymin = total - se_total, 
                     ymax = total + se_total),
                 width=0.1, col="black", linetype=1) +
-  scale_colour_manual(values=c( "#F0E442", "#009E73", "#999999", "#0072B2"))+
+  scale_colour_manual(values=c( "#F0E442", "#994F00", "#999999", "#0072B2"))+
   ylab("bird count")
 
 
@@ -171,7 +171,7 @@ yrsincef_bird_viz_yr<-yrsincef_bird_anlys%>%
 ggplot(yrsincef_bird_viz_yr, aes(yrsince_fire, total, fill=yrsince_fire))+
   geom_col(width=.5) +
   geom_errorbar(aes(ymax=total+se_total, ymin=total-se_total),width=0.1)+
-  scale_fill_manual(values=c("#F0E442", "#009E73", "#999999", "#0072B2"))+
+  scale_fill_manual(values=c("#F0E442", "#994F00", "#999999", "#0072B2"))+
   ylab("Bird count")
 
 #year and trt significant. needs multicomparison
@@ -207,18 +207,18 @@ yrsin_bird_comm<-Yrs_since_fire_bird%>%
 #deriving richness and evenness using codyn at landscape scale
 bird_rich <- community_structure(yrsin_bird_comm, time.var = "Year", 
                                abundance.var = "abund",
-                               rebirdicate.var = "rep_id", metric = "Evar")
+                               replicate.var = "rep_id", metric = "Evar")
 
 #deriving diversity values
 bird_diver <- community_diversity(yrsin_bird_comm, time.var = "Year", 
                                 abundance.var = "abund",
-                                rebirdicate.var = "rep_id", metric="Shannon")
+                                replicate.var = "rep_id", metric="Shannon")
 
 
 #extracting important columns 
 bird_comp_subset <- yrsin_bird_comm %>%
   ungroup()%>%
-  dbirdyr::select(Year, yrsince_fire, Watershed, TransectName, Transect,rep_id) %>%
+  select(Year, yrsince_fire, Watershed, TransectName, Transect,rep_id) %>%
   distinct()#remove repeated rows
 
 #combine into a single data
@@ -286,13 +286,13 @@ ggplot(bird_rich_diver_viz, aes(Year, diver, col = yrsince_fire,
   geom_errorbar(aes(ymin = diver - diver_se, 
                     ymax = diver + diver_se),
                 width=0.1, col="black", linetype=1) +
-  scale_colour_manual(values=c( "#F0E442", "#009E73", "#999999", "#0072B2"))+
+  scale_colour_manual(values=c( "#F0E442", "#994F00", "#999999", "#0072B2"))+
   ylab("bird diversity")
 #bargraph
 ggplot(bird_rich_diver_bar, aes(yrsince_fire, diver, fill=yrsince_fire))+
   geom_col(width=.5) +
   geom_errorbar(aes(ymax=diver + diver_se, ymin=diver - diver_se),width=0.1)+
-  scale_fill_manual(values=c("#F0E442", "#009E73", "#999999", "#0072B2"))+
+  scale_fill_manual(values=c("#F0E442", "#994F00", "#999999", "#0072B2"))+
   ylab("Bird diversity")
 
 #richness
@@ -304,14 +304,14 @@ ggplot(bird_rich_diver_viz, aes(Year, rich, col = yrsince_fire,
   geom_errorbar(aes(ymin = rich - rich_se, 
                     ymax = rich + rich_se),
                 width=0.1, col="black", linetype=1) +
-  scale_colour_manual(values=c( "#F0E442", "#009E73", "#999999", "#0072B2"))+
+  scale_colour_manual(values=c( "#F0E442", "#994F00", "#999999", "#0072B2"))+
   ylab("Bird richness")
 #bargraph
 ggplot(bird_rich_diver_bar, aes(yrsince_fire, rich, fill=yrsince_fire))+
   geom_col(width=.5) +
   geom_errorbar(aes(ymin = rich - rich_se, 
                     ymax = rich + rich_se),width=0.1)+
-  scale_fill_manual(values=c("#F0E442", "#009E73", "#999999", "#0072B2"))+
+  scale_fill_manual(values=c("#F0E442", "#994F00", "#999999", "#0072B2"))+
   ylab("Bird richness")
 
 #Evar
@@ -323,15 +323,15 @@ ggplot(bird_rich_diver_viz, aes(Year, evar, col = yrsince_fire,
   geom_errorbar(aes(ymin = evar - evar_se, 
                     ymax = evar + evar_se),
                 width=0.1, col="black", linetype=1) +
-  scale_colour_manual(values=c( "#F0E442", "#009E73", "#999999", "#0072B2"))+
+  scale_colour_manual(values=c( "#F0E442", "#994F00", "#999999", "#0072B2"))+
   ylab("Bird evenness")
 #bargraph
 ggplot(bird_rich_diver_bar, aes(yrsince_fire, evar, fill=yrsince_fire))+
   geom_col(width=.5) +
   geom_errorbar(aes(ymin = evar - evar_se, 
                     ymax = evar + evar_se),width=0.1)+
-  scale_fill_manual(values=c("#F0E442", "#009E73", "#999999", "#0072B2"))+
-  ylab("Bird richness")
+  scale_fill_manual(values=c("#F0E442", "#994F00", "#999999", "#0072B2"))+
+  ylab("Bird evenness")
 
 #grassland bird species
 #total grass bird count for year since fire
@@ -357,7 +357,7 @@ ggplot(yrsincef_grass_bird_viz, aes(Year, total, col = yrsince_fire,
   geom_errorbar(aes(ymin = total - se_total, 
                     ymax = total + se_total),
                 width=0.1, col="black", linetype=1) +
-  scale_colour_manual(values=c( "#F0E442", "#009E73", "#999999", "#0072B2")) +
+  scale_colour_manual(values=c( "#F0E442", "#994F00", "#999999", "#0072B2")) +
   ylab("grassland bird count")
 
 #model
@@ -380,7 +380,7 @@ yrsincef_grass_bird_yr<-yrsincef_grass_bird_anlys%>%
 ggplot(yrsincef_grass_bird_yr, aes(yrsince_fire, total, fill=yrsince_fire))+
   geom_col(width=.5) +
   geom_errorbar(aes(ymax=total+se_total, ymin=total-se_total),width=0.1)+
-  scale_fill_manual(values=c("#F0E442", "#009E73", "#999999", "#0072B2"))+
+  scale_fill_manual(values=c("#F0E442", "#994F00", "#999999", "#0072B2"))+
   ylab("grassland Bird count")
 
 #community metrics for grassland species
@@ -464,7 +464,7 @@ ggplot(yrsincef_non_grass_bird_viz, aes(Year, total, col = yrsince_fire,
   geom_errorbar(aes(ymin = total - se_total, 
                     ymax = total + se_total),
                 width=0.1, col="black", linetype=1) +
-  scale_colour_manual(values=c( "#F0E442", "#009E73", "#999999", "#0072B2")) +
+  scale_colour_manual(values=c( "#F0E442", "#994F00", "#999999", "#0072B2")) +
   ylab("non-grassland bird count")
 
 #model
@@ -491,7 +491,7 @@ yrsincef_non_grass_bird_yr<-yrsincef_non_grass_bird_anlys%>%
 ggplot(yrsincef_non_grass_bird_yr, aes(yrsince_fire, total, fill=yrsince_fire))+
   geom_col(width=.5) +
   geom_errorbar(aes(ymax=total+se_total, ymin=total-se_total),width=0.1)+
-  scale_fill_manual(values=c("#F0E442", "#009E73", "#999999", "#0072B2"))+
+  scale_fill_manual(values=c("#F0E442", "#994F00", "#999999", "#0072B2"))+
   ylab("non-grassland Bird count")
 
 
