@@ -587,18 +587,28 @@ ABG_VS_PBG_NMDS_2021
 
 
 #### 2021 Supplemental Stats 1####
-### by watershed
-#Subsampling
 set.seed(111)
 
-ABG_Test <- abundanceWide %>% 
-  filter(Treatment == "ABG")
+Abundance_Data2021 <- full_join(Abundance_ID_aboveground, BurnInfo2021, by = "WS") %>% 
+  unite("TreatmentSB",c("Treatment","SB"), sep="_") %>% 
+  filter(Date == "2021") %>%   
+  filter(Plot %in% c("2", "4"))
+
+#Filter ABG 
+ABG_Test <- full_join(Abundance_ID_aboveground, BurnInfo2021, by = "WS") %>% 
+  unite("TreatmentSB",c("Treatment","SB"), sep="_") %>% 
+  filter(Date == "2021") %>%   
+  filter(Plot %in% c("2", "4")) %>% 
+  filter(TreatmentSB == "ABG_0")
 
 #Filter PBG
-PBG_Test <- abundanceWide %>% 
-  filter(Treatment == "PBG")
+PBG_Test <- full_join(Abundance_ID_aboveground, BurnInfo2021, by = "WS") %>% 
+  unite("TreatmentSB",c("Treatment","SB"), sep="_") %>% 
+  filter(Date == "2021") %>%   
+  filter(Plot %in% c("2", "4")) %>% 
+  filter(TreatmentSB == c("PBG_0", "PBG_1", "PBG_2"))
 
-# Set seed for reproducibility
+
 
 # Get unique samples
 unique_samples <- unique(PBG_Test$Sample)
@@ -610,19 +620,169 @@ subsamples <- sample(unique_samples, 16, replace = FALSE)
 subsampled_data <- PBG_Test %>% filter(Sample %in% subsamples)
 
 #New Abundance_Data2021 with subsamples
-Abundance_Data <- full_join(subsampled_data, ABG_Test)
+Abundance_Data2021 <- full_join(subsampled_data, ABG_Test)
+
+#tag abg and pbg
+Abundance_Data2021$Sample <- paste(Abundance_Data2021$WS, Abundance_Data2021$Trans, Abundance_Data2021$Plot, sep = "_")
+Abundance_Data2021$Treatment <- ifelse(grepl("C1", Abundance_Data2021$Sample), "ABG", "PBG") 
+
+# PERMANOVA
+
+
+abundanceWide <- Abundance_Data2021 %>% 
+  mutate(block = ifelse(grepl("S", Sample), "North", "South")) %>%
+  select(Sample, block, WS, Trans, Plot, Treatment, TreatmentSB, Count, ID) %>%
+  group_by(Sample, block, WS, Trans, Plot, Treatment, TreatmentSB, ID) %>% 
+  summarise(Count = sum(Count)) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = 'ID', values_from = 'Count', values_fill = list(Count = 0)) 
+
+abundanceWide <- abundanceWide %>% 
+  mutate(sum = rowSums(abundanceWide[, c(8:88)], na.rm = TRUE)) %>% 
+  filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
 
 
 # PERMANOVA
-print(permanova <- adonis2(formula = Abundance_Data[,8:86]~Treatment, data=Abundance_Data, permutations=999, method="bray"))
-#F=2.8396 , df=1,28, p=0.002 
+print(permanova <- adonis2(formula = abundanceWide[,8:89]~Treatment, data=abundanceWide, permutations=999, method="bray"))
+#F=7.3456 , df=1,28, p=0.001 *
 
 #betadisper
-veg <- vegdist(Abundance_Data[,8:86], method = "bray")
-dispersion <- betadisper(veg, Abundance_Data$Treatment)
+veg <- vegdist(abundanceWide[,8:89], method = "bray")
+dispersion <- betadisper(veg, abundanceWide$Treatment)
 permutest(dispersion, pairwise=TRUE, permutations=999) 
+#F=10.379       , df=1,28, p=0.005  ***
 
-#F=28.736, df=1,28, p=0.001
+#### 2021 Supplemental Stats 2####
+set.seed(222)
+
+Abundance_Data2021 <- full_join(Abundance_ID_aboveground, BurnInfo2021, by = "WS") %>% 
+  unite("TreatmentSB",c("Treatment","SB"), sep="_") %>% 
+  filter(Date == "2021") %>%   
+  filter(Plot %in% c("2", "4"))
+
+#Filter ABG 
+ABG_Test <- full_join(Abundance_ID_aboveground, BurnInfo2021, by = "WS") %>% 
+  unite("TreatmentSB",c("Treatment","SB"), sep="_") %>% 
+  filter(Date == "2021") %>%   
+  filter(Plot %in% c("2", "4")) %>% 
+  filter(TreatmentSB == "ABG_0")
+
+#Filter PBG
+PBG_Test <- full_join(Abundance_ID_aboveground, BurnInfo2021, by = "WS") %>% 
+  unite("TreatmentSB",c("Treatment","SB"), sep="_") %>% 
+  filter(Date == "2021") %>%   
+  filter(Plot %in% c("2", "4")) %>% 
+  filter(TreatmentSB == c("PBG_0", "PBG_1", "PBG_2"))
+
+
+
+# Get unique samples
+unique_samples <- unique(PBG_Test$Sample)
+
+# Randomly select 16 unique samples
+subsamples <- sample(unique_samples, 16, replace = FALSE)
+
+# Filter the data frame based on the selected samples
+subsampled_data <- PBG_Test %>% filter(Sample %in% subsamples)
+
+#New Abundance_Data2021 with subsamples
+Abundance_Data2021 <- full_join(subsampled_data, ABG_Test)
+
+#tag abg and pbg
+Abundance_Data2021$Sample <- paste(Abundance_Data2021$WS, Abundance_Data2021$Trans, Abundance_Data2021$Plot, sep = "_")
+Abundance_Data2021$Treatment <- ifelse(grepl("C1", Abundance_Data2021$Sample), "ABG", "PBG") 
+
+# PERMANOVA
+
+
+abundanceWide <- Abundance_Data2021 %>% 
+  mutate(block = ifelse(grepl("S", Sample), "North", "South")) %>%
+  select(Sample, block, WS, Trans, Plot, Treatment, TreatmentSB, Count, ID) %>%
+  group_by(Sample, block, WS, Trans, Plot, Treatment, TreatmentSB, ID) %>% 
+  summarise(Count = sum(Count)) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = 'ID', values_from = 'Count', values_fill = list(Count = 0)) 
+
+abundanceWide <- abundanceWide %>% 
+  mutate(sum = rowSums(abundanceWide[, c(8:88)], na.rm = TRUE)) %>% 
+  filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
+
+
+# PERMANOVA
+print(permanova <- adonis2(formula = abundanceWide[,8:89]~Treatment, data=abundanceWide, permutations=999, method="bray"))
+#F=3.2482  , df=1,28, p=0.001 *
+
+#betadisper
+veg <- vegdist(abundanceWide[,8:89], method = "bray")
+dispersion <- betadisper(veg, abundanceWide$Treatment)
+permutest(dispersion, pairwise=TRUE, permutations=999) 
+#F=50.192           , df=1,28, 0.001   ***
+
+#### 2021 Supplemental Stats 3####
+set.seed(222)
+
+Abundance_Data2021 <- full_join(Abundance_ID_aboveground, BurnInfo2021, by = "WS") %>% 
+  unite("TreatmentSB",c("Treatment","SB"), sep="_") %>% 
+  filter(Date == "2021") %>%   
+  filter(Plot %in% c("2", "4"))
+
+#Filter ABG 
+ABG_Test <- full_join(Abundance_ID_aboveground, BurnInfo2021, by = "WS") %>% 
+  unite("TreatmentSB",c("Treatment","SB"), sep="_") %>% 
+  filter(Date == "2021") %>%   
+  filter(Plot %in% c("2", "4")) %>% 
+  filter(TreatmentSB == "ABG_0")
+
+#Filter PBG
+PBG_Test <- full_join(Abundance_ID_aboveground, BurnInfo2021, by = "WS") %>% 
+  unite("TreatmentSB",c("Treatment","SB"), sep="_") %>% 
+  filter(Date == "2021") %>%   
+  filter(Plot %in% c("2", "4")) %>% 
+  filter(TreatmentSB == c("PBG_0", "PBG_1", "PBG_2"))
+
+
+
+# Get unique samples
+unique_samples <- unique(PBG_Test$Sample)
+
+# Randomly select 16 unique samples
+subsamples <- sample(unique_samples, 16, replace = FALSE)
+
+# Filter the data frame based on the selected samples
+subsampled_data <- PBG_Test %>% filter(Sample %in% subsamples)
+
+#New Abundance_Data2021 with subsamples
+Abundance_Data2021 <- full_join(subsampled_data, ABG_Test)
+
+#tag abg and pbg
+Abundance_Data2021$Sample <- paste(Abundance_Data2021$WS, Abundance_Data2021$Trans, Abundance_Data2021$Plot, sep = "_")
+Abundance_Data2021$Treatment <- ifelse(grepl("C1", Abundance_Data2021$Sample), "ABG", "PBG") 
+
+# PERMANOVA
+
+
+abundanceWide <- Abundance_Data2021 %>% 
+  mutate(block = ifelse(grepl("S", Sample), "North", "South")) %>%
+  select(Sample, block, WS, Trans, Plot, Treatment, TreatmentSB, Count, ID) %>%
+  group_by(Sample, block, WS, Trans, Plot, Treatment, TreatmentSB, ID) %>% 
+  summarise(Count = sum(Count)) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = 'ID', values_from = 'Count', values_fill = list(Count = 0)) 
+
+abundanceWide <- abundanceWide %>% 
+  mutate(sum = rowSums(abundanceWide[, c(8:88)], na.rm = TRUE)) %>% 
+  filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
+
+
+# PERMANOVA
+print(permanova <- adonis2(formula = abundanceWide[,8:89]~Treatment, data=abundanceWide, permutations=999, method="bray"))
+#F=3.2482  , df=1,28, p=0.001 *
+
+#betadisper
+veg <- vegdist(abundanceWide[,8:89], method = "bray")
+dispersion <- betadisper(veg, abundanceWide$Treatment)
+permutest(dispersion, pairwise=TRUE, permutations=999) 
+#F=50.192           , df=1,28, 0.001   ***
 
 #### 2022 PERMANOVA & NMDS ####
 # Combine count with burn info
