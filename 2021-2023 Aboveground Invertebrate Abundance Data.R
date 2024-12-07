@@ -531,6 +531,9 @@ veg <- vegdist(abundanceWide[,8:89], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$Treatment)
 permutest(dispersion, pairwise=TRUE, permutations=999) 
 #F=23.434       , df=1,28, p=0.001 ***
+dispersion_values <- tapply(dispersion$distances, dispersion$group, mean)
+
+
 
 BC_Data <- metaMDS(abundanceWide[,8:89])
 sites <- 1:nrow(abundanceWide)
