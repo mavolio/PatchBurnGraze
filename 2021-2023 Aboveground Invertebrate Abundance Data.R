@@ -531,7 +531,6 @@ veg <- vegdist(abundanceWide[,8:89], method = "bray")
 dispersion <- betadisper(veg, abundanceWide$Treatment)
 permutest(dispersion, pairwise=TRUE, permutations=999) 
 #F=23.434       , df=1,28, p=0.001 ***
-dispersion_values <- tapply(dispersion$distances, dispersion$group, mean)
 
 
 
@@ -4820,15 +4819,89 @@ print(simper_results_2021_TreatmentSB)
 # To view the contribution of each species, you can examine the output in detail
 summary(simper_results_2021_TreatmentSB)
 
+
+# Prep for ABG vs. PBG 
+set.seed(123)
+
+
+Abundance_Data2021 <- full_join(Abundance_ID_aboveground, BurnInfo2021, by = "WS") %>% 
+  unite("TreatmentSB",c("Treatment","SB"), sep="_") %>% 
+  filter(Date == "2021") %>%   
+  filter(Plot %in% c("2", "4"))
+
+#Filter ABG 
+ABG_Test <- full_join(Abundance_ID_aboveground, BurnInfo2021, by = "WS") %>% 
+  unite("TreatmentSB",c("Treatment","SB"), sep="_") %>% 
+  filter(Date == "2021") %>%   
+  filter(Plot %in% c("2", "4")) %>% 
+  filter(TreatmentSB == "ABG_0")
+
+#Filter PBG
+PBG_Test <- full_join(Abundance_ID_aboveground, BurnInfo2021, by = "WS") %>% 
+  unite("TreatmentSB",c("Treatment","SB"), sep="_") %>% 
+  filter(Date == "2021") %>%   
+  filter(Plot %in% c("2", "4")) %>% 
+  filter(TreatmentSB == c("PBG_0", "PBG_1", "PBG_2"))
+
+# Get unique samples
+unique_samples <- unique(PBG_Test$Sample)
+
+# Randomly select 16 unique samples
+subsamples <- sample(unique_samples, 16, replace = FALSE)
+
+# Filter the data frame based on the selected samples
+subsampled_data <- PBG_Test %>% filter(Sample %in% subsamples)
+
+#New Abundance_Data2021 with subsamples
+Abundance_Data2021 <- full_join(subsampled_data, ABG_Test)
+
+#tag abg and pbg
+Abundance_Data2021$Sample <- paste(Abundance_Data2021$WS, Abundance_Data2021$Trans, Abundance_Data2021$Plot, sep = "_")
+Abundance_Data2021$Treatment <- ifelse(grepl("C1", Abundance_Data2021$Sample), "ABG", "PBG") 
+
+
+abundanceWide <- Abundance_Data2021 %>% 
+  mutate(block = ifelse(grepl("S", Sample), "North", "South")) %>%
+  select(Sample, block, WS, Trans, Plot, Treatment, TreatmentSB, Count, ID) %>%
+  group_by(Sample, block, WS, Trans, Plot, Treatment, TreatmentSB, ID) %>% 
+  summarise(Count = sum(Count)) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = 'ID', values_from = 'Count', values_fill = list(Count = 0)) 
+
+abundanceWide <- abundanceWide %>% 
+  mutate(sum = rowSums(abundanceWide[, c(8:89)], na.rm = TRUE)) %>% 
+  filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
+
+
+
 # Perform SIMPER analysis for ABG vs PBG
-simper_results_2021_Treatment <- simper(abundanceWide_2021[, 8:120], group = abundanceWide_2021$Treatment, permutations = 999)
+simper_results_2021_Treatment <- simper(abundanceWide[, 8:89], group = abundanceWide$Treatment, permutations = 999)
+
 
 # Print SIMPER results
 print(simper_results_2021_Treatment)
 
-# To view the contribution of each species, you can examine the output in detail
-summary(simper_results_2021_Treatment)
+# Cicadellidate 0.2280034
 
+
+# Calculate mean abundance for Hemiptera_Cicadellidae by treatment
+cicadellidae_abundance_summary <- abundanceWide %>%
+  group_by(Treatment) %>%
+  summarize(
+    Mean_Abundance = mean(Hemiptera_Cicadellidae, na.rm = TRUE),
+    SD_Abundance = sd(Hemiptera_Cicadellidae, na.rm = TRUE),
+    total_Abundance = sum(Hemiptera_Cicadellidae, na.rm = TRUE)
+  )
+
+print(cicadellidae_abundance_summary)
+
+# Treatment Mean_Abundance SD_Abundance total_Abundance
+# <chr>              <dbl>        <dbl>           <dbl>
+# 1 ABG                13.6         13.4              190
+# 2 PBG                 1.88         3.79              30
+# 
+
+# Print the summary
 #### SIMPER ANALYSIS 2022 ####
 
 # Perform SIMPER analysis for years since burned (2022)
@@ -4840,14 +4913,85 @@ print(simper_results_2022_TreatmentSB)
 # To view the contribution of each species in detail
 summary(simper_results_2022_TreatmentSB)
 
+# ABG VS PBG ++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+set.seed(123)
+
+# Combine and filter data for 2022
+Abundance_Data2022 <- full_join(Abundance_ID_aboveground, BurnInfo2021, by = "WS") %>% 
+  unite("TreatmentSB", c("Treatment", "SB"), sep = "_") %>% 
+  filter(Date == "2022") 
+
+# Filter ABG data for 2022
+ABG_Test <- full_join(Abundance_ID_aboveground, BurnInfo2021, by = "WS") %>% 
+  unite("TreatmentSB", c("Treatment", "SB"), sep = "_") %>% 
+  filter(Date == "2022") %>%   
+  filter(TreatmentSB == "ABG_0")
+
+# Filter PBG data for 2022
+PBG_Test <- full_join(Abundance_ID_aboveground, BurnInfo2021, by = "WS") %>% 
+  unite("TreatmentSB", c("Treatment", "SB"), sep = "_") %>% 
+  filter(Date == "2022") %>%   
+  filter(TreatmentSB %in% c("PBG_0", "PBG_1", "PBG_2"))
+
+# Get unique samples
+unique_samples <- unique(PBG_Test$Sample)
+
+# Randomly select 16 unique samples
+subsamples <- sample(unique_samples, 16, replace = FALSE)
+
+# Filter the data frame based on the selected samples
+subsampled_data <- PBG_Test %>% filter(Sample %in% subsamples)
+
+# Create new Abundance_Data2022 with subsamples
+Abundance_Data2022 <- full_join(subsampled_data, ABG_Test)
+
+# Tag ABG and PBG treatments
+Abundance_Data2022$Sample <- paste(Abundance_Data2022$WS, Abundance_Data2022$Trans, Abundance_Data2022$Plot, sep = "_")
+Abundance_Data2022$Treatment <- ifelse(grepl("C1", Abundance_Data2022$Sample), "ABG", "PBG")
+
+# Convert to wide format
+abundanceWide <- Abundance_Data2022 %>% 
+  mutate(block = ifelse(grepl("S", Sample), "North", "South")) %>%
+  select(Sample, block, WS, Trans, Plot, Treatment, TreatmentSB, Count, ID) %>%
+  group_by(Sample, block, WS, Trans, Plot, Treatment, TreatmentSB, ID) %>% 
+  summarise(Count = sum(Count)) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = 'ID', values_from = 'Count', values_fill = list(Count = 0))
+
+# Filter and finalize abundanceWide for 2022
+abundanceWide <- abundanceWide %>% 
+  mutate(sum = rowSums(abundanceWide[, c(8:ncol(abundanceWide))], na.rm = TRUE)) %>% 
+  filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
+
+
 # Perform SIMPER analysis for ABG vs PBG (2022)
-simper_results_2022_Treatment <- simper(abundanceWide_2022[, 8:120], group = abundanceWide_2022$Treatment, permutations = 999)
+simper_results_2022_Treatment <- simper(abundanceWide[, 8:91], group = abundanceWide$Treatment, permutations = 999)
+
 
 # Print SIMPER results for Treatment
 print(simper_results_2022_Treatment)
+#Cicadellidae 0.2006640                  
+
 
 # To view the contribution of each species in detail
 summary(simper_results_2022_Treatment)
+
+cicadellidae_abundance_summary <- abundanceWide %>%
+  group_by(Treatment) %>%
+  summarize(
+    Mean_Abundance = mean(Hemiptera_Cicadellidae, na.rm = TRUE),
+    SD_Abundance = sd(Hemiptera_Cicadellidae, na.rm = TRUE),
+    total_Abundance = sum(Hemiptera_Cicadellidae, na.rm = TRUE)
+  )
+
+print(cicadellidae_abundance_summary)
+
+# Treatment Mean_Abundance SD_Abundance total_Abundance
+# <chr>              <dbl>        <dbl>           <dbl>
+# 1 ABG                 12           8.41             192
+# 2 PBG                 11.2         7.29             180
+
 
 #### SIMPER ANALYSIS 2023 ####
 
@@ -4860,14 +5004,83 @@ print(simper_results_2023_TreatmentSB)
 # To view the contribution of each species in detail
 summary(simper_results_2023_TreatmentSB)
 
+# ABG VS PBG ++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+set.seed(123)
+
+# Combine and filter data for 2023
+Abundance_Data2023 <- full_join(Abundance_ID_aboveground, BurnInfo2021, by = "WS") %>% 
+  unite("TreatmentSB", c("Treatment", "SB"), sep = "_") %>% 
+  filter(Date == "2023") 
+
+# Filter ABG data for 2023
+ABG_Test <- full_join(Abundance_ID_aboveground, BurnInfo2021, by = "WS") %>% 
+  unite("TreatmentSB", c("Treatment", "SB"), sep = "_") %>% 
+  filter(Date == "2023") %>%   
+  filter(TreatmentSB == "ABG_0")
+
+# Filter PBG data for 2023
+PBG_Test <- full_join(Abundance_ID_aboveground, BurnInfo2021, by = "WS") %>% 
+  unite("TreatmentSB", c("Treatment", "SB"), sep = "_") %>% 
+  filter(Date == "2023") %>%   
+  filter(TreatmentSB %in% c("PBG_0", "PBG_1", "PBG_2"))
+
+# Get unique samples
+unique_samples <- unique(PBG_Test$Sample)
+
+# Randomly select 16 unique samples
+subsamples <- sample(unique_samples, 16, replace = FALSE)
+
+# Filter the data frame based on the selected samples
+subsampled_data <- PBG_Test %>% filter(Sample %in% subsamples)
+
+# Create new Abundance_Data2023 with subsamples
+Abundance_Data2023 <- full_join(subsampled_data, ABG_Test)
+
+# Tag ABG and PBG treatments
+Abundance_Data2023$Sample <- paste(Abundance_Data2023$WS, Abundance_Data2023$Trans, Abundance_Data2023$Plot, sep = "_")
+Abundance_Data2023$Treatment <- ifelse(grepl("C1", Abundance_Data2023$Sample), "ABG", "PBG")
+
+# Convert to wide format
+abundanceWide <- Abundance_Data2023 %>% 
+  mutate(block = ifelse(grepl("S", Sample), "North", "South")) %>%
+  select(Sample, block, WS, Trans, Plot, Treatment, TreatmentSB, Count, ID) %>%
+  group_by(Sample, block, WS, Trans, Plot, Treatment, TreatmentSB, ID) %>% 
+  summarise(Count = sum(Count)) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = 'ID', values_from = 'Count', values_fill = list(Count = 0))
+
+# Filter and finalize abundanceWide for 2023
+abundanceWide <- abundanceWide %>% 
+  mutate(sum = rowSums(abundanceWide[, c(8:ncol(abundanceWide))], na.rm = TRUE)) %>% 
+  filter(sum > 0, !(Sample %in% c('C1A_A_38_ABG', 'C3SA_D_16_PBG', 'C3SA_C_38_PBG')))
+
 # Perform SIMPER analysis for ABG vs PBG (2023)
-simper_results_2023_Treatment <- simper(abundanceWide_2023[, 8:75], group = abundanceWide_2023$Treatment, permutations = 999)
+simper_results_2023_Treatment <- simper(abundanceWide[, 8:59], group = abundanceWide$Treatment, permutations = 999)
 
 # Print SIMPER results for Treatment
 print(simper_results_2023_Treatment)
+#0.3668580
 
 # To view the contribution of each species in detail
 summary(simper_results_2023_Treatment)
+
+# Summarize Cicadellidae abundance
+cicadellidae_abundance_summary <- abundanceWide %>%
+  group_by(Treatment) %>%
+  summarize(
+    Mean_Abundance = mean(Hemiptera_Cicadellidae, na.rm = TRUE),
+    SD_Abundance = sd(Hemiptera_Cicadellidae, na.rm = TRUE),
+    total_Abundance = sum(Hemiptera_Cicadellidae, na.rm = TRUE)
+  )
+
+print(cicadellidae_abundance_summary)
+
+
+# Treatment Mean_Abundance SD_Abundance total_Abundance
+# <chr>              <dbl>        <dbl>           <dbl>
+# 1 ABG                 10.8         7.99             172
+# 2 PBG                 12.1         7.24             193
 
 #### New Beta Diversity Graph ####
 
@@ -4876,3 +5089,43 @@ multi_panel_graph <- grid.arrange(Beta_2021, Beta_2022, Beta_2023,
                                   nrow = 1 
 )
 
+
+#### Beta Diversity Years Since Burn 2021 ####
+# Group data by TreatmentSB and calculate beta diversity for each group
+calculate_beta_vegan <- function(data, species_columns, group_column) {
+  # Initialize a list to store results
+  beta_results <- data %>%
+    group_by(.data[[group_column]]) %>%
+    group_split() %>%
+    lapply(function(group_data) {
+      # Create a species matrix (only species columns)
+      species_matrix <- as.data.frame(group_data[, species_columns])
+      
+      # Calculate Bray-Curtis dissimilarity
+      bray_curtis <- vegdist(species_matrix, method = "bray")
+      
+      # Return the mean beta diversity
+      mean_beta <- mean(as.vector(bray_curtis), na.rm = TRUE)
+      data.frame(TreatmentSB = unique(group_data[[group_column]]), BetaDiversity = mean_beta)
+    })
+  
+  # Combine all results into a single data frame
+  beta_results_df <- do.call(rbind, beta_results)
+  return(beta_results_df)
+}
+
+# Identify species columns (assumes species data starts at the 8th column)
+species_columns <- 8:ncol(abundanceWide_2021)
+
+# Calculate beta diversity by TreatmentSB
+beta_diversity_results <- calculate_beta_vegan(
+  data = abundanceWide_2021,
+  species_columns = species_columns,
+  group_column = "TreatmentSB"
+)
+
+# Print results
+print(beta_diversity_results)
+
+# PERMANOVA test
+print(permanova <- adonis2(formula = abundanceWide_2021[,8:150]~TreatmentSB, data=abundanceWide_2021, permutations=999, method="bray"))
