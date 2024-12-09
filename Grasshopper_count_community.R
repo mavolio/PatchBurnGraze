@@ -138,114 +138,7 @@ grassh_count_wshed_df<-grassh_count_df%>%
   ungroup()
 
 
-#watershed models
-grassh_count_wshed_model<-lmer(log(Tcount_avg)~FireGrzTrt*RecYear+(1|Unit),
-                              data=grassh_count_wshed_df) #issingular
-check_model(grassh_count_wshed_model)
-qqnorm(residuals(grassh_count_wshed_model))
-Anova(grassh_count_wshed_model, type=3)
 
-testInteractions(grassh_count_wshed_model, fixed="RecYear",
-                 across = "FireGrzTrt", adjustment="BH")
-#using mean estimate from post-hoc to create figure as a comparison to raw data
-model_estimates_wshed<-interactionMeans(grassh_count_wshed_model)
-#replacing spaces in column names with underscore 
-names(model_estimates_wshed)<-str_replace_all(names(model_estimates_wshed), " ","_")
-#df for visuals from model estimates
-model_estimates_wshed_viz<-model_estimates_wshed%>%
-  mutate(count_wshed_bt_mean=exp(adjusted_mean),
-         count_wshed_bt_upper=exp(adjusted_mean+SE_of_link),
-         count_twshed_bt_lower=exp(adjusted_mean-SE_of_link))
-#visual
-ggplot(model_estimates_wshed_viz,aes(RecYear, count_wshed_bt_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
-  geom_point(size=3)+
-  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
-  geom_errorbar(aes(ymin=count_twshed_bt_lower,
-                    ymax=count_wshed_bt_upper),width=0.2,linetype=1)+
-  scale_colour_manual(values=c( "#F0E442", "#009E73"))
-
-
-#watershed sd models
-grassh_count_wshed_sd_model<-lmer(log(sd_Tcount)~FireGrzTrt*RecYear+(1|Unit),
-                               data=grassh_count_wshed_df) #issingular
-check_model(grassh_count_wshed_sd_model)
-qqnorm(residuals(grassh_count_wshed_sd_model))
-Anova(grassh_count_wshed_sd_model, type=3)
-
-testInteractions(grassh_count_wshed_sd_model, fixed="RecYear",
-                 across = "FireGrzTrt", adjustment="BH")
-#using mean estimate from post-hoc to create figure as a comparison to raw data
-model_estimates_sd_wshed<-interactionMeans(grassh_count_wshed_sd_model)
-#replacing spaces in column names with underscore 
-names(model_estimates_sd_wshed)<-str_replace_all(names(model_estimates_sd_wshed), " ","_")
-#df for visuals from model estimates
-model_estimates_wshed_sd_viz<-model_estimates_sd_wshed%>%
-  mutate(count_wshed_sd_bt_mean=exp(adjusted_mean),
-         count_wshed_sd_bt_upper=exp(adjusted_mean+SE_of_link),
-         count_twshed_sd_bt_lower=exp(adjusted_mean-SE_of_link))
-#visual
-ggplot(model_estimates_wshed_sd_viz,aes(RecYear, count_wshed_sd_bt_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
-  geom_point(size=3)+
-  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
-  geom_errorbar(aes(ymin=count_twshed_sd_bt_lower,
-                    ymax=count_wshed_sd_bt_upper),width=0.2,linetype=1)+
-  scale_colour_manual(values=c( "#F0E442", "#009E73"))
-
-#watershed cv models
-grassh_count_wshed_cv_model<-lmer(log(cv_Tcount)~FireGrzTrt+RecYear+(1|Unit),
-                                  data=grassh_count_wshed_df) #issingular
-check_model(grassh_count_wshed_cv_model)
-qqnorm(residuals(grassh_count_wshed_cv_model))
-Anova(grassh_count_wshed_cv_model, type=3)
-
-testInteractions(grassh_count_wshed_cv_model, fixed="RecYear",
-                 across = "FireGrzTrt", adjustment="BH")
-#using mean estimate from post-hoc to create figure as a comparison to raw data
-model_estimates_cv_wshed<-interactionMeans(grassh_count_wshed_cv_model)
-#replacing spaces in column names with underscore 
-names(model_estimates_cv_wshed)<-str_replace_all(names(model_estimates_cv_wshed), " ","_")
-#df for visuals from model estimates
-model_estimates_wshed_cv_viz<-model_estimates_cv_wshed%>%
-  mutate(count_wshed_cv_bt_mean=exp(adjusted_mean),
-         count_wshed_cv_bt_upper=exp(adjusted_mean+SE_of_link),
-         count_twshed_cv_bt_lower=exp(adjusted_mean-SE_of_link))
-#visual
-ggplot(model_estimates_wshed_cv_viz,aes(RecYear, count_wshed_cv_bt_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
-  geom_point(size=3)+
-  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
-  geom_errorbar(aes(ymin=count_twshed_cv_bt_lower,
-                    ymax=count_wshed_cv_bt_upper),width=0.2,linetype=1)+
-  scale_colour_manual(values=c( "#F0E442", "#009E73"))
-
-#stability at watershed scale
-stab_wshed_df<-grassh_count_wshed_df%>%
-  group_by(Unit,Watershed,FireGrzTrt)%>%
-  summarise(stab=mean(Tcount_avg,na.rm=T)/sd(Tcount_avg))%>%
-  ungroup()
-
-#stability model
-stab_model_wshed<-lmer(stab~FireGrzTrt+(1|Unit),
-                       data=stab_wshed_df)#issingular
-
-check_model(stab_model_wshed)
-qqnorm(residuals(stab_model_wshed))
-Anova(stab_model_wshed, type=3)
-
-#using mean estimate to create figure 
-model_estimates_stab_wshed<-interactionMeans(stab_model_wshed)
-#replacing spaces in column names with underscore 
-names(model_estimates_stab_wshed)<-str_replace_all(names(model_estimates_stab_wshed), " ","_")
-#df for visuals from model estimates
-model_estimates_wshed_stab_viz<-model_estimates_stab_wshed%>%
-  mutate(count_wshed_stab_bt_mean=exp(adjusted_mean),
-         count_wshed_stab_bt_upper=exp(adjusted_mean+SE_of_link),
-         count_twshed_stab_bt_lower=exp(adjusted_mean-SE_of_link))
-#visual
-ggplot(model_estimates_wshed_stab_viz,aes(x=FireGrzTrt,fill=FireGrzTrt))+
-  geom_bar(stat = "identity",aes(y=count_wshed_stab_bt_mean),width = 0.5)+
-  geom_errorbar(aes(ymin=count_twshed_stab_bt_lower,
-                    ymax=count_wshed_stab_bt_upper),width=0.2,linetype=1)+
-  scale_fill_manual(values=c( "#F0E442", "#009E73"))
 
 ##unit scale count by each unit####
 ####bootstrap separated  by unit
@@ -841,7 +734,8 @@ gh_combine_mean_sd<-ghcount_master_combine_mean_sd_cv%>%
          zscore_cv=(ghcount_ABG_cv-gh_PBG_cv_M)/gh_PBG_cv_sd,
          pval_cv=2*pnorm(-abs(zscore_cv)))
 write.csv(gh_combine_mean_sd, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/gh_count_mean_sd_combined_unit.csv")
-
+gh_combine_mean_sd<-read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/gh_count_mean_sd_combined_unit.csv")%>%
+  select(-X)
 #create visuals####
 #grasshopper average count
 combo_ghcount_geompoint_M<-gh_combine_mean_sd%>%
@@ -849,7 +743,7 @@ combo_ghcount_geompoint_M<-gh_combine_mean_sd%>%
                names_to = "treatment", values_to = "count_M")%>%
   select(treatment,count_M,RecYear, gh_PBG_M_sd)%>%
   distinct()%>%
-  mutate(PBG_sd=round(gh_PBG_M_sd,digits=2))#%>%
+  mutate(PBG_sd=round(gh_PBG_M_sd,digits=2))%>%
   mutate(PBG_sd=ifelse(PBG_sd==2.55 & treatment=="ghcount_ABG",NA,PBG_sd),
          PBG_sd=ifelse(PBG_sd==6.75 & treatment=="ghcount_ABG",NA,PBG_sd),
          PBG_sd=ifelse(PBG_sd==24.97 & treatment=="ghcount_ABG",NA,PBG_sd),
@@ -892,11 +786,26 @@ combo_ghcount_geompoint_sd<-gh_combine_mean_sd%>%
          PBG_sd=ifelse(PBG_sd==4.73 & treatment=="ghcount_ABG_sd",NA,PBG_sd))
 
 ggplot(combo_ghcount_geompoint_sd,aes(RecYear, count_sd, col=treatment))+
-  geom_point()+
+  geom_point(size=3)+
   geom_path(aes(as.numeric(RecYear)))+
   scale_colour_manual(values=c( "#009E73","#F0E442"),labels=c("PBG","ABG"))+
   geom_errorbar(aes(ymax=count_sd+1.96*(PBG_sd),
-                    ymin=count_sd-1.96*(PBG_sd)),width=.2)
+                    ymin=count_sd-1.96*(PBG_sd)),width=.05)+
+  scale_x_continuous(breaks=(2011:2021))
+
+#wrangle for bargraph figure
+combo_ghcount_bargraph_sd<-combo_ghcount_geompoint_sd%>%
+  group_by(treatment)%>%
+  summarise(ghcount_sd=mean(count_sd, na.rm=T),
+            sd=mean(PBG_sd, na.rm=T))%>%
+  mutate(treatment=case_when(treatment=="gh_PBG_sd_M"~"PBG",
+         treatment=="ghcount_ABG_sd"~"ABG"))
+#create bargraph figure for SD
+ggplot(combo_ghcount_bargraph_sd,aes(x=treatment,fill=treatment))+
+  geom_bar(stat = "identity",aes(y=ghcount_sd),width = 0.25)+
+  geom_errorbar(aes(ymin=ghcount_sd-sd,
+                    ymax=ghcount_sd+sd),width=0.05,linetype=1)+
+  scale_fill_manual(values=c( "#F0E442", "#009E73")) 
 
 #grasshopper cv count
 combo_ghcount_geompoint_cv<-gh_combine_mean_sd%>%
@@ -956,7 +865,7 @@ ghcount_master_combine_stab<-ghcount_master_stab%>%
   mutate(zscore=(ghcount_ABG_stab-PBG_stab_M)/PBG_stab_sd)%>%
   mutate(pval=2*pnorm(-abs(zscore)))
 write.csv(ghcount_master_combine_stab, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/gh_stability_combined_unit.csv")
-#ghcount_master_combine_stab<-read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/gh_stability_combined_unit.csv")
+ghcount_master_combine_stab<-read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/gh_stability_combined_unit.csv")
 #start from zero
 ggplot(ghcount_master_combine_stab,aes(count_PBG_stab))+
   geom_density(size=2,col="#009E73")+
@@ -981,9 +890,9 @@ gh_stability_df<-ghcount_master_combine_stab%>%
          confit=as.numeric(PBG_stab_sd)*1.96)
 
 ggplot(gh_stability_df, aes(treatment, fill=treatment))+
-  geom_bar(stat = "identity",aes(y=stability),width = 0.5)+
+  geom_bar(stat = "identity",aes(y=stability),width = 0.25)+
   geom_errorbar(aes(ymin=stability-confit,
-                    ymax=stability+confit), width=0.1)+
+                    ymax=stability+confit), width=0.05)+
   scale_fill_manual(values=c( "#F0E442", "#009E73"))
 
 #next step year since fire calculation####
@@ -1211,11 +1120,11 @@ ghrich_interact_viz<-ghrich_interact%>%
          ghrich_upper=exp(adjusted_mean+SE_of_link),
          ghrich_lower=exp(adjusted_mean-SE_of_link))
 #visual
-ggplot(ghrich_interact_viz,aes(RecYear, ghrich_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
+ggplot(ghrich_interact_viz,aes(RecYear, ghrich_mean, col=FireGrzTrt))+
   geom_point(size=3)+
   geom_path(aes(as.numeric(RecYear)),linewidth=1)+
   geom_errorbar(aes(ymin=ghrich_lower,
-                    ymax=ghrich_upper),width=0.2,linetype=1)+
+                    ymax=ghrich_upper),width=0.1,linetype=1)+
   scale_colour_manual(values=c( "#F0E442", "#009E73"))
 
 #average across years for simplification
@@ -1225,9 +1134,9 @@ ghrich_interact_bar<-ghrich_interact_viz%>%
             se_upper=mean(ghrich_upper),
             se_lower=mean(ghrich_lower))
 ggplot(ghrich_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
-  geom_bar(stat = "identity",aes(y=gh_richness),width = 0.5)+
+  geom_bar(stat = "identity",aes(y=gh_richness),width = 0.25)+
   geom_errorbar(aes(ymin=se_lower,
-                    ymax=se_upper),width=0.2,linetype=1)+
+                    ymax=se_upper),width=0.05,linetype=1)+
   scale_fill_manual(values=c( "#F0E442", "#009E73"))
 
 #evenness model
@@ -1250,39 +1159,23 @@ gheven_interact_viz<-gheven_interact%>%
          gheven_upper=adjusted_mean+SE_of_link,
          gheven_lower=adjusted_mean-SE_of_link)
 #visual
-ggplot(gheven_interact_viz,aes(RecYear, ghevenness_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
+ggplot(gheven_interact_viz,aes(RecYear, ghevenness_mean, col=FireGrzTrt))+
   geom_point(size=3)+
   geom_path(aes(as.numeric(RecYear)),linewidth=1)+
   geom_errorbar(aes(ymin=gheven_lower,
-                    ymax=gheven_upper),width=0.2,linetype=1)+
+                    ymax=gheven_upper),width=0.1,linetype=1)+
   scale_colour_manual(values=c( "#F0E442", "#009E73"))
-#checking if creating figures from raw data will be more appropriate for the model result
-gh_metric_raw<-grassh_rich_diver%>%
-  group_by(RecYear, FireGrzTrt)%>%
-  summarise(Shannon_avg=mean(Shannon, na.rm=T),
-            se_shan=SE_function(Shannon),
-            Evar_avg=mean(Evar,na.rm=T),
-            se_evar=SE_function(Evar),
-            richness_avg=mean(richness, na.rm=T),
-            se_rich=SE_function(richness))
-#visual
-ggplot(gh_metric_raw,aes(RecYear, Evar_avg, col=FireGrzTrt, linetype=FireGrzTrt))+
-  geom_point(size=3)+
-  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
-  geom_errorbar(aes(ymin=Evar_avg-se_evar,
-                    ymax=Evar_avg+se_evar),width=0.2,linetype=1)+
-  scale_colour_manual(values=c( "#F0E442", "#009E73"))#not diff in info from using the phia interaction mean function
 
-#average across years for simplification
+##average across years for simplification
 gheven_interact_bar<-gheven_interact_viz%>%
   group_by(FireGrzTrt)%>%
   summarise(gh_evenness=mean(ghevenness_mean),
             se_upper=mean(gheven_upper),
             se_lower=mean(gheven_lower))
 ggplot(gheven_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
-  geom_bar(stat = "identity",aes(y=gh_evenness),width = 0.5)+
+  geom_bar(stat = "identity",aes(y=gh_evenness),width = 0.25)+
   geom_errorbar(aes(ymin=se_lower,
-                    ymax=se_upper),width=0.2,linetype=1)+
+                    ymax=se_upper),width=0.05,linetype=1)+
   scale_fill_manual(values=c( "#F0E442", "#009E73"))
 
 #perform permanova and calculate betadiversity###
@@ -1335,7 +1228,7 @@ Gh_env_data <- grassh_permav_df%>%dplyr::select(1:6)
 
 #get nmds1 and 2
 Gh_mds_all <- metaMDS(Gh_sp_data, distance = "bray")
-#Run 20 stress 0.2695
+#stress 0.2695
 
 #combine NMDS1 and 2 with factor columns and create centroids
 Gh_mds_scores <- data.frame(Gh_env_data, scores(Gh_mds_all, display="sites"))%>%
@@ -1415,11 +1308,37 @@ for(YEAR in 1:length(year_vec_gh)){
 }
 write.csv(gh_beta, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/Grasshoper_betadiver.csv")
 write.csv(gh_perm, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/Grasshopper_permanova.csv")
+
+
+#calcu;late betadiversity within each unit
+#creating a loop to do this
+year_vec_gh <- unique(Gh_env_data$RecYear)
+gh_perm_unit <- {}
+gh_beta_unit <- {}
+
+
+for(YEAR in 1:length(year_vec_gh)){
+  vdist_temp_gh <- vegdist(filter(Gh_sp_data, Gh_env_data$RecYear ==  year_vec_gh[YEAR]))
+  permanova_temp_gh <- adonis(vdist_temp_gh ~ subset(Gh_env_data, RecYear == year_vec_gh[YEAR])$unit_trt)
+  permanova_out_temp_gh <- data.frame(RecYear = year_vec_gh[YEAR], 
+                                      DF = permanova_temp_gh$aov.tab[1,1],
+                                      F_value = permanova_temp_gh$aov.tab[1,4],
+                                      P_value = permanova_temp_gh$aov.tab[1,6])
+  gh_perm_unit <- rbind(gh_perm_unit,permanova_out_temp_gh)
+  
+  bdisp_temp_gh <- betadisper(vdist_temp_gh, filter(Gh_env_data, RecYear==year_vec_gh[YEAR])$unit_trt, type = "centroid")
+  bdisp_out_temp_gh <- data.frame(filter(Gh_env_data, RecYear==year_vec_gh[YEAR]), distance = bdisp_temp_gh$distances)
+  gh_beta_unit <- rbind(gh_beta_unit, bdisp_out_temp_gh)
+  
+  rm(vdist_temp_gh, permanova_temp_gh, permanova_out_temp_gh, bdisp_temp_gh, bdisp_out_temp_gh)
+}
+
+
 #model for betadiversity
-gh_beta$RecYear<-as.factor(gh_beta$RecYear)
+gh_beta_unit$RecYear<-as.factor(gh_beta_unit$RecYear)
 gh_beta_model<-lmer(log(distance)~FireGrzTrt*RecYear+(1|Unit),
-                    data=gh_beta)#issingular
-Anova(gh_beta_model, type=3)
+                    data=gh_beta_unit)#issingular
+anova(gh_beta_model)
 qqnorm(resid(gh_beta_model))
 check_model(gh_beta_model)
 #pairwise interaction 
@@ -1435,11 +1354,11 @@ model_estimates_beta_viz<-model_estimates_beta%>%
          gh_upper=exp(adjusted_mean+SE_of_link),
          gh_lower=exp(adjusted_mean-SE_of_link))
 #visual
-ggplot(model_estimates_beta_viz,aes(RecYear, gh_betadiv, col=FireGrzTrt, linetype=FireGrzTrt))+
+ggplot(model_estimates_beta_viz,aes(RecYear, gh_betadiv, col=FireGrzTrt))+
   geom_point(size=3)+
   geom_path(aes(as.numeric(RecYear)),linewidth=1)+
   geom_errorbar(aes(ymin=gh_lower,
-                    ymax=gh_upper),width=0.2,linetype=1)+
+                    ymax=gh_upper),width=0.1,linetype=1)+
   scale_colour_manual(values=c( "#F0E442", "#009E73"))
 #summarize with a bargraph
 ghbeta_interact_bar<-model_estimates_beta_viz%>%
@@ -1448,9 +1367,9 @@ ghbeta_interact_bar<-model_estimates_beta_viz%>%
             se_upper=mean(gh_upper),
             se_lower=mean(gh_lower))
 ggplot(ghbeta_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
-  geom_bar(stat = "identity",aes(y=gh_betadiver),width = 0.5)+
+  geom_bar(stat = "identity",aes(y=gh_betadiver),width = 0.25)+
   geom_errorbar(aes(ymin=se_lower,
-                    ymax=se_upper),width=0.2,linetype=1)+
+                    ymax=se_upper),width=0.05,linetype=1)+
   scale_fill_manual(values=c( "#F0E442", "#009E73"))
 
 #simper analysis to find what species are driving difference in composition####
