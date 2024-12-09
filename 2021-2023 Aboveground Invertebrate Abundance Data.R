@@ -5169,3 +5169,25 @@ print(permanova <- adonis2(formula = abundanceWide_2022[,8:121]~TreatmentSB, dat
 
 pairwise.adonis<-pairwise.adonis2(abundanceWide_2022[,8:121]~TreatmentSB, data = abundanceWide_2022)
 pairwise.adonis
+
+#### Beta Diversity Years Since Burn 2023 ####
+species_columns <- 8:ncol(abundanceWide_2023)
+
+# Calculate beta diversity by TreatmentSB
+beta_diversity_results <- calculate_beta_vegan(
+  data = abundanceWide_2023,
+  species_columns = species_columns,
+  group_column = "TreatmentSB"
+)
+
+# Print results
+print(beta_diversity_results)
+
+# TreatmentSB BetaDiversity
+# 1       ABG_0     0.5242918
+# 2       PBG_0     0.4959577
+# 3       PBG_1     0.5011592
+# 4       PBG_2     0.5262528
+
+# PERMANOVA test
+print(permanova <- adonis2(formula = abundanceWide_2023[,8:76]~TreatmentSB, data=abundanceWide_2023, permutations=999, method="bray"))
