@@ -13,6 +13,8 @@ library(openxlsx)
 library(grid)
 library(cowplot)
 library(gtable)
+library(pairwiseAdonis)
+
 #### Seed Set ####
 set.seed(123)
 
@@ -5129,3 +5131,41 @@ print(beta_diversity_results)
 
 # PERMANOVA test
 print(permanova <- adonis2(formula = abundanceWide_2021[,8:150]~TreatmentSB, data=abundanceWide_2021, permutations=999, method="bray"))
+
+# TreatmentSB BetaDiversity
+# 1       ABG_0     0.5224689
+# 2       PBG_0     0.4667138
+# 3       PBG_1     0.5017885
+# 4       PBG_2     0.5170851
+
+pairwise.adonis<-pairwise.adonis2(abundanceWide_2021[,8:150]~TreatmentSB, data = abundanceWide_2021)
+pairwise.adonis
+
+#### Beta Diversity Years Since Burn 2022 ####
+# Identify species columns (assumes species data starts at the 8th column)
+species_columns <- 8:ncol(abundanceWide_2022)
+
+# Calculate beta diversity by TreatmentSB
+beta_diversity_results <- calculate_beta_vegan(
+  data = abundanceWide_2022,
+  species_columns = species_columns,
+  group_column = "TreatmentSB"
+)
+
+# Print results
+print(beta_diversity_results)
+
+# > print(beta_diversity_results)
+# TreatmentSB BetaDiversity
+# 1       ABG_0     0.4282996
+# 2       PBG_0     0.4251098
+# 3       PBG_1     0.4365440
+# 4       PBG_2     0.4452078
+
+# PERMANOVA test
+print(permanova <- adonis2(formula = abundanceWide_2022[,8:121]~TreatmentSB, data=abundanceWide_2022, permutations=999, method="bray"))
+
+# Run pairwise.adonis2
+
+pairwise.adonis<-pairwise.adonis2(abundanceWide_2022[,8:121]~TreatmentSB, data = abundanceWide_2022)
+pairwise.adonis
