@@ -1,6 +1,6 @@
 #BPBG grasshopper count and community metrics
 #Authors: Joshua Ajowele
-#Started: 26 May 2022 last modified: 21 October 2024
+#Started: 26 May 2022 last modified: 10 Dec 2024
 
 #load library
 library(tidyverse)
@@ -422,7 +422,82 @@ grassh_comm_metrics_df<-grassh_comm_df%>%
   left_join(richness_evar, by="yr_trt_unit")%>%
   left_join(diversity, by="yr_trt_unit")
 
+#create models for richness and evenness at the repsite/transect scale
+grassh_transect_comm<-grassh_comm_metrics_df
+#convert to factors
+grassh_transect_comm$RecYear<-as.factor(grassh_transect_comm$RecYear)
 
+#mixed anova of local richness and evenness
+local_rich_model<-lmer(richness~FireGrzTrt*RecYear+(1|Unit/Watershed), 
+                       data=grassh_transect_comm)
+anova(local_rich_model)
+check_model(local_rich_model)#good enough
+qqnorm(resid(local_rich_model))
+summary(local_rich_model)
+
+#using mean estimate to create figure 
+local_rich_interact<-interactionMeans(local_rich_model)
+#replacing spaces in column names with underscore 
+names(local_rich_interact)<-str_replace_all(names(local_rich_interact), " ","_")
+#df for visuals from model estimates
+local_rich_interact_viz<-local_rich_interact%>%
+  mutate(local_rich_mean=adjusted_mean,
+         local_rich_upper=adjusted_mean+SE_of_link,
+         local_rich_lower=adjusted_mean-SE_of_link)
+#visual
+ggplot(local_rich_interact_viz,aes(RecYear, local_rich_mean, col=FireGrzTrt))+
+  geom_point(size=3)+
+  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
+  geom_errorbar(aes(ymin=local_rich_lower,
+                    ymax=local_rich_upper),width=0.1,linetype=1)+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))
+
+#average across years for simplification
+local_rich_interact_bar<-local_rich_interact_viz%>%
+  group_by(FireGrzTrt)%>%
+  summarise(local_mean=mean(local_rich_mean),
+            se_upper=mean(local_rich_upper),
+            se_lower=mean(local_rich_lower))
+ggplot(local_rich_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
+  geom_bar(stat = "identity",aes(y=local_mean),width = 0.25)+
+  geom_errorbar(aes(ymin=se_lower,
+                    ymax=se_upper),width=0.05,linetype=1)+
+  scale_fill_manual(values=c( "#F0E442", "#009E73"))
+
+local_evar_model<-lmer(Evar~FireGrzTrt*RecYear+(1|Unit/Watershed),
+                       data=grassh_transect_comm)
+anova(local_evar_model)
+check_model(local_evar_model)
+qqnorm(resid(local_evar_model))#good enough
+
+#using mean estimate to create figure 
+local_ever_interact<-interactionMeans(local_evar_model)
+#replacing spaces in column names with underscore 
+names(local_ever_interact)<-str_replace_all(names(local_ever_interact), " ","_")
+#df for visuals from model estimates
+local_ever_interact_viz<-local_ever_interact%>%
+  mutate(local_evar_mean=adjusted_mean,
+         local_evar_upper=adjusted_mean+SE_of_link,
+         local_evar_lower=adjusted_mean-SE_of_link)
+#visual
+ggplot(local_ever_interact_viz,aes(RecYear, local_evar_mean, col=FireGrzTrt))+
+  geom_point(size=3)+
+  geom_path(aes(as.numeric(RecYear)),linewidth=1)+
+  geom_errorbar(aes(ymin=local_evar_lower,
+                    ymax=local_evar_upper),width=0.1,linetype=1)+
+  scale_colour_manual(values=c( "#F0E442", "#009E73"))
+
+#average across years for simplification
+local_evar_interact_bar<-local_ever_interact_viz%>%
+  group_by(FireGrzTrt)%>%
+  summarise(local_mean=mean(local_evar_mean),
+            se_upper=mean(local_evar_upper),
+            se_lower=mean(local_evar_lower))
+ggplot(local_evar_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
+  geom_bar(stat = "identity",aes(y=local_mean),width = 0.25)+
+  geom_errorbar(aes(ymin=se_lower,
+                    ymax=se_upper),width=0.05,linetype=1)+
+  scale_fill_manual(values=c( "#F0E442", "#009E73"))
 
 ####bootstrap for community metrics####
 #extract PBG and separate into Unit
