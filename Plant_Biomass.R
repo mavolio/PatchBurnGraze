@@ -2,7 +2,7 @@
 ####Plant Biomass from diskpasture meter
 ###Author: Joshua Ajowele
 ###collaborators: PBG synthesis group
-###last update:10/21/2024
+###last update:Dec 4 2024
 
 #packages 
 library(tidyverse)
@@ -1447,7 +1447,7 @@ biomass_combine_stab<-biomass_master_stab%>%
   mutate(zscore=(biomass_ABG_stab-PBG_stab_M)/PBG_stab_sd)%>%
   mutate(pval=2*pnorm(-abs(zscore)))
 write.csv(biomass_combine_stab, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/biomass_stability_combined_unit.csv")
-#biomass_combine_stab<-read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/biomass_stability_combined_unit.csv")
+biomass_combine_stab<-read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/biomass_stability_combined_unit.csv")
 ggplot(biomass_combine_stab,aes(biomass_PBG_stab))+
   geom_density(size=2,col="#009E73")+
   #facet_grid("RecYear")+
@@ -1465,9 +1465,9 @@ biom_stability_df<-biomass_combine_stab%>%
          confit=as.numeric(PBG_stab_sd)*1.96)
 
 ggplot(biom_stability_df, aes(treatment, fill=treatment))+
-  geom_bar(stat = "identity",aes(y=stability),width = 0.5)+
+  geom_bar(stat = "identity",aes(y=stability),width = 0.25)+
   geom_errorbar(aes(ymin=stability-confit,
-                    ymax=stability+confit), width=0.1)+
+                    ymax=stability+confit), width=0.05)+
   scale_fill_manual(values=c( "#F0E442", "#009E73"))
 
 
@@ -1545,7 +1545,7 @@ ggplot(combo_biomass_geompoint_M,aes(RecYear, biom_M, col=treatment))+
   geom_path(aes(as.numeric(RecYear)))+
   scale_colour_manual(values=c( "#009E73","#F0E442"),labels=c("PBG","ABG"))+
   geom_errorbar(aes(ymax=biom_M+1.96*(PBG_sd),
-                    ymin=biom_M-1.96*(PBG_sd)),width=.2)
+                    ymin=biom_M-1.96*(PBG_sd)),width=.1)
 
 
 
@@ -1568,11 +1568,25 @@ combo_biomass_geompoint_sd<-biomass_combine_mean_sd%>%
          PBG_sd=ifelse(PBG_sd==63.85 & treatment=="biomass_ABG_sd",NA,PBG_sd))
 
 ggplot(combo_biomass_geompoint_sd,aes(RecYear, biom_sd, col=treatment))+
-  geom_point()+
+  geom_point(size=3)+
   geom_path(aes(as.numeric(RecYear)))+
   scale_colour_manual(values=c( "#009E73","#F0E442"),labels=c("PBG","ABG"))+
   geom_errorbar(aes(ymax=biom_sd+1.96*(PBG_sd),
-                    ymin=biom_sd-1.96*(PBG_sd)),width=.2)
+                    ymin=biom_sd-1.96*(PBG_sd)),width=.1)+
+  scale_x_continuous(breaks = 2012:2021)
+#wrangle for bargraph figure
+combo_biomass_bargraph_sd<-combo_biomass_geompoint_sd%>%
+  group_by(treatment)%>%
+  summarise(biomass_sd=mean(biom_sd, na.rm=T),
+            sd=mean(PBG_sd, na.rm=T))%>%
+  mutate(treatment=ifelse(treatment=="biom_PBG_sd_M","PBG",treatment),
+         treatment=ifelse(treatment=="biomass_ABG_sd","ABG",treatment))
+#create bargraph figure for SD
+ggplot(combo_biomass_bargraph_sd,aes(x=treatment,fill=treatment))+
+  geom_bar(stat = "identity",aes(y=biomass_sd),width = 0.25)+
+  geom_errorbar(aes(ymin=biomass_sd-sd,
+                    ymax=biomass_sd+sd),width=0.05,linetype=1)+
+  scale_fill_manual(values=c( "#F0E442", "#009E73")) 
 
 #cv biomass
 combo_biomass_geompoint_cv<-biomass_combine_mean_sd%>%

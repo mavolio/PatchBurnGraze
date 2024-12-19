@@ -47,7 +47,7 @@ species_comp<-species_comp_data%>%
   #selecting the maximum cover for each species
   summarise(abundance=max(abundance, na.rm=T))%>%
   #removing unwanted years
-  filter(!RecYear%in%2008:2010)%>%
+  filter(!RecYear%in%2008:2011)%>%
   filter(RecYear!=2022)
 
 #Create a watershed key column to merge with the raw data
@@ -113,13 +113,18 @@ pl_rich_diver$RecYear<-as.factor(pl_rich_diver$RecYear)
 pl_rich_diver$Unit<-as.factor(pl_rich_diver$Unit)
 pl_rich_diver$FireGrzTrt<-as.factor(pl_rich_diver$FireGrzTrt)
 #build model
+#remove diversity code from script
 pl_diver_model<-lmer(log(Shannon)~FireGrzTrt*RecYear+(1|Unit),
                      data=pl_rich_diver)
 Anova(pl_diver_model, type=3)
 anova(pl_diver_model)
 qqnorm(resid(pl_diver_model))
 check_model(pl_diver_model)
+summary(pl_diver_model)
 
+pl_diver_l_model<-lm(log(Shannon)~FireGrzTrt*RecYear+Unit, data=pl_rich_diver)
+summary(pl_diver_l_model)
+anova(pl_diver_l_model)#similar to mixed model.
 #multiple comparison
 testInteractions(pl_diver_model, pairwise="FireGrzTrt", fixed="RecYear",
                  adjustment="BH")
@@ -170,11 +175,11 @@ plrich_interact_viz<-plrich_interact%>%
          plrich_upper=exp(adjusted_mean+SE_of_link),
          plrich_lower=exp(adjusted_mean-SE_of_link))
 #visual
-ggplot(plrich_interact_viz,aes(RecYear, plrich_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
+ggplot(plrich_interact_viz,aes(RecYear, plrich_mean, col=FireGrzTrt))+
   geom_point(size=3)+
   geom_path(aes(as.numeric(RecYear)),linewidth=1)+
   geom_errorbar(aes(ymin=plrich_lower,
-                    ymax=plrich_upper),width=0.2,linetype=1)+
+                    ymax=plrich_upper),width=0.1,linetype=1)+
   scale_colour_manual(values=c( "#F0E442", "#009E73"))
 
 #average across years for simplification
@@ -184,9 +189,9 @@ plrich_interact_bar<-plrich_interact_viz%>%
             se_upper=mean(plrich_upper),
             se_lower=mean(plrich_lower))
 ggplot(plrich_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
-  geom_bar(stat = "identity",aes(y=pl_richness),width = 0.5)+
+  geom_bar(stat = "identity",aes(y=pl_richness),width = 0.25)+
   geom_errorbar(aes(ymin=se_lower,
-                    ymax=se_upper),width=0.2,linetype=1)+
+                    ymax=se_upper),width=0.05,linetype=1)+
   scale_fill_manual(values=c( "#F0E442", "#009E73"))
 
 #evenness model
@@ -211,11 +216,11 @@ pleven_interact_viz<-pleven_interact%>%
          pleven_upper=adjusted_mean+SE_of_link,
          pleven_lower=adjusted_mean-SE_of_link)
 #visual
-ggplot(pleven_interact_viz,aes(RecYear, plevenness_mean, col=FireGrzTrt, linetype=FireGrzTrt))+
+ggplot(pleven_interact_viz,aes(RecYear, plevenness_mean, col=FireGrzTrt))+
   geom_point(size=3)+
   geom_path(aes(as.numeric(RecYear)),linewidth=1)+
   geom_errorbar(aes(ymin=pleven_lower,
-                    ymax=pleven_upper),width=0.2,linetype=1)+
+                    ymax=pleven_upper),width=0.1,linetype=1)+
   scale_colour_manual(values=c( "#F0E442", "#009E73"))
 
 #average across years for simplification
@@ -225,9 +230,9 @@ pleven_interact_bar<-pleven_interact_viz%>%
             se_upper=mean(pleven_upper),
             se_lower=mean(pleven_lower))
 ggplot(pleven_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
-  geom_bar(stat = "identity",aes(y=pl_evenness),width = 0.5)+
+  geom_bar(stat = "identity",aes(y=pl_evenness),width = 0.25)+
   geom_errorbar(aes(ymin=se_lower,
-                    ymax=se_upper),width=0.2,linetype=1)+
+                    ymax=se_upper),width=0.05,linetype=1)+
   scale_fill_manual(values=c( "#F0E442", "#009E73"))
 
 
@@ -269,7 +274,7 @@ pl_env_data <- sp_comp_comm%>%dplyr::select(1:7)
 
 #get nmds1 and 2
 pl_mds_all <- metaMDS(pl_sp_data, distance = "bray")
-#Run 20 stress 0.276
+#stress 0.275
 
 #combine NMDS1 and 2 with factor columns and create centroids
 pl_mds_scores <- data.frame(pl_env_data, scores(pl_mds_all, display="sites"))%>%
@@ -395,11 +400,11 @@ model_estimates_beta_viz<-model_estimates_beta%>%
          pl_upper=exp(adjusted_mean+SE_of_link),
          pl_lower=exp(adjusted_mean-SE_of_link))
 #visual
-ggplot(model_estimates_beta_viz,aes(RecYear, pl_betadiv, col=FireGrzTrt, linetype=FireGrzTrt))+
+ggplot(model_estimates_beta_viz,aes(RecYear, pl_betadiv, col=FireGrzTrt))+
   geom_point(size=3)+
   geom_path(aes(as.numeric(RecYear)),linewidth=1)+
   geom_errorbar(aes(ymin=pl_lower,
-                    ymax=pl_upper),width=0.2,linetype=1)+
+                    ymax=pl_upper),width=0.1,linetype=1)+
   scale_colour_manual(values=c( "#F0E442", "#009E73"))
 #summarize with a bargraph
 plbeta_interact_bar<-model_estimates_beta_viz%>%
@@ -408,9 +413,9 @@ plbeta_interact_bar<-model_estimates_beta_viz%>%
             se_upper=mean(pl_upper),
             se_lower=mean(pl_lower))
 ggplot(plbeta_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
-  geom_bar(stat = "identity",aes(y=pl_betadiver),width = 0.5)+
+  geom_bar(stat = "identity",aes(y=pl_betadiver),width = 0.25)+
   geom_errorbar(aes(ymin=se_lower,
-                    ymax=se_upper),width=0.2,linetype=1)+
+                    ymax=se_upper),width=0.05,linetype=1)+
   scale_fill_manual(values=c( "#F0E442", "#009E73"))
 
 #simper analysis to determine species contributing 80% of difference in composition####
@@ -748,6 +753,7 @@ local_rich_model<-lmer(richness~FireGrzTrt*RecYear+(1|Unit/Watershed),
 anova(local_rich_model)
 check_model(local_rich_model)#good enough
 qqnorm(resid(local_rich_model))
+summary(local_rich_model)
 
 #using mean estimate to create figure 
 local_rich_interact<-interactionMeans(local_rich_model)
@@ -763,7 +769,7 @@ ggplot(local_rich_interact_viz,aes(RecYear, local_rich_mean, col=FireGrzTrt))+
   geom_point(size=3)+
   geom_path(aes(as.numeric(RecYear)),linewidth=1)+
   geom_errorbar(aes(ymin=local_rich_lower,
-                    ymax=local_rich_upper),width=0.2,linetype=1)+
+                    ymax=local_rich_upper),width=0.1,linetype=1)+
   scale_colour_manual(values=c( "#F0E442", "#009E73"))
 
 #average across years for simplification
@@ -773,9 +779,9 @@ local_rich_interact_bar<-local_rich_interact_viz%>%
             se_upper=mean(local_rich_upper),
             se_lower=mean(local_rich_lower))
 ggplot(local_rich_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
-  geom_bar(stat = "identity",aes(y=local_mean),width = 0.5)+
+  geom_bar(stat = "identity",aes(y=local_mean),width = 0.25)+
   geom_errorbar(aes(ymin=se_lower,
-                    ymax=se_upper),width=0.2,linetype=1)+
+                    ymax=se_upper),width=0.05,linetype=1)+
   scale_fill_manual(values=c( "#F0E442", "#009E73"))
 
 local_evar_model<-lmer(Evar~FireGrzTrt*RecYear+(1|Unit/Watershed),
@@ -798,7 +804,7 @@ ggplot(local_ever_interact_viz,aes(RecYear, local_evar_mean, col=FireGrzTrt))+
   geom_point(size=3)+
   geom_path(aes(as.numeric(RecYear)),linewidth=1)+
   geom_errorbar(aes(ymin=local_evar_lower,
-                    ymax=local_evar_upper),width=0.2,linetype=1)+
+                    ymax=local_evar_upper),width=0.1,linetype=1)+
   scale_colour_manual(values=c( "#F0E442", "#009E73"))
 
 #average across years for simplification
@@ -808,9 +814,9 @@ local_evar_interact_bar<-local_ever_interact_viz%>%
             se_upper=mean(local_evar_upper),
             se_lower=mean(local_evar_lower))
 ggplot(local_evar_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
-  geom_bar(stat = "identity",aes(y=local_mean),width = 0.5)+
+  geom_bar(stat = "identity",aes(y=local_mean),width = 0.25)+
   geom_errorbar(aes(ymin=se_lower,
-                    ymax=se_upper),width=0.2,linetype=1)+
+                    ymax=se_upper),width=0.05,linetype=1)+
   scale_fill_manual(values=c( "#F0E442", "#009E73"))
 
 #create abundance based on lifeforms####
