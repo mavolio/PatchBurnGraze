@@ -4177,12 +4177,12 @@ results[["Fungivore"]] # F = 0.009, p = 0.999
 results[["Detritivore"]] # F = 1.165, p = 0.331
 results[["Parasite"]] #sig different: F  = 2.995. p= 0.0382 *
 model_parasite <- aov(Parasite ~ TreatmentSB, data = Functional_wide_2021_C)
-TukeyHSD(model_parasite) # 
+TukeyHSD(model_parasite) # significantly different: p = 0.0432632, PBG_1-PBG_0 with PBG 1 being higher. 
 
-
-results[["Saprophagic"]]
+ 
+results[["Saprophagic"]] #F = 0.646, p = 0.589
 results[["Gall_Former"]] # N/A onyl one gull former found
-results[["predatorCombined"]]
+results[["predatorCombined"]] # F = 0.405, p = 0.75
 
 
 #### Functional Trait Years Since Burn 2022 ####
