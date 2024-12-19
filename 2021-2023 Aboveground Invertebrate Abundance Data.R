@@ -4131,6 +4131,123 @@ for (BOOT in bootstrap_vector) {
 }
 
 
+#### Functional Trait Years Since Burn 2021 ####
+FunctionalSB_2021 <- cleaned_data %>%
+  filter(Date == 2021, Plot %in% c(2, 4))
+
+Merged_FunctionalSB_2021 <- merge(FunctionalSB_2021, BurnInfo2021) %>%
+  mutate(TreatmentSB = paste(Treatment, SB, sep = "_"))
+
+Clean_FunctionalSB_2021 <- Merged_FunctionalSB_2021 %>%
+  group_by(Sample, Functional_Group, TreatmentSB) %>%
+  summarise(Total_Abundance = sum(Count, na.rm = TRUE), .groups = 'drop')
+
+Functional_wide_2021 <- Clean_FunctionalSB_2021 %>%
+  pivot_wider(
+    names_from = Functional_Group,
+    values_from = Total_Abundance,
+    values_fill = 0  # Fill missing values with 0
+  )
+
+
+Functional_wide_2021_C <- Functional_wide_2021 %>%
+  mutate(predatorCombined = Predator + Parasitoid)
+
+# 
+# Specify the columns to analyze
+functional_groups <- c("Herbivore", "Omnivore", "Predator", "Parasitoid",
+                       "Pollinator", "Fungivore", "Detritivore", "Parasite", 
+                       "Saprophagic", "Gall Former", "predatorCombined")
+
+results <- lapply(functional_groups, function(col) {
+  # Use backticks to ensure special characters are handled
+  formula <- as.formula(paste0("`", col, "` ~ TreatmentSB"))
+  
+  model <- aov(formula, data = Functional_wide_2021_C)
+  summary(model)
+})
+
+names(results) <- functional_groups
+results[["Herbivore"]] # F = 1.92, p = 0.137
+results[["Omnivore"]] # F = 1.754, p = 0.166
+results[["Predator"]] # F = 0.557, p = 0.646
+results[["Parasitoid"]] # F = 0.557, p = 0.646
+results[["Pollinator"]] # F = 1.609, p = 0.197
+results[["Fungivore"]] # F = 0.009, p = 0.999
+results[["Detritivore"]] # F = 1.165, p = 0.331
+results[["Parasite"]] #sig different: F  = 2.995. p= 0.0382 *
+model_parasite <- aov(Parasite ~ TreatmentSB, data = Functional_wide_2021_C)
+TukeyHSD(model_parasite) # 
+
+
+results[["Saprophagic"]]
+results[["Gall_Former"]] # N/A onyl one gull former found
+results[["predatorCombined"]]
+
+
+#### Functional Trait Years Since Burn 2022 ####
+FunctionalSB_2022 <- cleaned_data %>%
+  filter(Date == 2022)
+
+Merged_FunctionalSB_2022 <- merge(FunctionalSB_2022, BurnInfo2022) %>%
+  mutate(TreatmentSB = paste(Treatment, SB, sep = "_"))
+
+Clean_FunctionalSB_2022 <- Merged_FunctionalSB_2022 %>%
+  group_by(Sample, Functional_Group, TreatmentSB) %>%
+  summarise(Total_Abundance = sum(Count, na.rm = TRUE), .groups = 'drop')
+
+
+
+Functional_wide_2022 <- Clean_FunctionalSB_2022 %>%
+  pivot_wider(
+    names_from = Functional_Group,
+    values_from = Total_Abundance,
+    values_fill = 0  # Fill missing values with 0
+  )
+
+
+# Run PERMANOVA
+adonis2_results_2022 <- adonis2(
+  Functional_wide_2022[, 3:10] ~ TreatmentSB, # Columns 3:10 contain functional group abundances
+  data = Functional_wide_2022,
+  method = "bray" # Bray-Curtis dissimilarity
+)
+
+# View results
+print(adonis2_results_2022)
+
+# F = 2.8631, p = 0.004 **
+
+#### Functional Trait Years Since Burn 2023 ####
+FunctionalSB_2023 <- cleaned_data %>%
+  filter(Date == 2023)
+
+Merged_FunctionalSB_2023 <- merge(FunctionalSB_2023, BurnInfo2023) %>%
+  mutate(TreatmentSB = paste(Treatment, SB, sep = "_"))
+
+Clean_FunctionalSB_2023 <- Merged_FunctionalSB_2023 %>%
+  group_by(Sample, Functional_Group, TreatmentSB) %>%
+  summarise(Total_Abundance = sum(Count, na.rm = TRUE), .groups = 'drop')
+
+Functional_wide_2023 <- Clean_FunctionalSB_2023 %>%
+  pivot_wider(
+    names_from = Functional_Group,
+    values_from = Total_Abundance,
+    values_fill = 0  # Fill missing values with 0
+  )
+
+# Run PERMANOVA
+adonis2_results_2023 <- adonis2(
+  Functional_wide_2023[, 3:10] ~ TreatmentSB, # Columns 3:10 contain functional group abundances
+  data = Functional_wide_2023,
+  method = "bray" # Bray-Curtis dissimilarity
+)
+
+# View results
+print(adonis2_results_2023)
+
+# F = 0.859, p = 0.556
+
 #### 2021 Z-Score Calculations ####
 detritivore_average_total_count_2021 <- Plot_master_2021 %>%
   group_by(iteration) %>%
@@ -4821,6 +4938,13 @@ print(simper_results_2021_TreatmentSB)
 # To view the contribution of each species, you can examine the output in detail
 summary(simper_results_2021_TreatmentSB)
 
+cicadellidae_abundance_summary <- abundanceWide_2021 %>%
+  group_by(TreatmentSB) %>%
+  summarize(
+    Mean_Abundance = mean(Hemiptera_Cicadellidae, na.rm = TRUE),
+    SD_Abundance = sd(Hemiptera_Cicadellidae, na.rm = TRUE),
+    total_Abundance = sum(Hemiptera_Cicadellidae, na.rm = TRUE)
+  )
 
 # Prep for ABG vs. PBG 
 set.seed(123)
@@ -4915,6 +5039,15 @@ print(simper_results_2022_TreatmentSB)
 # To view the contribution of each species in detail
 summary(simper_results_2022_TreatmentSB)
 
+cicadellidae_abundance_summary <- abundanceWide_2022 %>%
+  group_by(TreatmentSB) %>%
+  summarize(
+    Mean_Abundance = mean(Hemiptera_Cicadellidae, na.rm = TRUE),
+    SD_Abundance = sd(Hemiptera_Cicadellidae, na.rm = TRUE),
+    total_Abundance = sum(Hemiptera_Cicadellidae, na.rm = TRUE)
+  )
+
+
 # ABG VS PBG ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 set.seed(123)
@@ -5005,6 +5138,14 @@ print(simper_results_2023_TreatmentSB)
 
 # To view the contribution of each species in detail
 summary(simper_results_2023_TreatmentSB)
+
+cicadellidae_abundance_summary <- abundanceWide_2023 %>%
+  group_by(TreatmentSB) %>%
+  summarize(
+    Mean_Abundance = mean(Hemiptera_Cicadellidae, na.rm = TRUE),
+    SD_Abundance = sd(Hemiptera_Cicadellidae, na.rm = TRUE),
+    total_Abundance = sum(Hemiptera_Cicadellidae, na.rm = TRUE)
+  )
 
 # ABG VS PBG ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -5132,14 +5273,16 @@ print(beta_diversity_results)
 # PERMANOVA test
 print(permanova <- adonis2(formula = abundanceWide_2021[,8:150]~TreatmentSB, data=abundanceWide_2021, permutations=999, method="bray"))
 
+#F = 1.2983, P = 0.093 
+
+pairwise.adonis<-pairwise.adonis2(abundanceWide_2021[,8:150]~TreatmentSB, data = abundanceWide_2021)
+pairwise.adonis
+
 # TreatmentSB BetaDiversity
 # 1       ABG_0     0.5224689
 # 2       PBG_0     0.4667138
 # 3       PBG_1     0.5017885
 # 4       PBG_2     0.5170851
-
-pairwise.adonis<-pairwise.adonis2(abundanceWide_2021[,8:150]~TreatmentSB, data = abundanceWide_2021)
-pairwise.adonis
 
 #### Beta Diversity Years Since Burn 2022 ####
 # Identify species columns (assumes species data starts at the 8th column)
@@ -5164,6 +5307,8 @@ print(beta_diversity_results)
 
 # PERMANOVA test
 print(permanova <- adonis2(formula = abundanceWide_2022[,8:121]~TreatmentSB, data=abundanceWide_2022, permutations=999, method="bray"))
+
+# F = 2.4861, p = 0.003 **
 
 # Run pairwise.adonis2
 
