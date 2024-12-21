@@ -4205,18 +4205,34 @@ Functional_wide_2022 <- Clean_FunctionalSB_2022 %>%
     values_fill = 0  # Fill missing values with 0
   )
 
+Functional_wide_2022_C <- Functional_wide_2022 %>%
+  mutate(predatorCombined = Predator + Parasitoid)
 
-# Run PERMANOVA
-adonis2_results_2022 <- adonis2(
-  Functional_wide_2022[, 3:10] ~ TreatmentSB, # Columns 3:10 contain functional group abundances
-  data = Functional_wide_2022,
-  method = "bray" # Bray-Curtis dissimilarity
+functional_groups <- c(
+  "Herbivore", "Omnivore", "Predator", "Parasitoid",
+  "Pollinator", "Fungivore", "Detritivore", "Parasite", 
+   "predatorCombined"
 )
 
-# View results
-print(adonis2_results_2022)
+results <- lapply(functional_groups, function(col) {
+  # Use backticks to ensure special characters are handled
+  formula <- as.formula(paste0("`", col, "` ~ TreatmentSB"))
+  
+  model <- aov(formula, data = Functional_wide_2022_C)
+  summary(model)
+})
 
-# F = 2.8631, p = 0.004 **
+names(results) <- functional_groups
+results[["Herbivore"]]        #F = 2.744, p = 0.0508 
+results[["Omnivore"]]         #F = 1.634, p = 0.191        
+results[["Predator"]]         #F = 2.147, p = 0.104    
+results[["Parasitoid"]]       #F = 1.482, p = 0.229      
+results[["Pollinator"]]       #F = 0.359, p = 0.782
+results[["Fungivore"]]        #F = 0.519, p = 0.670
+results[["Detritivore"]]      #F = 0.870, p = 0.462
+results[["Parasite"]]         #F = 0.909, p = 0.442 
+results[["predatorCombined"]] #F = 2.440, p = 0.0731
+
 
 #### Functional Trait Years Since Burn 2023 ####
 FunctionalSB_2023 <- cleaned_data %>%
@@ -4236,17 +4252,32 @@ Functional_wide_2023 <- Clean_FunctionalSB_2023 %>%
     values_fill = 0  # Fill missing values with 0
   )
 
-# Run PERMANOVA
-adonis2_results_2023 <- adonis2(
-  Functional_wide_2023[, 3:10] ~ TreatmentSB, # Columns 3:10 contain functional group abundances
-  data = Functional_wide_2023,
-  method = "bray" # Bray-Curtis dissimilarity
+Functional_wide_2023_C <- Functional_wide_2023 %>%
+  mutate(predatorCombined = Predator + Parasitoid)
+
+functional_groups <- c(
+  "Herbivore", "Omnivore", "Predator", "Parasitoid",
+  "Pollinator", "Fungivore", "Parasite", 
+  "predatorCombined"
 )
 
-# View results
-print(adonis2_results_2023)
+results <- lapply(functional_groups, function(col) {
+  # Use backticks to ensure special characters are handled
+  formula <- as.formula(paste0("`", col, "` ~ TreatmentSB"))
+  
+  model <- aov(formula, data = Functional_wide_2023_C)
+  summary(model)
+})
 
-# F = 0.859, p = 0.556
+names(results) <- functional_groups
+results[["Herbivore"]]        #F = 1.255 p = 0.298              
+results[["Omnivore"]]         #F = 2.58, p = 0.0618 
+results[["Predator"]]         #F = 1.109, p = 0.353
+results[["Parasitoid"]]       #F = 0.483, p = 0.696
+results[["Pollinator"]]       #F = 1.423, p = 0.245
+results[["Fungivore"]]        #F = 1.031, p = 0.386
+results[["Parasite"]]         #F = 1.000, p = 0.399
+results[[ "predatorCombined"]]#F = 0.883, p = 0.455
 
 #### 2021 Z-Score Calculations ####
 detritivore_average_total_count_2021 <- Plot_master_2021 %>%
