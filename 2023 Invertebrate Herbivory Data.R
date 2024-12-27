@@ -142,7 +142,8 @@ summary(zero_model <- glmer(`Damage` ~ TreatmentSB + (1|Plant),
                             family = binomial))
 Anova(zero_model, type='III') 
 back.emmeans(emmeans(zero_model, ~TreatmentSB), transform='log')
-
+pairwise_results <- emmeans(zero_model, pairwise ~ TreatmentSB, adjust = "tukey")
+pairwise_results
 
 # Part 2: distribution of the continuous, non-zero data
 
