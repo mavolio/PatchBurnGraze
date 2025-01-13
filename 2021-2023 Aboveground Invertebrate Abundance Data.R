@@ -4004,7 +4004,7 @@ Plot_master_2021<- data.frame()  # Initialize an empty dataframe
 for (BOOT in bootstrap_vector) {
   # Sample unique plot_index values within each block for 2022
   New_Key_2021 <- sample_compact_2021 %>%
-    dplyr::select(1:14) %>%
+    dplyr::select(1:13) %>%
     unique() %>%
     group_by(block) %>%
     sample_n(16, replace = TRUE) %>%
