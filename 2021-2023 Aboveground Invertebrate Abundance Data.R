@@ -453,7 +453,7 @@ Years_Since_Burned_NMDS_2021 <- ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, co
         panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
         plot.title = element_text(size = 75)
   ) +
-  ggtitle("2021 year since burned") + 
+  ggtitle("") + 
   annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = min(BC_NMDS_Graph$MDS2) + 0.06, 
            label = 'Mean p = 0.069\nVariance p = 0.451', size = STATS_TEXT_SIZE, hjust = 'left')
 
@@ -581,7 +581,7 @@ ABG_VS_PBG_NMDS_2021 <- ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = gr
         panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
         plot.title = element_text(size = 75)
   ) +
-  ggtitle("2021 ABG vs PBG")
+  ggtitle("")
 
 
 #PERMANOVA: F=1.9529 , df=1,28, p=0.013 *
@@ -863,7 +863,7 @@ Years_Since_Burned_NMDS_2022 <- ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, co
         panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
         plot.title = element_text(size = 75)
   ) +
-  ggtitle("2022 year since burned") + 
+  ggtitle("") + 
   annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = min(BC_NMDS_Graph$MDS2) + 0.12, 
            label = 'Mean p = 0.001\nVariance p = 0.975', size = STATS_TEXT_SIZE, hjust = 'left')
 
@@ -987,9 +987,9 @@ ABG_VS_PBG_NMDS_2022  <- ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = g
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(), 
         plot.title = element_text(size = 75)
   ) +
-  ggtitle("2022 ABG vs PBG") +
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = min(BC_NMDS_Graph$MDS2) + 0.12, label = 'Variance p = 0.001', size = STATS_TEXT_SIZE, hjust = 'left') +
-  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = min(BC_NMDS_Graph$MDS2) + 0.010, label = 'Mean p=0.001', size = STATS_TEXT_SIZE, hjust = 'left')
+  ggtitle("") +
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = min(BC_NMDS_Graph$MDS2) + 0.12, label = 'Variance p = 0.245', size = STATS_TEXT_SIZE, hjust = 'left') +
+  annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = min(BC_NMDS_Graph$MDS2) + 0.010, label = 'Mean p = 0.321', size = STATS_TEXT_SIZE, hjust = 'left')
 
 
 #Mean F=4.5219, df=1,30, p=0.001 ***
@@ -1313,7 +1313,7 @@ Years_Since_Burned_NMDS_2023 <- ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, co
         panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
         plot.title = element_text(size = 75)
   ) +
-  ggtitle("2023 year since burned") + 
+  ggtitle("") + 
   annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = c(min(BC_NMDS_Graph$MDS2) + 0.03, min(BC_NMDS_Graph$MDS2) - 0.2), 
            label = c('Mean p = 0.094', 'Variance p = 0.999'), size = STATS_TEXT_SIZE, hjust = 'left')
 
@@ -1423,7 +1423,7 @@ ABG_VS_PBG_NMDS_2023 <- ggplot(BC_NMDS_Graph, aes(x = MDS1, y = MDS2, color = gr
         panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
         plot.title = element_text(size = 75)
   ) +
-  ggtitle("2023 ABG vs PBG") + 
+  ggtitle("") + 
   annotate('text', x = min(BC_NMDS_Graph$MDS1) - 0.04, y = c(min(BC_NMDS_Graph$MDS2) + 0.02, min(BC_NMDS_Graph$MDS2) - 0.2), 
            label = c('Mean p = 0.016', 'Variance p = 0.159'), size = STATS_TEXT_SIZE, hjust = 'left')
 
@@ -2321,17 +2321,19 @@ print(p_value_W_2023)
 richness_2021 <- ggplot(average_richness_2021, aes(x = mean_richness, y = ..scaled.., color = "PBG")) +
   geom_density(alpha = 0.5) +
   geom_vline(aes(xintercept = mean_richness_ABG_2021, color = "ABG"), linetype = "dashed", size = 1) +
-  labs(title = "2021: Density Plot of Mean Richness",
-       x = "Mean Richness",
-       y = "Density") +
-  scale_color_manual(values = c("blue", "red"), name = "Legend") +
+  labs(title = "",
+       x = "",
+       y = "") +
+  scale_color_manual(values = c("blue", "red"), name = "") +  # Set name to an empty string to remove "Legend"
   scale_x_continuous(limits = c(5, 20)) +
   scale_y_continuous(limits = c(0, 1)) +
-  theme(legend.position = c(0.15, 0.7),
+  theme(legend.position = c(0.25, 0.6),
         axis.text.x = element_text(size = 22),  # Adjust the size as needed
-        axis.text.y = element_text(size = 22))  # Adjust the size as needed
+        axis.text.y = element_text(size = 22),
+        legend.text = element_text(size = 30))  # Adjust the size as needed
 
 richness_2021
+
 
 
 
@@ -2339,9 +2341,9 @@ richness_2021
 evenness_2021 <- ggplot(average_evenness_2021, aes(x = mean_evenness, y = ..scaled.., color = "PBG")) +
   geom_density(alpha = 0.5) +
   geom_vline(aes(xintercept = mean_evenness_ABG_2021, color = "ABG Mean Evenness"), linetype = "dashed", size = 1) +
-  labs(title = "2021: Density Plot of Mean Evenness",
-       x = "Mean Evenness",
-       y = "Density") +
+  labs(title = "",
+       x = "",
+       y = "") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
 #  annotate("text", x = 0.8, y = 1, label = "p-value: 0.885", color = "blue", size = 4, hjust = 1, vjust = 1) +
 #  annotate("text", x = 0.8, y = 0.8, label = "Z-score: 0.145", color = "red", size = 4, hjust = 1, vjust = 1) +
@@ -2357,9 +2359,9 @@ evenness_2021
 count_2021 <- ggplot(average_total_count_2021, aes(x = mean_count, y = ..scaled.., color = "PBG")) +
   geom_density(alpha = 0.5) +
   geom_vline(aes(xintercept = ABG_mean_total_count_2021, color = "ABG Total Abundance"), linetype = "dashed", size = 1) +
-  labs(title = "2021: Density Plot of Total Abundance",
-       x = "Mean Total Abundance",
-       y = "Density") +
+  labs(title = "",
+       x = "",
+       y = "") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
 #  annotate("text", x = 55, y = 1, label = "p-value: 0.252", color = "blue", size = 4, hjust = 1, vjust = 1) +
 #  annotate("text", x = 55, y = 0.80, label = "Z-score: 1.15", color = "red", size = 4, hjust = 1, vjust = 1) +
@@ -2374,9 +2376,9 @@ count_2021
 weight_2021 <- ggplot(average_total_weight_2021, aes(x = mean_weight, y = ..scaled.., color = "PBG")) +
   geom_density(alpha = 0.5) +
   geom_vline(aes(xintercept = mean_weight_ABG_2021, color = "ABG Total Count"), linetype = "dashed", size = 1) +
-  labs(title = "2021: Density Plot of Weight",
-       x = "Mean Weight",
-       y = "Density") +
+  labs(title = "",
+       x = "",
+       y = "") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
 #  annotate("text", x = 130, y = 1, label = "p-value: 0.408", color = "blue", size = 4, hjust = 1, vjust = 1) +
 #  annotate("text", x = 130, y = 0.8, label = "Z-score: 0.828", color = "red", size = 4, hjust = 1, vjust = 1) +
@@ -2394,9 +2396,9 @@ grid.arrange(richness_2021, evenness_2021, count_2021, weight_2021)
 richness_2022 <- ggplot(average_richness_2022, aes(x = mean_richness, y = ..scaled..,  color = "PBG")) +
   geom_density(alpha = 0.5) +
   geom_vline(aes(xintercept = mean_richness_ABG_2022 , color = "ABG Mean Richness"), linetype = "dashed", size = 1) +
-  labs(title = "2022: Density Plot of Mean Richness",
-       x = "Mean Richness",
-       y = "Density") +
+  labs(title = "",
+       x = "",
+       y = "") +
   scale_color_manual(values = c("blue", "red"), name = "Legend")  +
 #  annotate("text", x = 20, y = 1, label = "p-value: 0.0425", color = "blue", size = 4, hjust = 1, vjust = 1) +
 #  annotate("text", x = 20, y = .80, label = "Z-score: 2.03", color = "red", size = 4, hjust = 1, vjust = 1) +
@@ -2411,9 +2413,9 @@ richness_2022
 evenness_2022 <- ggplot(average_evenness_2022, aes(x = mean_evenness, y = ..scaled..,  color = "PBG")) +
   geom_density(alpha = 0.5) +
   geom_vline(aes(xintercept = mean_evenness_ABG_2022, color = "ABG Mean Evenness"), linetype = "dashed", size = 1) +
-  labs(title = "2022: Density Plot of Mean Evenness",
-       x = "Mean Evenness",
-       y = "Density") +
+  labs(title = "",
+       x = "",
+       y = "") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
 #  annotate("text", x = 0.8, y = 1, label = "p-value: 0.343", color = "blue", size = 4, hjust = 1, vjust = 1) +
 #  annotate("text", x = 0.8, y = 0.8, label = "Z-score: 0.948", color = "red", size = 4, hjust = 1, vjust = 1) +
@@ -2427,9 +2429,9 @@ evenness_2022
 count_2022 <- ggplot(average_total_count_2022, aes(x = mean_count, y = ..scaled..,  color = "PBG")) +
   geom_density(alpha = 0.5) +
   geom_vline(aes(xintercept = ABG_mean_total_count_2022, color = "ABG Total Abundance"), linetype = "dashed", size = 1) +
-  labs(title = "2022: Density Plot of Total Abundance",
-       x = "Mean Total Abundance",
-       y = "Density") +
+  labs(title = "",
+       x = "",
+       y = "") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
 #  annotate("text", x = 55, y = 1, label = "p-value: 0.130", color = "blue", size = 4, hjust = 1, vjust = 1) +
 #  annotate("text", x = 55, y = .80, label = "Z-score: 1.51", color = "red", size = 4, hjust = 1, vjust = 1) +
@@ -2443,9 +2445,9 @@ count_2022
 weight_2022 <- ggplot(average_total_weight_2022, aes(x = mean_weight, y = ..scaled..,  color = "PBG")) +
   geom_density(alpha = 0.5) +
   geom_vline(aes(xintercept = mean_weight_ABG_2022, color = "ABG Total Count"), linetype = "dashed", size = 1) +
-  labs(title = "2022: Density Plot of Weight",
-       x = "Mean Weight",
-       y = "Density") +
+  labs(title = "",
+       x = "",
+       y = "") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
 #  annotate("text", x = 130, y = 1, label = "p-value: 0.0897", color = "blue", size = 4, hjust = 1, vjust = 1) +
 #  annotate("text", x = 130, y = .80, label = "Z-score: 1.697", color = "red", size = 4, hjust = 1, vjust = 1) +
@@ -2464,9 +2466,9 @@ grid.arrange(richness_2022, evenness_2022, count_2022)
 richness_2023 <- ggplot(average_richness_2023, aes(x = mean_richness, y = ..scaled..,  color = "PBG")) +
   geom_density(alpha = 0.5) +
   geom_vline(aes(xintercept = mean_richness_ABG_2023 , color = "ABG Mean Richness"), linetype = "dashed", size = 1) +
-  labs(title = "2023: Density Plot of Mean Richness",
-       x = "Mean Richness",
-       y = "Density") +
+  labs(title = "",
+       x = "",
+       y = "") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
 #  annotate("text", x = 20, y = 1, label = "p-value: 0.657", color = "blue", size = 4, hjust = 1, vjust = 1) +
 #  annotate("text", x = 20, y = 0.8, label = "Z-score: 0.445", color = "red", size = 4, hjust = 1, vjust = 1) +
@@ -2479,9 +2481,9 @@ richness_2023 <- ggplot(average_richness_2023, aes(x = mean_richness, y = ..scal
 evenness_2023 <- ggplot(average_evenness_2023, aes(x = mean_evenness, y = ..scaled.., color = "PBG")) +
   geom_density(alpha = 0.5) +
   geom_vline(aes(xintercept = mean_evenness_ABG_2023, color = "ABG Mean Evenness"), linetype = "dashed", size = 1) +
-  labs(title = "2023: Density Plot of Mean Evenness",
-       x = "Mean Evenness",
-       y = "Density") +
+  labs(title = "",
+       x = "",
+       y = "") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
 #  annotate("text", x = 0.8, y = 1, label = "p-value: <0.001", color = "blue", size = 4, hjust = 1, vjust = 1) +
 #  annotate("text", x = 0.8, y = 0.8, label = "Z-score:  3.400", color = "red", size = 4, hjust = 1, vjust = 1) +
@@ -2496,9 +2498,9 @@ evenness_2023 <- ggplot(average_evenness_2023, aes(x = mean_evenness, y = ..scal
 count_2023 <- ggplot(average_total_count_2023, aes(x = mean_count, y = ..scaled..,  color = "PBG")) +
   geom_density(alpha = 0.5) +
   geom_vline(aes(xintercept = ABG_mean_total_count_2023, color = "ABG Total Abundance"), linetype = "dashed", size = 1) +
-  labs(title = "2023: Density Plot of Total Abundance",
-       x = "Mean Total Abundance",
-       y = "Density") +
+  labs(title = "",
+       x = "",
+       y = "") +
   scale_color_manual(values = c("blue", "red"), name = "Legend") +
 #  annotate("text", x = 55, y = 1, label = "p-value: 0.886", color = "blue", size = 4, hjust = 1, vjust = 1) +
 #  annotate("text", x = 55, y = 0.8, label = "Z-score: 0.143", color = "red", size = 4, hjust = 1, vjust = 1) +
@@ -2510,9 +2512,9 @@ count_2023 <- ggplot(average_total_count_2023, aes(x = mean_count, y = ..scaled.
 weight_2023 <- ggplot(average_total_weight_2023, aes(x = mean_weight, y = ..scaled..,  color = "PBG")) +
   geom_density(alpha = 0.5) +
   geom_vline(aes(xintercept = mean_weight_ABG_2023, color = "ABG Total Count"), linetype = "dashed", size = 1) +
-  labs(title = "2023: Density Plot of Weight",
-       x = "Mean Weight",
-       y = "Density") +
+  labs(title = "",
+       x = "",
+       y = "") +
   scale_color_manual(values = c("blue", "red")) +
 #  annotate("text", x = 130, y = 1, label = "p-value: 0.268", color = "blue", size = 4, hjust = 1, vjust = 1) +
 #  annotate("text", x = 130, y = 0.8, label = "Z-score: 1.11", color = "red", size = 4, hjust = 1, vjust = 1) +
@@ -2566,7 +2568,7 @@ grid.arrange(
   richness_2022, evenness_2022, count_2022, 
   richness_2023, evenness_2023, count_2023, 
   ncol = 3,
-  top = "Comparison of Richness, Evenness, and Count across Years"
+  top = ""
   #,bottom = legend
 )
 
@@ -3679,18 +3681,18 @@ beta_diversity_value_2 <- mean(dissimilarity_matrix)
 Beta_2021 <- ggplot(PBG_plot_master_2021, aes(x = beta_diversity)) +
   geom_density(aes(y = ..scaled.., color = "PBG"), alpha = 0.5) +
   geom_vline(aes(xintercept = beta_diversity_value_2, color = "ABG"), linetype = "dashed", size = 1) +
-  labs(title = "2021 Density Plot of Beta Diversity",
-       x = "Mean Beta Diversity",
-       y = "Density") +
-  scale_color_manual(values = c("PBG" = "red", "ABG" = "blue"), name = "Legend") +
+  labs(title = "",
+       x = "",
+       y = "") +
+  scale_color_manual(values = c("PBG" = "red", "ABG" = "blue"), name = "") +  # Removed legend title
   theme_bw() +
   theme(
     panel.grid.major = element_blank(), 
     panel.grid.minor = element_blank(),
-    legend.position=c(0.01,0.99),   # Top left corner
+    legend.position = c(0.75, 0.99),   # Top left corner
     legend.justification = c("left", "top"),  # Align legend at the top-left corner
     legend.text = element_text(size = 20),    # Legend text size
-    legend.title = element_text(size = 20),   # Legend title size
+    legend.title = element_blank(),           # Ensure legend title is blank
     axis.text = element_text(size = 20),
     axis.title = element_text(size = 30),
     axis.text.y = element_text(size = 20),
@@ -3793,9 +3795,9 @@ beta_diversity_value_2 <- mean(dissimilarity_matrix_2)
 Beta_2022 <- ggplot(PBG_plot_master_2022, aes(x = beta_diversity)) +
   geom_density(aes(y = ..scaled.., color = "PBG"), alpha = 0.5) +
   geom_vline(aes(xintercept = beta_diversity_value_2, color = "ABG"), linetype = "dashed", size = 1) +
-  labs(title = "2022 Density Plot of Beta Diversity",
-       x = "Mean Beta Diversity",
-       y = "Density") +
+  labs(title = "",
+       x = "",
+       y = "") +
   scale_color_manual(values = c("PBG" = "red", "ABG" = "blue"), name = "Legend") +
   theme_bw() +
   theme(
@@ -3896,9 +3898,9 @@ beta_diversity_value_2 <- mean(dissimilarity_matrix_2)
 Beta_2023 <- ggplot(PBG_plot_master_2023, aes(x = beta_diversity)) +
   geom_density(aes(y = ..scaled.., color = "PBG"), alpha = 0.5) +
   geom_vline(aes(xintercept = beta_diversity_value_2, color = "ABG"), linetype = "dashed", size = 1) +
-  labs(title = "2023 Density Plot of Beta Diversity",
-       x = "Mean Beta Diversity",
-       y = "Density") +
+  labs(title = "",
+       x = "",
+       y = "") +
   scale_color_manual(values = c("PBG" = "red", "ABG" = "blue"), name = "Legend") +
   theme_bw() +
   theme(
@@ -5260,9 +5262,18 @@ print(cicadellidae_abundance_summary)
 
 
 multi_panel_graph <- grid.arrange(Beta_2021, Beta_2022, Beta_2023, 
-                                  nrow = 1 
+                                  ncol = 1 
 )
 
+ggsave(
+  filename = "multi_panel_graph.png",     # File name
+  plot = multi_panel_graph,               # The arranged grid
+  device = "png",                         # File type
+  width = 8,                              # Width of the image in inches
+  height = 12,                            # Height of the image in inches
+  units = "in",                           # Units for width and height
+  dpi = 300                               # Resolution in dots per inch
+)
 
 #### Beta Diversity Years Since Burn 2021 ####
 # Group data by TreatmentSB and calculate beta diversity for each group
@@ -5314,6 +5325,26 @@ pairwise.adonis
 # 2       PBG_0     0.4667138
 # 3       PBG_1     0.5017885
 # 4       PBG_2     0.5170851
+
+#### Beta-Diversity Years Since Bruned Graph 2021 ####
+# Box plot of Beta Diversity
+Beta_boxplot_2021 <- ggplot(beta_diversity_results, aes(x = TreatmentSB, y = BetaDiversity, fill = TreatmentSB)) +
+  geom_bar() +
+  labs(title = "Box Plot of Beta Diversity (2021)",
+       x = "Treatment",
+       y = "Beta Diversity") +
+  scale_fill_manual(values = c("PBG" = "red", "ABG" = "blue")) +  # Custom fill colors
+  theme_bw() +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.text = element_text(size = 14),
+    axis.title = element_text(size = 16),
+    legend.position = "none" # Remove legend if not needed
+  )
+
+# Display the box plot
+Beta_boxplot_2021
 
 #### Beta Diversity Years Since Burn 2022 ####
 # Identify species columns (assumes species data starts at the 8th column)

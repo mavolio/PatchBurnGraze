@@ -167,26 +167,28 @@ ggplot(data=Invertebrate_Herbivory_2023, aes(x=TreatmentSB, y=Herbivory, fill=Pl
 
 #### New Graphs ####
 
-ggplot(data=Invertebrate_Herbivory_2023, aes(x=Treatment, y=Herbivory)) +  
+ABGvsPBG <- ggplot(data=Invertebrate_Herbivory_2023, aes(x=Treatment, y=Herbivory)) +  
   geom_boxplot(aes(fill=Treatment), width=0.1, position=position_dodge(width=0.9), outlier.shape=NA) + 
   geom_violin(aes(fill=Treatment), size=1, bw=.3, position=position_dodge(width=0.9)) +
   geom_jitter(position=position_jitter(width=0.2, height=0, seed=123), alpha=0.5) +
   theme_minimal() +
   theme(
     panel.grid = element_blank(), 
-    legend.position = c(0.1, 0.9),
+    legend.position = "none",
     legend.text = element_text(size = 15),     # Increases legend text size
-    legend.title = element_text(size = 18),    # Increases legend title size
+    legend.title = element_text(size = 0),    # Increases legend title size
     axis.title = element_text(size = 20),      # Increases axis titles size
     axis.text = element_text(size = 15)        # Increases axis text size
   ) +
-  scale_fill_manual(values=c("ABG"="blue", "PBG"="red"))
+  scale_fill_manual(values=c("ABG"="blue", "PBG"="red")) +
+  labs(title="", x="", y="")
+  
+
+ABGvsPBG
 
 
 
-
-
-ggplot(data=Invertebrate_Herbivory_2023, aes(x=TreatmentSB, y=Herbivory, fill=TreatmentSB)) + 
+YearSinceBurned <- ggplot(data=Invertebrate_Herbivory_2023, aes(x=TreatmentSB, y=Herbivory, fill=TreatmentSB)) + 
   geom_violin(color="black", size=1, bw=.3) +
   geom_boxplot(width=0.1, position=position_dodge(width=0.9), outlier.shape=NA) + 
   geom_jitter(position=position_jitter(width=0.2, height=0, seed=123), alpha=0.5) +
@@ -199,14 +201,15 @@ ggplot(data=Invertebrate_Herbivory_2023, aes(x=TreatmentSB, y=Herbivory, fill=Tr
   labs(fill="Treatment") +   # Changes legend title to "Treatment"
   theme(
     panel.grid = element_blank(), 
-    legend.position = c(0.1, 0.9),        # Moves legend to upper left corner
+    legend.position = "none",        # Moves legend to upper left corner
     legend.text = element_text(size = 15),     # Increases legend text size
     legend.title = element_text(size = 18),    # Increases legend title size
     axis.title = element_text(size = 20),      # Increases axis titles size
     axis.text = element_text(size = 15)        # Increases axis text (tick labels) size
-  )
+  ) + 
+  labs(x = "", y = "")
 
-
+YearSinceBurned
 
 #### Percent Damage ####
 # Total number of rows
@@ -232,3 +235,7 @@ damage_by_species <- Invertebrate_Herbivory_2023 %>%
 
 # View the results
 print(damage_by_species)
+
+#### Combined Graph ####
+
+multi_panel_graph <- grid.arrange(ABGvsPBG, YearSinceBurned, nrow = 1)

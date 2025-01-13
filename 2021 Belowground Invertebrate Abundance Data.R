@@ -518,7 +518,7 @@ CountGraph_Filtered <- CountGraph_New %>%
 
 # PERMANOVA
 
-set.seed(123)
+set.seed(124)
 
 
 abundanceWide <- CountGraph_Filtered %>% 
