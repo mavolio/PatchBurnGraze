@@ -4063,7 +4063,7 @@ Plot_master_2022 <- data.frame()  # Initialize an empty dataframe
 for (BOOT in bootstrap_vector) {
   # Sample unique plot_index values within each block for 2022
   New_Key_2022 <- sample_compact_2022 %>%
-    dplyr::select(1:12) %>%
+    dplyr::select(1:11) %>%
     unique() %>%
     group_by(block) %>%
     sample_n(16, replace = TRUE) %>%
@@ -4392,8 +4392,8 @@ D_C_predator_2021
 p_value_D_C_predator_2021 <- 2 * pnorm(-abs(D_C_predator_2021))
 p_value_D_C_predator_2021
 
-# Z = 1.407006
-# P = 0.1594256
+# Z = 1.072252
+# P = 0.283607
 
 # Fungivore
 fungivore_average_total_count_2021 <- Plot_master_2021 %>%
@@ -4657,8 +4657,8 @@ D_C_predator_2022
 p_value_D_C_predator_2022 <- 2 * pnorm(-abs(D_C_predator_2022))
 p_value_D_C_predator_2022
 
-#Z = 1.089409
-#P = 0.2759736s
+#Z = -0.3665249
+#P = 0.7139735
 
 # Fungivore
 fungivore_average_total_count_2022 <- Plot_master_2022 %>%
@@ -4862,8 +4862,8 @@ D_C_predator_2023
 p_value_D_C_predator_2023 <- 2 * pnorm(-abs(D_C_predator_2023))
 p_value_D_C_predator_2023
 
-# Z = 1.144022
-# P = 0.2526144
+# Z = 0.3821911
+# P = 0.7023197
 
 # Fungivore
 fungivore_average_total_count_2023 <- Plot_master_2023 %>%
