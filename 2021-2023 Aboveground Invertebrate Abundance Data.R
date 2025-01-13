@@ -3956,6 +3956,12 @@ merged_data <- Abundance_ID_aboveground %>%
 
 cleaned_data <- merged_data %>% filter(!is.na(Functional_Group))
 
+#NOTE: Per Kim, replace parasitoids with predator
+
+cleaned_data$Functional_Group <- ifelse(cleaned_data$Functional_Group == "Parasitoid", 
+                                        "Predator", 
+                                        cleaned_data$Functional_Group)
+
 #### Functional Trait Bootstrapping 2021 ####
 # Filter data for 2021
 data_2021 <- cleaned_data %>% filter(Date == 2021)
