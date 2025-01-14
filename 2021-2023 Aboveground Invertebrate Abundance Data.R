@@ -3362,13 +3362,13 @@ multi_panel_graph <- grid.arrange(
 
 
 #### Years Since Burned Graph Settings ####
-Axis_Label_Size_1 <- 20 #The actualy ticks and treatments
-Axis_Text_Size <- 20 #Text on axislike abuandance, richness etc
+Axis_Label_Size_1 <- 14 #The actualy ticks and treatments
+Axis_Text_Size <- 16 #Text on axislike abuandance, richness etc
 #### 2021 Years Since Burned, Count Evenness Graphs ####
 # Box plot for count
 count_boxplot <- ggplot(Abundance_Data2021, aes(x=TreatmentSB, y=Count, fill=TreatmentSB)) +
   geom_boxplot() +
-  labs(title="Abundance Comparison for Treatments with Years Since Burned (2021)", x="Treatment", y="Abundance") +
+  labs(title="", x="Treatment", y="") +
   scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red", "ABG_0" = "blue")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   theme_minimal() +
   #annotate("text", x = -Inf, y = Inf, label = "P value: 0.857", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
@@ -3392,7 +3392,7 @@ count_boxplot
 # Boxplot for Richness
 richness_boxplot <- ggplot(Joined2021, aes(x=TreatmentSB, y=richness, fill=TreatmentSB)) +
   geom_boxplot() +
-  labs(title="Richness Comparison for Treatments with Years Since Burned (2021)", x="Treatment", y="Richness") +
+  labs(title="", x="Treatment", y="") +
   scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   theme_minimal() +
  # annotate("text", x = -Inf, y = Inf, label = "P value: 0.725", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
@@ -3415,7 +3415,7 @@ richness_boxplot
 # Boxplot for Evenness
 evenness_boxplot <- ggplot(Joined2021, aes(x=TreatmentSB, y=Evar, fill=TreatmentSB)) +
   geom_boxplot() +
-  labs(title="Evenness Comparison for Treatments with Years Since Burned (2021)", x="Treatment", y="Evenness") +
+  labs(title="", x="Treatment", y="") +
   scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   theme_minimal() +
   #annotate("text", x = -Inf, y = Inf, label = "P value: 0.091", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
@@ -3439,7 +3439,7 @@ evenness_boxplot
 # Box plot for count
 count_boxplot_2022 <- ggplot(Abundance_Data2022, aes(x=TreatmentSB, y=Count, fill=TreatmentSB)) +
   geom_boxplot() +
-  labs(title="Abundance Comparison for Treatments with Years Since Burned (2022)", x="Treatment", y="Abundance") +
+  labs(title="", x="Treatment", y="") +
   scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red", "ABG_0" = "blue")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   theme_minimal() +
  # annotate("text", x = -Inf, y = Inf, label = "P value: 0.553", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
@@ -3462,7 +3462,7 @@ count_boxplot_2022
 # Boxplot for Richness
 richness_boxplot_2022 <- ggplot(Joined2022, aes(x=TreatmentSB, y=richness, fill=TreatmentSB)) +
   geom_boxplot() +
-  labs(title="Richness Comparison for Treatments with Years Since Burned (2022)", x="Treatment", y="Richness") +
+  labs(title="", x="Treatment", y="") +
   scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   theme_minimal() +
  # annotate("text", x = -Inf, y = Inf, label = "P value: 0.062", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
@@ -3485,7 +3485,7 @@ richness_boxplot_2022
 # Boxplot for Evenness
 evenness_boxplot_2022 <- ggplot(Joined2022, aes(x=TreatmentSB, y=Evar, fill=TreatmentSB)) +
   geom_boxplot() +
-  labs(title="Evenness Comparison for Treatments with Years Since Burned (2022)", x="Treatment", y="Evenness") +
+  labs(title="", x="Treatment", y="") +
   scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   theme_minimal() +
 #  annotate("text", x = -Inf, y = Inf, label = "P value: 0.446", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
@@ -3509,7 +3509,7 @@ evenness_boxplot_2022
 # Box plot for count
 count_boxplot_2023 <- ggplot(Abundance_Data2023, aes(x=TreatmentSB, y=Count, fill=TreatmentSB)) +
   geom_boxplot() +
-  labs(title="Abundance Comparison for Treatments with Years Since Burned (2023)", x="Treatment", y="Abundance") +
+  labs(title="", x="Treatment", y="") +
   scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red", "ABG_0" = "blue")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   scale_x_discrete(labels = c("ABG_0" = "ABG 0", "PBG_0" = "PBG 0", "PBG_1" = "PBG 1", "PBG_2" = "PBG 2")) + # Set custom axis labels
   theme_minimal() +
@@ -3533,7 +3533,7 @@ count_boxplot_2023
 # Boxplot for Richness
 richness_boxplot_2023 <- ggplot(Joined2023, aes(x=TreatmentSB, y=richness, fill=TreatmentSB)) +
   geom_boxplot() +
-  labs(title="Richness Comparison for Treatments with Years Since Burned (2023)", x="Treatment", y="Richness") +
+  labs(title="", x="Treatment", y="") +
   scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   scale_x_discrete(labels = c("ABG_0" = "ABG 0", "PBG_0" = "PBG 0", "PBG_1" = "PBG 1", "PBG_2" = "PBG 2")) + # Set custom axis labels
   theme_minimal() +
@@ -3555,7 +3555,7 @@ richness_boxplot_2023
 # Boxplot for Evenness
 evenness_boxplot_2023 <- ggplot(Joined2023, aes(x=TreatmentSB, y=Evar, fill=TreatmentSB)) +
   geom_boxplot() +
-  labs(title="Evenness Comparison for Treatments with Years Since Burned (2023)", x="Treatment", y="Evenness") +
+  labs(title="", x="Treatment", y="") +
   scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   scale_x_discrete(labels = c("ABG_0" = "ABG 0", "PBG_0" = "PBG 0", "PBG_1" = "PBG 1", "PBG_2" = "PBG 2")) + # Set custom axis labels
   theme_minimal() +
@@ -3598,10 +3598,10 @@ theme_set(theme_bw())
 
 
 multi_panel_graph <- grid.arrange(
-  richness_boxplot, evenness_boxplot, count_boxplot,
-  richness_boxplot_2022, evenness_boxplot_2022, count_boxplot_2022,
-  richness_boxplot_2023, evenness_boxplot_2023, count_boxplot_2023,
-  nrow = 3, ncol = 3)
+  richness_boxplot, evenness_boxplot, count_boxplot, Beta_barplot_2021,
+  richness_boxplot_2022, evenness_boxplot_2022, count_boxplot_2022, Beta_barplot_2022,
+  richness_boxplot_2023, evenness_boxplot_2023, count_boxplot_2023, Beta_barplot_2023,
+  nrow = 3, ncol = 4)
 
 
 # Display the multipanel graph
@@ -5332,25 +5332,32 @@ pairwise.adonis
 # 3       PBG_1     0.5017885
 # 4       PBG_2     0.5170851
 
-#### Beta-Diversity Years Since Bruned Graph 2021 ####
+#### Beta-Diversity Years Since Burned Graph 2021 ####
 # Box plot of Beta Diversity
-Beta_boxplot_2021 <- ggplot(beta_diversity_results, aes(x = TreatmentSB, y = BetaDiversity, fill = TreatmentSB)) +
-  geom_bar() +
-  labs(title = "Box Plot of Beta Diversity (2021)",
+
+beta_diversity_results$TreatmentSB <- factor(beta_diversity_results$TreatmentSB, 
+                                             levels = c("ABG_0", "PBG_0", "PBG_1", "PBG_2"))
+
+Beta_barplot_2021 <- ggplot(beta_diversity_results, aes(x = TreatmentSB, y = BetaDiversity, fill = factor(TreatmentSB))) +
+  stat_summary(fun = "mean", geom = "bar", position = "dodge") +  # Use stat_summary for bar plot with mean values
+  labs(title = "",
        x = "Treatment",
-       y = "Beta Diversity") +
-  scale_fill_manual(values = c("PBG" = "red", "ABG" = "blue")) +  # Custom fill colors
-  theme_bw() +
+       y = "") +
+  scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) +  # Custom colors for ABG and PBG
+  scale_x_discrete(labels = gsub("_", " ", levels(beta_diversity_results$TreatmentSB))) +  # Replace underscores with spaces
+  theme_minimal() +
   theme(
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
-    axis.text = element_text(size = 14),
-    axis.title = element_text(size = 16),
+    axis.text = element_text(size = Axis_Label_Size_1),
+    axis.title = element_text(size = Axis_Text_Size),
     legend.position = "none" # Remove legend if not needed
   )
 
-# Display the box plot
-Beta_boxplot_2021
+# Display the bar plot
+Beta_barplot_2021
+
+
 
 #### Beta Diversity Years Since Burn 2022 ####
 # Identify species columns (assumes species data starts at the 8th column)
@@ -5383,6 +5390,31 @@ print(permanova <- adonis2(formula = abundanceWide_2022[,8:121]~TreatmentSB, dat
 pairwise.adonis<-pairwise.adonis2(abundanceWide_2022[,8:121]~TreatmentSB, data = abundanceWide_2022)
 pairwise.adonis
 
+#### Beta-Diversity Years Since Burned Graph 2022 ####
+# Box plot of Beta Diversity
+
+beta_diversity_results$TreatmentSB <- factor(beta_diversity_results$TreatmentSB, 
+                                             levels = c("ABG_0", "PBG_0", "PBG_1", "PBG_2"))
+
+Beta_barplot_2022 <- ggplot(beta_diversity_results, aes(x = TreatmentSB, y = BetaDiversity, fill = factor(TreatmentSB))) +
+  stat_summary(fun = "mean", geom = "bar", position = "dodge") +  # Use stat_summary for bar plot with mean values
+  labs(title = "",
+       x = "Treatment",
+       y = "") +
+  scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) +  # Custom colors for ABG and PBG
+  scale_x_discrete(labels = gsub("_", " ", levels(beta_diversity_results$TreatmentSB))) +  # Replace underscores with spaces
+  theme_minimal() +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.text = element_text(size = Axis_Label_Size_1),
+    axis.title = element_text(size = Axis_Text_Size),
+    legend.position = "none" # Remove legend if not needed
+  )
+
+# Display the bar plot
+Beta_barplot_2022
+
 #### Beta Diversity Years Since Burn 2023 ####
 species_columns <- 8:ncol(abundanceWide_2023)
 
@@ -5404,3 +5436,27 @@ print(beta_diversity_results)
 
 # PERMANOVA test
 print(permanova <- adonis2(formula = abundanceWide_2023[,8:76]~TreatmentSB, data=abundanceWide_2023, permutations=999, method="bray"))
+
+#### Beta-Diversity Years Since Burned Graph 2023 ####
+# Box plot of Beta Diversity
+
+beta_diversity_results$TreatmentSB <- factor(beta_diversity_results$TreatmentSB, 
+                                             levels = c("ABG_0", "PBG_0", "PBG_1", "PBG_2"))
+
+Beta_barplot_2023 <- ggplot(beta_diversity_results, aes(x = TreatmentSB, y = BetaDiversity, fill = factor(TreatmentSB))) +
+  stat_summary(fun = "mean", geom = "bar", position = "dodge") +  # Use stat_summary for bar plot with mean values
+  labs(title = "",
+       x = "Treatment",
+       y = "") +
+  scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) +  # Custom colors for ABG and PBG
+  scale_x_discrete(labels = gsub("_", " ", levels(beta_diversity_results$TreatmentSB))) +  # Replace underscores with spaces
+  theme_minimal() +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.text = element_text(size = Axis_Label_Size_1),
+    axis.title = element_text(size = Axis_Text_Size),
+    legend.position = "none" # Remove legend if not needed
+  )
+
+Beta_barplot_2023
