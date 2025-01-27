@@ -1,7 +1,7 @@
 #Patch-Burn Synthesis Project
 #Plant community data at the landscape scale
 #Author: Joshua Adedayo Ajowele joshuaajowele@gmail.com
-#Started: May 13, 2024 last modified: Nov 27, 2024
+#Started: May 13, 2024 last modified: Jan 27, 2025
 
 #load library
 library(tidyverse)
@@ -431,7 +431,7 @@ pl_env_data_2021 <- sp_comp_comm%>%
 simper_2021<-simper(pl_sp_data_2021,pl_env_data_2021$FireGrzTrt)
 simper_pl_2021<-summary(simper_2021, order=T)
 Simper_df_2021<-data.frame(simper_pl_2021$ABG_PBG)
-
+write.csv(Simper_df_2021,"C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/plant_2021_simper.csv")
 
 sp_comp_comm_2011_2021<-species_comp%>%
   left_join(watershed_key,by="Watershed")%>%
@@ -556,21 +556,22 @@ burn_time_sp_comp<-species_comp%>%
   left_join(Watershed_key2,by="Watershed")%>%
   mutate(year_watershed=paste(RecYear,Watershed,sep="_"))%>%
   left_join(YrSinceFire_key, by="year_watershed")%>%
-  group_by(RecYear,yrsins_fire,Unit,Watershed,FireGrzTrt,Transect,sp)%>%
+  group_by(RecYear,yrsins_fire,Unit,Watershed,FireGrzTrt,Transect,Plot,sp)%>%
   summarise(abundance=mean(abundance, na.rm=T))%>%
-  mutate(abundance=abundance/100)%>%
+  group_by(RecYear,yrsins_fire,Unit,Watershed,FireGrzTrt,Transect,Plot)%>%
+  mutate(abundance=abundance/sum(abundance))%>%
   pivot_wider(names_from = sp, values_from = abundance, values_fill = 0)
   
 
 # Separate out spcomp and environmental columns (cols are species) #
 burn_time_sp_data <- burn_time_sp_comp %>%
   ungroup()%>%
-  dplyr::select(-1:-6)
-burn_time_env_data <- burn_time_sp_comp%>%dplyr::select(1:6)
+  dplyr::select(-1:-7)
+burn_time_env_data <- burn_time_sp_comp%>%dplyr::select(1:7)
 
 #get nmds1 and 2
 burn_time_mds_all <- metaMDS(burn_time_sp_data, distance = "bray")
-#Run 20 stress 0.211
+#Run 20 stress 0.238
 
 #combine NMDS1 and 2 with factor columns and create centroids
 burn_time_mds_scores <- data.frame(burn_time_env_data, scores(burn_time_mds_all, display="sites"))%>%
@@ -584,7 +585,7 @@ ggplot(burn_time_mds_scores, aes(x=NMDS1_mean, y=NMDS2_mean, col=yrsins_fire, sh
   geom_path()+
   scale_shape_manual(values=c(15:18,0:2,5))+
   scale_colour_manual(values=c("#F0E442", "#994F00", "#999999", "#0072B2"))#+
-  facet_wrap(~Unit, scales="free")
+  facet_wrap(~Unit, scales="free")#8.33 x 5.5
 
 #calculating permanova
 #creating a loop to do this
@@ -605,7 +606,7 @@ for(YEAR in 1:length(burn_year_vec_pl)){
 
 write.csv(burn_pl_perm, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/plant_permanova_yearsincefire.csv")
 
-#multiple comparison for significant years 2018 and 2020
+#multiple comparison
 burn_time_sp_data_2018<-burn_time_sp_data%>%
   filter(burn_time_env_data$RecYear==2018)
 burn_time_env_data_2018<-burn_time_env_data%>%
@@ -644,17 +645,18 @@ burn_time_sp_comp_south<-species_comp%>%
   mutate(year_watershed=paste(RecYear,Watershed,sep="_"))%>%
   left_join(YrSinceFire_key, by="year_watershed")%>%
   filter(Unit=="south")%>%
-  group_by(RecYear,yrsins_fire,Unit,Watershed,FireGrzTrt,Transect,sp)%>%
+  group_by(RecYear,yrsins_fire,Unit,Watershed,FireGrzTrt,Transect,Plot,sp)%>%
   summarise(abundance=mean(abundance, na.rm=T))%>%
-  mutate(abundance=abundance/100)%>%
+  group_by(RecYear,yrsins_fire,Unit,Watershed,FireGrzTrt,Transect,Plot)%>%
+  mutate(abundance=abundance/sum(abundance))%>%
   pivot_wider(names_from = sp, values_from = abundance, values_fill = 0)
 
 
 # Separate out spcomp and environmental columns (cols are species) #
 burn_time_sp_data_south <- burn_time_sp_comp_south %>%
   ungroup()%>%
-  dplyr::select(-1:-6)
-burn_time_env_data_south <- burn_time_sp_comp_south%>%dplyr::select(1:6)
+  dplyr::select(-1:-7)
+burn_time_env_data_south <- burn_time_sp_comp_south%>%dplyr::select(1:7)
 #compare by watershed
 burn_year_vec_pl_s <- unique(burn_time_env_data_south$RecYear)
 burn_pl_perm_watershed_s <- {}
@@ -670,7 +672,7 @@ for(YEAR in 1:length(burn_year_vec_pl_s)){
   rm(burn_vdist_temp_pl, burn_permanova_temp_pl, burn_permanova_out_temp_pl)
 }
 
-write.csv(burn_pl_perm_watershed, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/plant_permanova_watershed.csv")
+write.csv(burn_pl_perm_watershed_s, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/plant_permanova_south_ysinfire.csv")
 
 #subsetting by year
 burn_time_env_data_south_2016<-burn_time_env_data_south%>%
@@ -682,13 +684,19 @@ burn_time_sp_data_south_2016<-burn_time_sp_data_south%>%
 pairwise.adonis2(burn_time_sp_data_south_2016~yrsins_fire, data=burn_time_env_data_south_2016)
 
 
-#comparing watershed and year since fire treatment without considering year
+#comparing watershed and year since fire treatment while accounting for year and watershed considering year
 dist_south<-vegdist(burn_time_sp_data_south)
 permanova_south<-adonis(dist_south~burn_time_env_data_south$yrsins_fire+burn_time_env_data_south$Watershed+as.factor(burn_time_env_data_south$RecYear))
-permanova_south$aov.tab
+plant_perm_south_ysinfire<-permanova_south$aov.tab
+write.csv(plant_perm_south_ysinfire,"C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/plant_perma_south_ysinfire_2016_2021.csv")
 
-pairwise.adonis2(burn_time_sp_data_south~yrsins_fire+Watershed+as.factor(RecYear), data=burn_time_env_data_south)
-pairwise.adonis2(burn_time_sp_data_south~Watershed+yrsins_fire+as.factor(RecYear), data=burn_time_env_data_south)
+#find where the difference lie
+pairwise_plant_south_perm_ysinfire<-pairwise.adonis2(burn_time_sp_data_south~yrsins_fire+Watershed+as.factor(RecYear), data=burn_time_env_data_south)
+write.csv(pairwise_plant_south_perm_ysinfire,"C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/pairwise_plant_south_perm_ysinsfire.csv")
+
+#just checking the order of explanatory variables doesn't affect the result
+#pairwise.adonis2(burn_time_sp_data_south~Watershed+yrsins_fire+as.factor(RecYear), data=burn_time_env_data_south)
+#it does not
 
 #north unit
 burn_time_sp_comp_north<-species_comp%>%
@@ -698,26 +706,28 @@ burn_time_sp_comp_north<-species_comp%>%
   mutate(year_watershed=paste(RecYear,Watershed,sep="_"))%>%
   left_join(YrSinceFire_key, by="year_watershed")%>%
   filter(Unit=="north")%>%
-  group_by(RecYear,yrsins_fire,Unit,Watershed,FireGrzTrt,Transect,sp)%>%
+  group_by(RecYear,yrsins_fire,Unit,Watershed,FireGrzTrt,Transect,Plot,sp)%>%
   summarise(abundance=mean(abundance, na.rm=T))%>%
-  mutate(abundance=abundance/100)%>%
+  group_by(RecYear,yrsins_fire,Unit,Watershed,FireGrzTrt,Transect,Plot)%>%
+  mutate(abundance=abundance/sum(abundance))%>%
   pivot_wider(names_from = sp, values_from = abundance, values_fill = 0)
 #subsetting environmental and sp data
 burn_time_sp_data_north<-burn_time_sp_comp_north%>%
   ungroup()%>%
-  select(-1:-6)
+  select(-1:-7)
 burn_time_env_data_north<-burn_time_sp_comp_north%>%
-  select(1:6)
+  select(1:7)
 dist_north<-vegdist(burn_time_sp_data_north)
 permanova_north<-adonis(dist_north~burn_time_env_data_north$yrsins_fire+burn_time_env_data_north$Watershed+as.factor(burn_time_env_data_north$RecYear))
-permanova_north$aov.tab
+plant_perm_north_yrsinfire<-permanova_north$aov.tab
+write.csv(plant_perm_north_yrsinfire,"C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/plant_permanova_north_ysinfire_2016_2018.csv")
 
 #pairwise comparisons
-pairwise.adonis2(burn_time_sp_data_north~yrsins_fire+Watershed+as.factor(RecYear), data=burn_time_env_data_north)
+pairwise_plant_north_perm_ysinfire<-pairwise.adonis2(burn_time_sp_data_north~yrsins_fire+Watershed+as.factor(RecYear), data=burn_time_env_data_north)
+write.csv(pairwise_plant_north_perm_ysinfire,"C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/pairwise_plant_north_perm_ysinfire.csv")
 
-pairwise.adonis2(burn_time_sp_data_north~Watershed+yrsins_fire+as.factor(RecYear), data=burn_time_env_data_north)
-
-pairwise.adonis2(burn_time_sp_data_north~FireGrzTrt+Watershed+as.factor(RecYear), data=burn_time_env_data_north)
+#for validation 
+#pairwise.adonis2(burn_time_sp_data_north~FireGrzTrt+Watershed+as.factor(RecYear), data=burn_time_env_data_north)
 
 #get alpha richness and evenness (average by transect)####
 local_sp_comp<-species_comp%>%
