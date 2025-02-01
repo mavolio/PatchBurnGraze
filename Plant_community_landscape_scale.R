@@ -682,7 +682,7 @@ burn_time_sp_data_south_2016<-burn_time_sp_data_south%>%
 
 #package for pERMANOVA pairwise comparison 
 pairwise.adonis2(burn_time_sp_data_south_2016~yrsins_fire, data=burn_time_env_data_south_2016)
-
+#cannot disentangle watershed effect
 
 #comparing watershed and year since fire treatment while accounting for year and watershed considering year
 dist_south<-vegdist(burn_time_sp_data_south)
@@ -844,7 +844,15 @@ species_comp_abund<-species_comp_data%>%
 #import data as dataframe
 lifeforms_data<- read_excel("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/sp_list_update.xlsx")%>%
   mutate(life_form=paste(growthform,lifeform, sep="_"))%>%
-  rename(SpeCode=code)
+  rename(SpeCode=code)%>%
+  mutate(life_form=case_when(life_form=="a_s"~"a_g",
+                               life_form=="b_f"~"a_f",
+                               life_form=="p_s"~"p_g",
+                               life_form=="p_o"~"p_f",
+                               life_form=="P_w"~"p_w",
+                               life_form=="a_m"~"a_f",
+                               life_form=="p_m"~"p_f",
+                             TRUE~life_form))
 
 #merging key with dataset
 sp_comp_abund<-species_comp_abund%>%
@@ -888,3 +896,74 @@ ggplot(sp_comp_abund_viz, aes(y=abundance,x=life_form,fill=FireGrzTrt))+
 ggplot(sp_comp_abund_viz, aes(y=abundance,fill=life_form,x=FireGrzTrt))+
   geom_bar(position = "stack", stat = "identity")+
   scale_fill_bluebrown()
+
+#merging key with dataset
+sp_comp_abund_model<-species_comp_abund%>%
+  left_join(watershed_key,by="Watershed")%>%
+  left_join(Watershed_key2,by="Watershed")%>%
+  left_join(lifeforms_data, by="SpeCode")%>%
+  filter(Transect!="C" | Watershed!="C03C")%>%
+  filter(Watershed!="C03C" | Transect!="D")%>%
+  filter(Watershed!="C03B" | Transect!="A")%>%
+  filter(Watershed!="C03B" | Transect!="B")%>%
+  filter(Watershed!="C03B" | Transect!="C")%>%
+  filter(Watershed!="C03A" | Transect!="A")%>%
+  filter(Watershed!="C03A" | Transect!="B")%>%
+  filter(Watershed!="C03A" | Transect!="C")%>%
+  filter(Watershed!="C3SC" | Transect!="A")%>%
+  filter(Watershed!="C3SC" | Transect!="B")%>%
+  filter(Watershed!="C3SC" | Transect!="C")%>%
+  filter(Watershed!="C3SA" | Transect!="B")%>%
+  filter(Watershed!="C3SA" | Transect!="C")%>%
+  filter(Watershed!="C3SA" | Transect!="D")%>%
+  filter(Watershed!="C3SB" | Transect!="A")%>%
+  filter(Watershed!="C3SB" | Transect!="B")%>%
+  group_by(Unit,RecYear,FireGrzTrt,sp)%>%
+  mutate(abundance_avg=mean(abundance,na.rm=T))%>%
+  group_by(Unit,RecYear,FireGrzTrt)%>%
+  mutate(abundance_mean=(abundance_avg/sum(abundance_avg, na.rm=T)))%>%
+  group_by(Unit,RecYear,FireGrzTrt,life_form)%>%
+  summarise(abundance_m=sum(abundance_mean,na.rm=T))
+
+P_gramm<-sp_comp_abund_model%>%
+  filter(life_form=="p_g")
+#model for functiongal group
+p_gramminoid_model<-lmer(abundance_m~FireGrzTrt*as.factor(RecYear)+(1|Unit),
+                   data=P_gramm)
+check_model(p_gramminoid_model)#looks good
+anova(p_gramminoid_model)#no interaction effect
+
+a_gramm<-sp_comp_abund_model%>%
+  filter(life_form=="a_g")
+a_gramm_model<-lmer(log(abundance_m)~FireGrzTrt*as.factor(RecYear)+(1|Unit),
+                    data=a_gramm)
+check_model(a_gramm_model)#looks good
+check_normality(a_gramm_model)
+anova(a_gramm_model)
+
+p_forb<-sp_comp_abund_model%>%
+  filter(life_form=="p_f")
+p_forb_model<-lmer(abundance_m~FireGrzTrt*as.factor(RecYear)+(1|Unit),
+                    data=p_forb)
+check_model(p_forb_model)#looks good
+check_normality(p_forb_model)
+anova(p_forb_model)
+summary(p_forb_model)
+#convergence warning due to random effect being zero; same result output when LM was used
+
+a_forb<-sp_comp_abund_model%>%
+  filter(life_form=="a_f")
+a_forb_model<-lmer(abundance_m~FireGrzTrt*as.factor(RecYear)+(1|Unit),
+                   data=a_forb)
+check_model(a_forb_model)#looks good
+check_normality(a_forb_model)
+anova(a_forb_model)
+summary(a_forb_model)
+
+wood<-sp_comp_abund_model%>%
+  filter(life_form=="p_w")
+wood_model<-lmer(abundance_m~FireGrzTrt*as.factor(RecYear)+(1|Unit),
+                   data=wood)
+check_model(wood_model)#looks good
+check_normality(wood_model)
+anova(wood_model)
