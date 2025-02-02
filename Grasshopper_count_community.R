@@ -1,7 +1,6 @@
 #BPBG grasshopper count and community metrics
 #Authors: Joshua Ajowele
-#Started: 26 May 2022 last modified: 10 Dec 2024
-
+#Started: 26 May 2022 last modified: 1 Feb 2025
 #load library
 library(tidyverse)
 library(vegan)
@@ -1601,6 +1600,105 @@ ggplot(gh_cover_2021,aes(x=reorder(spe,-abund_ABG_PBG)))+
   ylab("Difference in abundance (ABG-PBG)")
 
 
+#community composition for year since fire
+grassh_comm_yrs_df <- grasshopperspcomp_df%>%
+  rename(RecYear=Recyear)%>%
+  mutate(year_watershed=paste(RecYear,Watershed,sep = "_"))%>%
+  full_join(watershed_key, by = "Watershed")%>%
+  left_join(Watershed_key2,by="Watershed")%>%
+  left_join(YrSinceFire_key, by="year_watershed")%>%
+  mutate(spe=paste(Genus,Species, sep="_"))%>%
+  filter(!RecYear== 2010)%>%
+  filter(!spe%in%c("Oecanthinae_spp.","Tettigoniidae_spp.","Gryllidae_spp.",
+                   "Conocephalus_spp.","Neoconocephalus_robustus","Scudderia_texensis",
+                   "Arethaea_constricta","Orchelimum_spp.","Amblycorypha_oblongifolia","Pediodectes_haldemani",
+                   "Amblycorypha_rotundifolia","Neoconocephalus_spp.","Neoconocephalus_ensiger","Pediodectes_nigromarginatus",
+                   "Scudderia_furcata","Scudderia_spp."))%>%
+  #using the max cover from the two sweeps done on each transect
+  group_by(Unit,RecYear,yrsins_fire,Watershed,Repsite,spe)%>%
+  summarise(Total=max(Total))%>%
+  group_by(Unit,RecYear,yrsins_fire,Watershed,Repsite)%>%
+  #converting count data to abundance data (0-100%)
+  mutate(abundance=(Total/sum(Total, na.rm=T)))
+
+
+#separate into units
+#south unit
+grassh_south_comm<-grassh_comm_yrs_df%>%
+  filter(RecYear%in%2016:2021)%>%
+  select(-Total)%>%
+  filter(Unit=="south")%>%
+  group_by(Unit,RecYear,yrsins_fire,Watershed,Repsite,spe)%>%
+  pivot_wider(names_from = spe, values_from = abundance, values_fill = 0)
+  
+#subsetting environmental and sp data
+grassh_south_comm_sp<-grassh_south_comm%>%
+  ungroup()%>%
+  select(-1:-5)
+grassh_south_comm_env<-grassh_south_comm%>%
+  select(1:5)
+dist_south<-vegdist(grassh_south_comm_sp)
+permanova_south<-adonis(dist_south~grassh_south_comm_env$yrsins_fire+grassh_south_comm_env$Watershed+as.factor(grassh_south_comm_env$RecYear))
+grassh_perm_south_yrsinfire<-permanova_south$aov.tab
+write.csv(grassh_perm_south_yrsinfire,"C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/grassh_perm_south_yrsinfire_2016_2021.csv")
+#pairwise comparison
+pairwise_grassh_perm_south_yrsinfire<-pairwise.adonis2(grassh_south_comm_sp~yrsins_fire+Watershed+as.factor(RecYear), data=grassh_south_comm_env)
+write.csv(pairwise_grassh_perm_south_yrsinfire,"C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/pairwise_grassh_perm_south_yrsinfire.csv")
+
+
+
+#north unit
+grassh_north_comm<-grassh_comm_yrs_df%>%
+  filter(RecYear%in%2016:2021)%>%
+  select(-Total)%>%
+  filter(Unit=="north")%>%
+  group_by(Unit,RecYear,yrsins_fire,Watershed,Repsite,spe)%>%
+  pivot_wider(names_from = spe, values_from = abundance, values_fill = 0)
+
+#subsetting environmental and sp data
+grassh_north_comm_sp<-grassh_north_comm%>%
+  ungroup()%>%
+  select(-1:-5)
+grassh_north_comm_env<-grassh_north_comm%>%
+  select(1:5)
+dist_north<-vegdist(grassh_north_comm_sp)
+permanova_north<-adonis(dist_north~grassh_north_comm_env$yrsins_fire+grassh_north_comm_env$Watershed+as.factor(grassh_north_comm_env$RecYear))
+grassh_perm_north_yrsinfire<-permanova_north$aov.tab
+write.csv(grassh_perm_north_yrsinfire,"C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/grassh_perm_north_yrsinfire_2016_2021.csv")
+#pairwise comparison
+pairwise_grassh_perm_north_yrsinfire<-pairwise.adonis2(grassh_north_comm_sp~yrsins_fire+Watershed+as.factor(RecYear), data=grassh_north_comm_env)
+write.csv(pairwise_grassh_perm_north_yrsinfire,"C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/pairwise_grassh_perm_north_yrsinfire.csv")
+
+
+#create NMDS figure
+grassh_comm_yrs_df_nmds<-grassh_comm_yrs_df%>%
+  select(-Total)%>%
+  filter(RecYear%in%2016:2021)%>%
+  pivot_wider(names_from = spe, values_from = abundance, values_fill = 0)
+
+#splitting into environ and sp data
+nmds_sp<-grassh_comm_yrs_df_nmds%>%
+  ungroup()%>%
+  select(-1:-5)
+nmds_env<-grassh_comm_yrs_df_nmds%>%
+  select(1:5)
+
+#get nmds1 and 2
+mds_all <- metaMDS(nmds_sp, distance = "bray")
+#stress 0.218
+#combine NMDS1 and 2 with factor columns and create centroids
+nmds_sp_scores <- data.frame(nmds_env, scores(mds_all, display="sites"))%>%
+  group_by(RecYear, Unit,yrsins_fire,Watershed)%>%
+  mutate(NMDS1_mean=mean(NMDS1),
+         NMDS2_mean=mean(NMDS2))
+
+#plotting centroid through time
+ggplot(nmds_sp_scores, aes(x=NMDS1_mean, y=NMDS2_mean, col=yrsins_fire, shape=Unit))+
+  geom_point(size=8)+
+  geom_path()+
+  scale_shape_manual(values=c(15:18,0:2,5))+
+  scale_colour_manual(values=c("#F0E442", "#994F00", "#999999", "#0072B2"))#+
+facet_wrap(~Unit, scales="free")#8.33 x 5.5
 
 #just checking if any species is an indicator distingushing treatent
 #library(indicspecies)
