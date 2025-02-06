@@ -15,7 +15,7 @@ library(lmerTest)
 library(see)
 library(patchwork)
 library(phia)
-
+library(readxl)
 
 
 ### Standard Error function
@@ -1600,7 +1600,69 @@ ggplot(gh_cover_2021,aes(x=reorder(spe,-abund_ABG_PBG)))+
   ylab("Difference in abundance (ABG-PBG)")
 
 
-#community composition for year since fire
+#assessing grasshopper composition based on feeding guild####
+#import feeding guild df
+feeding_df<-read_excel("C:/Users/JAAJOWELE/OneDrive - UNCG/Grasshopper_guild.xlsx")%>%
+  mutate(spe=str_replace(species," ", "_"))
+
+#create df with feeding guild abundanc###
+grassh_feeding_df <- grasshopperspcomp_df%>%
+  full_join(watershed_key, by = "Watershed")%>%
+  left_join(Watershed_key2,by="Watershed")%>%
+  mutate(spe=paste(Genus,Species, sep="_"))%>%
+  mutate(RecYear = Recyear)%>%
+  filter(!RecYear== 2010)%>%
+  filter(!spe%in%c("Oecanthinae_spp.","Tettigoniidae_spp.","Gryllidae_spp.",
+                   "Conocephalus_spp.","Neoconocephalus_robustus","Scudderia_texensis",
+                   "Arethaea_constricta","Orchelimum_spp.","Amblycorypha_oblongifolia","Pediodectes_haldemani",
+                   "Amblycorypha_rotundifolia","Neoconocephalus_spp.","Neoconocephalus_ensiger","Pediodectes_nigromarginatus",
+                   "Scudderia_furcata","Scudderia_spp."))%>%
+  #using the max cover from the two sweeps done on each transect
+  group_by(Unit,RecYear,FireGrzTrt,Watershed,Repsite,spe)%>%
+  summarise(Total=max(Total))%>%
+  filter(Repsite!="C" | Watershed!="C03C")%>%
+  filter(Watershed!="C03C" | Repsite!="D")%>%
+  filter(Watershed!="C03B" | Repsite!="A")%>%
+  filter(Watershed!="C03B" | Repsite!="B")%>%
+  filter(Watershed!="C03B" | Repsite!="C")%>%
+  filter(Watershed!="C03A" | Repsite!="A")%>%
+  filter(Watershed!="C03A" | Repsite!="B")%>%
+  filter(Watershed!="C03A" | Repsite!="C")%>%
+  filter(Watershed!="C3SC" | Repsite!="A")%>%
+  filter(Watershed!="C3SC" | Repsite!="B")%>%
+  filter(Watershed!="C3SC" | Repsite!="C")%>%
+  filter(Watershed!="C3SA" | Repsite!="B")%>%
+  filter(Watershed!="C3SA" | Repsite!="C")%>%
+  filter(Watershed!="C3SA" | Repsite!="D")%>%
+  filter(Watershed!="C3SB" | Repsite!="A")%>%
+  filter(Watershed!="C3SB" | Repsite!="B")%>%
+  group_by(Unit,RecYear,FireGrzTrt,spe)%>%
+  summarise(total_avg=mean(Total,na.rm=T))%>%
+  left_join(feeding_df, by="spe")%>%
+  #converting count data to abundance data (0-100% scale)
+  mutate(abundance=(total_avg/sum(total_avg, na.rm=T)))%>%
+  group_by(Unit,RecYear,FireGrzTrt,feeding)%>%
+  mutate(abundance_m=sum(abundance,na.rm=T))%>%
+  group_by(Unit,RecYear,FireGrzTrt,feeding)%>%
+  summarise(abundance=mean(abundance_m,na.rm=T))
+
+#prepare data for figure 
+grassh_feeding_viz<-grassh_feeding_df%>%
+  group_by(FireGrzTrt,feeding)%>%
+  summarise(abundance=mean(abundance,na.rm=T))
+ggplot(grassh_feeding_viz, aes(y=abundance,fill=feeding,x=FireGrzTrt))+
+  geom_bar(position = "stack", stat = "identity")+
+  scale_fill_bluebrown()
+
+
+
+
+
+
+
+
+
+#community composition for year since fire####
 grassh_comm_yrs_df <- grasshopperspcomp_df%>%
   rename(RecYear=Recyear)%>%
   mutate(year_watershed=paste(RecYear,Watershed,sep = "_"))%>%
