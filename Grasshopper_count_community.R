@@ -1,6 +1,6 @@
 #BPBG grasshopper count and community metrics
 #Authors: Joshua Ajowele
-#Started: 26 May 2022 last modified: 1 Feb 2025
+#Started: 26 May 2022 last modified: 6 Feb 2025
 #load library
 library(tidyverse)
 library(vegan)
@@ -1697,8 +1697,8 @@ ggplot(nmds_sp_scores, aes(x=NMDS1_mean, y=NMDS2_mean, col=yrsins_fire, shape=Un
   geom_point(size=8)+
   geom_path()+
   scale_shape_manual(values=c(15:18,0:2,5))+
-  scale_colour_manual(values=c("#F0E442", "#994F00", "#999999", "#0072B2"))#+
-facet_wrap(~Unit, scales="free")#8.33 x 5.5
+  scale_colour_manual(values=c("#F0E442", "#994F00", "#999999", "#0072B2"))+
+facet_wrap(~Unit, scales="free")#8.33 x 4.17
 
 #just checking if any species is an indicator distingushing treatent
 #library(indicspecies)
