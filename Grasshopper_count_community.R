@@ -838,7 +838,7 @@ ggplot(combo_ghcount_geompoint_M,aes(RecYear, count_M, col=treatment))+
                     ymin=count_M-1.96*(PBG_sd)),width=.2)
 
 #emergency use, ignore
-gh_combine_mean_sd<-read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/gh_count_mean_sd_combined_unit.csv")
+#gh_combine_mean_sd<-read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/gh_count_mean_sd_combined_unit.csv")
 
 #grasshopper sd count
 combo_ghcount_geompoint_sd<-gh_combine_mean_sd%>%
@@ -1656,10 +1656,38 @@ ggplot(grassh_feeding_viz, aes(y=abundance,fill=feeding,x=FireGrzTrt))+
 
 
 
+#model for diff feeding guild
+#grass feeders relative abundance
+grass_feeders<-grassh_feeding_df%>%
+  filter(feeding=="grass")
+grass_feed_model<-lmer(abundance~FireGrzTrt*as.factor(RecYear)+(1|Unit),
+                       data=grass_feeders)
+check_model(grass_feed_model)#looks good
+anova(grass_feed_model)
 
+#grass feeders relative abundance
+forb_feeders<-grassh_feeding_df%>%
+  filter(feeding=="forb")
+forb_feed_model<-lmer(abundance~FireGrzTrt*as.factor(RecYear)+(1|Unit),
+                       data=forb_feeders)
+check_heteroscedasticity(forb_feed_model)#looks good
+anova(forb_feed_model)
 
+mix_feeders<-grassh_feeding_df%>%
+  filter(feeding=="mix")
+mix_feed_model<-lmer(log(abundance)~FireGrzTrt*as.factor(RecYear)+(1|Unit),
+                     data=mix_feeders)
+check_model(mix_feed_model)
+anova(mix_feed_model)
 
-
+unknown_feeders<-grassh_feeding_df%>%
+  filter(feeding=="unknown")%>%
+  filter(!RecYear==2020)%>%#2value is missing for ABG in 2012 & 2020
+  filter(!RecYear==2012)
+unknown_feed_model<-lmer(log(abundance)~FireGrzTrt*as.factor(RecYear)+(1|Unit),
+                     data=unknown_feeders)
+check_model(unknown_feed_model)
+anova(unknown_feed_model)#doesn't make sense to run this-no meaningful interpretation
 
 
 #community composition for year since fire####
