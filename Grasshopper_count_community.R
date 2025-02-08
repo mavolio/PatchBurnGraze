@@ -1,6 +1,6 @@
 #BPBG grasshopper count and community metrics
 #Authors: Joshua Ajowele
-#Started: 26 May 2022 last modified: 6 Feb 2025
+#Started: 26 May 2022 last modified: 8 Feb 2025
 #load library
 library(tidyverse)
 library(vegan)
@@ -1033,12 +1033,12 @@ check_model(yrs_ghcount_model)
 Anova(yrs_ghcount_model, type=3)
 anova(yrs_ghcount_model)
 qqnorm(resid(yrs_ghcount_model))
-library(lmerTest)
 #multiple comparison
 testInteractions(yrs_ghcount_model, pairwise="yrsins_fire", fixed="RecYear",
                  adjustment="BH")
-#using mean estimate to create figure 
-yrs_interact<-interactionMeans(yrs_ghcount_model)
+#comparison for fixed effect
+testInteractions(yrs_ghcount_model, pairwise = "yrsins_fire", slope="RecYear")
+
 #replacing spaces in column names with underscore 
 names(yrs_interact)<-str_replace_all(names(yrs_interact), " ","_")
 #df for visuals from model estimates
