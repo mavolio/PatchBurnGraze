@@ -2,7 +2,7 @@
 ####Plant Biomass from diskpasture meter
 ###Author: Joshua Ajowele
 ###collaborators: PBG synthesis group
-###last update:Dec 4 2024
+###last update:Feb 8 2025
 
 #packages 
 library(tidyverse)
@@ -11,6 +11,7 @@ library(readr)
 library(performance)
 library(car)
 library(lme4)
+library(lmerTest)
 library(nlme)
 library(see)
 library(patchwork)
@@ -1673,14 +1674,17 @@ yrs_biomass$Transect=as.factor(yrs_biomass$Transect)
 
 #mixed anova year since burn####
 yrs_biomass_model<-lmer(log(biomass)~yrsins_fire*RecYear+(1|Unit/Watershed/Transect),
-                        data=yrs_biomass)#issingular
+                        data=yrs_biomass)#issingular due to watershed
+summary(yrs_biomass_model)
 check_model(yrs_biomass_model)
-Anova(yrs_biomass_model, type=3)
+anova(yrs_biomass_model)
 qqnorm(resid(yrs_biomass_model))
-
+check_normality(yrs_biomass_model)
 #multiple comparison
 testInteractions(yrs_biomass_model, pairwise="yrsins_fire", fixed="RecYear",
                  adjustment="BH")
+#comparison of fixed effects
+testInteractions(yrs_biomass_model, pairwise="yrsins_fire")
 #using mean estimate to create figure 
 yrs_interact<-interactionMeans(yrs_biomass_model)
 #replacing spaces in column names with underscore 
@@ -1716,7 +1720,7 @@ ggplot(yrs_interact_bar,aes(x=yrsins_fire,fill=yrsins_fire))+
   geom_bar(stat = "identity",aes(y=biomass_mean),width = 0.5)+
   geom_errorbar(aes(ymin=se_lower,
                     ymax=se_upper),width=0.2,linetype=1)+
-  scale_fill_manual(values=c( "#F0E442", "#009E73", "#999999", "#0072B2"))
+  scale_fill_manual(values=c( "#F0E442", "#994F00", "#999999", "#0072B2"))
 
 #load in precipitation data####
 precip_data<-read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/Precipitation_1982_2023.csv")%>%
