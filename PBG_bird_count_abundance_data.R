@@ -1,6 +1,6 @@
 #PBG Bird count and community metrics
 #Authors: Joshua Ajowele
-#Started: 26 May 2022 last modified: 05 Nov 2024
+#Started: 26 May 2022 last modified: 08 Feb 2025
 
 #load library####
 library(tidyverse)
@@ -65,9 +65,6 @@ transect_key<- data.frame(TransectName = levels(factor(PBG_bird_merge$TransectNa
 PBG_bird_viz<-PBG_bird_merge%>%
   left_join(watershed_bird_key, by="Watershed")%>%
   left_join(transect_key, by="TransectName")
-#check data for entry errors, 2018 C3A seems to be suspect: 
-#I think it has an extra transect that should belong to C3B-90% sure-Corrected in raw data
-#email Alice about it
 
 #There are multibirde observation by multibirde observers 2011-2016
 #or just multibirde observation by one observer 2011, C3C, C1A
@@ -131,6 +128,7 @@ yrsincef_bird_anlys<-Yrs_since_fire_bird%>%
   group_by(Year, yrsince_fire, Watershed, TransectName, Transect)%>%
   summarise(tot_max=sum(total_max, na.rm=T))
 yrsincef_bird_anlys$Year<-as.factor(yrsincef_bird_anlys$Year)
+yrsincef_bird_anlys$yrsince_fire<-as.factor(yrsincef_bird_anlys$yrsince_fire)
 #visuals
 yrsincef_bird_viz<-yrsincef_bird_anlys%>%
   group_by(Year, yrsince_fire)%>%
@@ -150,10 +148,10 @@ ggplot(yrsincef_bird_viz, aes(Year, total, col = yrsince_fire,
 
 
 #models for total count 
-yrsincef_bird_model<-lmer(log(tot_max)~yrsince_fire*Year+(1|Transect), data=yrsincef_bird_anlys)
+yrsincef_bird_model<-lmer(log(tot_max)~yrsince_fire+Year+(1|Transect), data=yrsincef_bird_anlys)
 check_model(yrsincef_bird_model)
 anova(yrsincef_bird_model, type=3)
-summary(yrsincef_bird_model)
+#use lm since randmon effect bariance is zero
 yrsincef_bird_model_lm<-lm(log(tot_max)~yrsince_fire+Year, data=yrsincef_bird_anlys)
 summary(yrsincef_bird_model_lm)
 anova(yrsincef_bird_model_lm)
@@ -178,21 +176,23 @@ ggplot(yrsincef_bird_viz_yr, aes(yrsince_fire, total, fill=yrsince_fire))+
 #use the ghlt for multicomparison
 #install.packages("multcomp")
 library(multcomp)
-yrsincefire_comp<- glht(yrsincef_bird_model, linfct=mcp(yrsince_fire="Tukey"))
+yrsincefire_comp<- glht(yrsincef_bird_model_lm, linfct=mcp(yrsince_fire="Tukey"))
 print(summary(yrsincefire_comp))
 #ALL P-ADJUSTED 
 
-
 #visuals
 yrsincef_bird_viz_yr<-yrsincef_bird_anlys%>%
-  group_by(yrsince_fire)%>%
+  group_by(yrsince_fire, Year)%>%
   summarise(total=mean(tot_max, na.rm=T),
-            se_total=SE_function(tot_max))
+            se_total=SE_function(tot_max))%>%
+  group_by(yrsince_fire)%>%
+  summarise(total=mean(total, na.rm=T),
+            se_total=mean(se_total, na.rm=T))
 
 ggplot(yrsincef_bird_viz_yr, aes(yrsince_fire, total, fill=yrsince_fire))+
   geom_col(width=.5) +
   geom_errorbar(aes(ymax=total+se_total, ymin=total-se_total),width=0.1)+
-  scale_fill_manual(values=c("#E69F00", "#56B4E9", "#009E73", "#CC79A7"))+
+  scale_fill_manual(values=c( "#F0E442", "#994F00", "#999999", "#0072B2"))+
   ylab("Bird count")
 
 #community metrics with all species####
@@ -218,7 +218,7 @@ bird_diver <- community_diversity(yrsin_bird_comm, time.var = "Year",
 #extracting important columns 
 bird_comp_subset <- yrsin_bird_comm %>%
   ungroup()%>%
-  select(Year, yrsince_fire, Watershed, TransectName, Transect,rep_id) %>%
+  dplyr::select(Year, yrsince_fire, Watershed, TransectName, Transect,rep_id) %>%
   distinct()#remove repeated rows
 
 #combine into a single data
@@ -232,13 +232,6 @@ bird_rich_diver$Year<-as.factor(bird_rich_diver$Year)
 bird_rich_diver$Transect<-as.factor(bird_rich_diver$Transect)
 bird_rich_diver$yrsince_fire<-as.factor(bird_rich_diver$yrsince_fire)
 #build model
-bird_diver_model<-lmer(Shannon~yrsince_fire*Year+(1|Transect),
-                     data=bird_rich_diver)
-anova(bird_diver_model)
-summary(bird_diver_model)
-qqnorm(resid(bird_diver_model))
-check_model(bird_diver_model)
-
 #richness
 bird_rich_model<-lmer(log(richness)~yrsince_fire+Year+(1|Transect),
                        data=bird_rich_diver)
@@ -256,7 +249,6 @@ anova(bird_evar_model)
 summary(bird_evar_model)
 qqnorm(resid(bird_evar_model))
 check_model(bird_evar_model)
-
 #Visual
 #dataframe for geompoint
 bird_rich_diver_viz<-bird_rich_diver%>%
@@ -271,30 +263,14 @@ bird_rich_diver_viz<-bird_rich_diver%>%
 bird_rich_diver_bar<-bird_rich_diver%>%
   group_by(Year,yrsince_fire)%>%
   summarise_at(vars(Shannon:Evar),mean,na.rm=T)%>%
-  group_by(yrsince_fire)%>%
+  mutate(SE_rich=SE_function(richness),
+            SE_evar=SE_function(Evar))%>%
+group_by(yrsince_fire)%>%
   summarise(rich=mean(richness,na.rm=T),
-            rich_se=SE_function(richness),
-            diver=mean(Shannon,na.rm=T),
-            diver_se=SE_function(Shannon),
+            rich_se=mean(SE_rich),
             evar=mean(Evar,na.rm=T),
-            evar_se=SE_function(Evar))
- #geompoint 
-ggplot(bird_rich_diver_viz, aes(Year, diver, col = yrsince_fire,
-                              fill=yrsince_fire, linetype=yrsince_fire)) +
-  geom_point(size=2, col="black") +
-  geom_path(aes(as.numeric(Year))) +
-  geom_errorbar(aes(ymin = diver - diver_se, 
-                    ymax = diver + diver_se),
-                width=0.1, col="black", linetype=1) +
-  scale_colour_manual(values=c( "#F0E442", "#994F00", "#999999", "#0072B2"))+
-  ylab("bird diversity")
-#bargraph
-ggplot(bird_rich_diver_bar, aes(yrsince_fire, diver, fill=yrsince_fire))+
-  geom_col(width=.5) +
-  geom_errorbar(aes(ymax=diver + diver_se, ymin=diver - diver_se),width=0.1)+
-  scale_fill_manual(values=c("#F0E442", "#994F00", "#999999", "#0072B2"))+
-  ylab("Bird diversity")
-
+            evar_se=mean(SE_evar))
+ 
 #richness
 #geompoint 
 ggplot(bird_rich_diver_viz, aes(Year, rich, col = yrsince_fire,
@@ -342,6 +318,7 @@ yrsincef_grass_bird_anlys<-Yrs_since_fire_bird%>%
   group_by(Year, yrsince_fire, Watershed, TransectName, Transect)%>%
   summarise(tot_count=sum(total_max, na.rm=T))
 yrsincef_grass_bird_anlys$Year<-as.factor(yrsincef_grass_bird_anlys$Year)
+yrsincef_grass_bird_anlys$yrsince_fire<-as.factor(yrsincef_grass_bird_anlys$yrsince_fire)
 
 #visual
 yrsincef_grass_bird_viz<-yrsincef_grass_bird_anlys%>%
@@ -373,9 +350,12 @@ anova(yrsincef_grass_bird_model_lm)
 
 #visuals across years
 yrsincef_grass_bird_yr<-yrsincef_grass_bird_anlys%>%
-  group_by(yrsince_fire)%>%
+  group_by(yrsince_fire,Year)%>%
   summarise(total=mean(tot_count, na.rm=T),
-            se_total=SE_function(tot_count))
+            se_total=SE_function(tot_count))%>%
+  group_by(yrsince_fire)%>%
+  summarise(total=mean(total,na.rm=T),
+            se_total=mean(se_total,na.rm=T))
 
 ggplot(yrsincef_grass_bird_yr, aes(yrsince_fire, total, fill=yrsince_fire))+
   geom_col(width=.5) +
@@ -420,26 +400,50 @@ bird_rich_diver_grass$Year<-as.factor(bird_rich_diver_grass$Year)
 bird_rich_diver_grass$Transect<-as.factor(bird_rich_diver_grass$Transect)
 bird_rich_diver_grass$yrsince_fire<-as.factor(bird_rich_diver_grass$yrsince_fire)
 #build model
-bird_diver_grass_model<-lmer(Shannon~yrsince_fire*Year+(1|Transect),
-                       data=bird_rich_diver_grass)
-anova(bird_diver_grass_model)
-summary(bird_diver_grass_model)
-qqnorm(resid(bird_diver_grass_model))
-check_model(bird_diver_grass_model)
-#MULTICOMPARISON
-#yrsin_grass_diver<- glht(bird_diver_grass_model, linfct=mcp(yrsince_fire="Tukey"))
-#print(summary(yrsin_grass_diver))
+
 #richness
-bird_rich_grass_model<-lmer(log(richness)~yrsince_fire*Year+(1|Transect),
+bird_rich_grass_model<-lmer(log(richness)~yrsince_fire+Year+(1|Transect),
                              data=bird_rich_diver_grass)
 anova(bird_rich_grass_model)
 summary(bird_rich_grass_model)
 qqnorm(resid(bird_rich_grass_model))
 check_model(bird_rich_grass_model)
-#yrsin_grass_rich<- glht(bird_rich_grass_model, linfct=mcp(yrsince_fire="Tukey"))
-#print(summary(yrsin_grass_rich))
+yrsin_grass_rich<- glht(bird_rich_grass_model, linfct=mcp(yrsince_fire="Tukey"))
+print(summary(yrsin_grass_rich))
+
+#visuals across years
+bird_rich_diver_grass_yr<-bird_rich_diver_grass%>%
+  group_by(yrsince_fire,Year)%>%
+  summarise(rich=mean(richness, na.rm=T),
+            se_rich=SE_function(richness),
+            even=mean(Evar, na.rm=T),
+            se_evar=SE_function(Evar))%>%
+  group_by(yrsince_fire)%>%
+  summarise(richness=mean(rich,na.rm=T),
+            se_richness=mean(se_rich,na.rm=T),
+            evenness=mean(even,na.rm=T),
+            se_evenness=mean(se_evar,na.rm=T))
+
+ggplot(bird_rich_diver_grass_yr, aes(yrsince_fire, richness, fill=yrsince_fire))+
+  geom_col(width=.5) +
+  geom_errorbar(aes(ymax=richness+se_richness, ymin=richness-se_richness),width=0.1)+
+  scale_fill_manual(values=c("#F0E442", "#994F00", "#999999", "#0072B2"))+
+  ylab("grassland bird richness")
 
 
+#evenness
+bird_evar_grass_model<-lmer(Evar~yrsince_fire+Year+(1|Transect),
+                            data=bird_rich_diver_grass)
+anova(bird_evar_grass_model)
+summary(bird_evar_grass_model)
+check_model(bird_evar_grass_model)
+
+#visual
+ggplot(bird_rich_diver_grass_yr, aes(yrsince_fire, evenness, fill=yrsince_fire))+
+  geom_col(width=.5) +
+  geom_errorbar(aes(ymax=evenness+se_evenness, ymin=evenness-se_evenness),width=0.1)+
+  scale_fill_manual(values=c("#F0E442", "#994F00", "#999999", "#0072B2"))+
+  ylab("grassland bird evenness")
 
 #non-grassland bird####
 yrsincef_non_grass_bird_anlys<-Yrs_since_fire_bird%>%
@@ -484,9 +488,12 @@ check_model(yrsincef_non_grass_bird_model_lm)
 
 #visuals across years
 yrsincef_non_grass_bird_yr<-yrsincef_non_grass_bird_anlys%>%
-  group_by(yrsince_fire)%>%
+  group_by(yrsince_fire, Year)%>%
   summarise(total=mean(tot_count, na.rm=T),
-            se_total=SE_function(tot_count))
+            se_total=SE_function(tot_count))%>%
+  group_by(yrsince_fire)%>%
+  summarise(total=mean(total, na.rm=T),
+            se_total=mean(se_total,na.rm=T))
 
 ggplot(yrsincef_non_grass_bird_yr, aes(yrsince_fire, total, fill=yrsince_fire))+
   geom_col(width=.5) +
@@ -497,180 +504,3 @@ ggplot(yrsincef_non_grass_bird_yr, aes(yrsince_fire, total, fill=yrsince_fire))+
 
 
 
-
-
-
-
-
-
-#data ready for visuals
-PBG_bird_viz_ready_all<-PBG_bird_viz%>%
-  rename(total=Count)%>%
-  #remove NA otherwise it will appear in max count
-  filter(total!="NA")%>%
-  group_by(Year, FireGrzTrt, Watershed, TransectName, Transect, SpeciesCode)%>%
-  summarise(total_max=max(total))
-
-#Separate PBG from ABG to perform bootstrap####
-PBG_bird_boot<-PBG_bird_viz_ready_all%>%
-  filter(FireGrzTrt=="PBG")%>%
-  group_by(Year, FireGrzTrt, Watershed, TransectName, Transect)%>%
-  summarise(total_count=sum(total_max))%>%
-  ungroup()
-ABG_bird_boot<-PBG_bird_viz_ready_all%>%
-  filter(FireGrzTrt=="ABG")%>%
-  group_by(Year, FireGrzTrt, Watershed, TransectName, Transect)%>%
-  summarise(total_count=sum(total_max))%>%
-  ungroup()
-
-#Bootstrapping for total count####
-#create an index 
-PBG_bird_boot_index<-PBG_bird_boot%>%
-  group_by(Year)%>%
-  mutate(birdot_index=1:length(Year))
-
-num_bootstrap_bird<-21
-bootstrap_vector<-1:num_bootstrap_bird
-PBG_bird_count_master<-{}
-for(BOOT in 1:length(bootstrap_vector)){
-  bird_count_rand_key<-PBG_bird_boot_index%>%
-    dbirdyr::select(Year, Watershed, FireGrzTrt, Transect, birdot_index)%>%
-    unique(.)%>%
-    group_by(Year)%>%
-    sambirde_n(2, rebirdace=T)%>%
-    dbirdyr::select(birdot_index,Year)%>%
-    ungroup()
-  bird_count_ready<-PBG_bird_boot_index%>%
-    right_join(bird_count_rand_key, by= c("Year", "birdot_index"),
-               multibirde="all")%>%
-    mutate(iteration=BOOT)
-  PBG_bird_count_master<-rbind(PBG_bird_count_master, bird_count_ready)
-}
-write.csv(PBG_bird_count_master, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/PBG_bird_count_master.csv")
-
-#calculate count sd,cv,mean and stability####
-ABG_bird_count<-ABG_bird_boot%>%
-  group_by(Year)%>%#calculate metrics at the unit level
-  summarise(count_ABGNth=mean(total_count, na.rm=T),
-            count_ABGNth_sd=sd(total_count),
-            cv_count_ABGNth=sd(total_count)/mean(total_count, na.rm=T))%>%
-  ungroup()%>%
-  mutate(Stab_ABGNth=mean(count_ABGNth, na.rm =T)/sd(count_ABGNth),
-         temp_ABG_m=mean(count_ABGNth,na.rm=T),
-         temp_ABG_sd=sd(count_ABGNth))
-
-#calculate variables for PBG bootstrap
-PBG_bird_count<-PBG_bird_count_master%>%
-  group_by(Year,iteration)%>%
-  summarise(count_PBGNth=mean(total_count,na.rm=T),
-            sd_c_PBGNth=sd(total_count),
-            cv_c_PBGNth=sd(total_count)/mean(total_count, na.rm=T))%>%
-  group_by(iteration)%>%
-  mutate(stab_PBGNth=mean(count_PBGNth, na.rm=T)/sd(count_PBGNth),
-         temp_PBG_m=mean(count_PBGNth, na.rm=T),
-         temp_PBG_sd=sd(count_PBGNth))
-
-#combine PBG and ABG and calculate zscores####
-Combo_bird_count<-PBG_bird_count%>%
-  left_join(ABG_bird_count, by="Year")%>%
-  group_by(Year)%>%
-  mutate(count_PBGNth_m=mean(count_PBGNth, na.rm=T),
-         count_PBGNth_sd=sd(count_PBGNth),
-         z_score_NthMean=((count_ABGNth-count_PBGNth_m)/count_PBGNth_sd),
-         p_value_NMean=2*pnorm(-abs(z_score_NthMean)),
-         count_PBGNth_sd_M=mean(sd_c_PBGNth, na.rm=T),
-         count_PBGNth_sd_sd=sd(sd_c_PBGNth),
-         Z_score_Nsd=((count_ABGNth_sd-count_PBGNth_sd_M)/count_PBGNth_sd_sd),
-         pvalue_Nsd=2*pnorm(-abs(Z_score_Nsd)),
-         count_PBGNth_cv_M=mean(cv_c_PBGNth, na.rm=T),
-         count_PBGNth_cv_sd=sd(cv_c_PBGNth),
-         Z_score_Ncv=((cv_count_ABGNth-count_PBGNth_cv_M)/count_PBGNth_cv_sd),
-         pvalue_Ncv=2*pnorm(-abs(Z_score_Ncv)))%>%
-  ungroup()%>%
-  mutate(stab_PBGNm=mean(stab_PBGNth,na.rm=T),
-         stab_PBGN_sd=sd(stab_PBGNth),
-         z_score_NStab=((Stab_ABGNth-stab_PBGNm)/stab_PBGN_sd),
-         pvalue_stab=2*pnorm(-abs(z_score_NStab)))
-
-#create figures for bird count####
-#create visual for stab
-ggplot(Combo_bird_count,aes(stab_PBGNth))+
-  geom_density(size=1)+
-  #facet_grid("Year")+
-  geom_vline(aes(xintercept=Stab_ABGNth), linetype=2,size=1)+
-  xlab("Stability")
-#yet to select the same transects for stability
-#temp mean
-ggplot(Combo_bird_count,aes(temp_PBG_m))+
-  geom_density(size=1)+
-  #facet_grid("Year")+
-  geom_vline(aes(xintercept=temp_ABG_m), linetype=2,size=1)+
-  xlab("temporal mean")
-#temp sd
-ggplot(Combo_bird_count,aes(temp_PBG_sd))+
-  geom_density(size=1)+
-  #facet_grid("Year")+
-  geom_vline(aes(xintercept=temp_ABG_sd), linetype=2,size=1)+
-  xlab("temporal sd")
-
-ggplot(Combo_bird_count,aes(count_PBGNth))+
-  geom_density(size=.5)+
-  facet_wrap(~Year, scales = "free")+
-  #facet_grid("Year")+
-  geom_vline(aes(xintercept=count_ABGNth), linetype=2,size=.5)
-
-#create visual using point 
-#total count at unit scale
-combo_bird_count_geompoint<-Combo_bird_count%>%
-  pivot_longer(c(count_PBGNth_m,count_ABGNth),
-               names_to = "treatment", values_to = "count_mean")%>%
-  select(count_mean,treatment, Year, count_PBGNth_sd)%>%
-  unique()%>%
-  #round to two decimal birdaces
-  mutate(sdsd=round(count_PBGNth_sd,digits=2))%>%
-  mutate(sdsd=ifelse(sdsd==5.90 & treatment=="count_ABGNth",0,sdsd),
-         sdsd=ifelse(sdsd==3.34 & treatment=="count_ABGNth",0,sdsd),
-         sdsd=ifelse(sdsd==1.56 & treatment=="count_ABGNth",0,sdsd),
-         sdsd=ifelse(sdsd==2.78 & treatment=="count_ABGNth",0,sdsd),
-         sdsd=ifelse(sdsd==2.58 & treatment=="count_ABGNth",0,sdsd),
-         sdsd=ifelse(sdsd==2.73 & treatment=="count_ABGNth",0,sdsd),
-         sdsd=ifelse(sdsd==7.25 & treatment=="count_ABGNth",0,sdsd),
-         sdsd=ifelse(sdsd==4.45 & treatment=="count_ABGNth",0,sdsd),
-         sdsd=ifelse(sdsd==1.16 & treatment=="count_ABGNth",0,sdsd),
-         sdsd=ifelse(sdsd==3.61 & treatment=="count_ABGNth",0,sdsd))
-
-ggplot(combo_bird_count_geompoint,aes(Year, count_mean, col=treatment))+
-  geom_point()+
-  geom_path(aes(as.numeric(Year)))+
-  scale_colour_manual(values=c( "#F0E442", "#009E73"),labels=c("ABG","PBG"))+
-  geom_errorbar(aes(ymax=count_mean+1.96*(sdsd),
-                    ymin=count_mean-1.96*(sdsd)),width=.2)+
-  scale_x_continuous(breaks=2011:2021)
-
-
-#sd unit scale
-combo_bird_sd_geompoint<-Combo_bird_count%>%
-  pivot_longer(c(count_PBGNth_sd_M,count_ABGNth_sd),
-               names_to = "treatment", values_to = "count_sd")%>%
-  select(count_sd,treatment, Year, count_PBGNth_sd_sd)%>%
-  unique()%>%
-  #round to two decimal birdaces
-  mutate(sdsd=round(count_PBGNth_sd_sd,digits=2))%>%
-  mutate(sdsd=ifelse(sdsd==7.27 & treatment=="count_ABGNth_sd",0,sdsd),
-         sdsd=ifelse(sdsd==2.17 & treatment=="count_ABGNth_sd",0,sdsd),
-         sdsd=ifelse(sdsd==2.16 & treatment=="count_ABGNth_sd",0,sdsd),
-         sdsd=ifelse(sdsd==2.25 & treatment=="count_ABGNth_sd",0,sdsd),
-         sdsd=ifelse(sdsd==2.18 & treatment=="count_ABGNth_sd",0,sdsd),
-         sdsd=ifelse(sdsd==2.51 & treatment=="count_ABGNth_sd",0,sdsd),
-         sdsd=ifelse(sdsd==5.99 & treatment=="count_ABGNth_sd",0,sdsd),
-         sdsd=ifelse(sdsd==3.76 & treatment=="count_ABGNth_sd",0,sdsd),
-         sdsd=ifelse(sdsd==0.80 & treatment=="count_ABGNth_sd",0,sdsd),
-         sdsd=ifelse(sdsd==3.17 & treatment=="count_ABGNth_sd",0,sdsd))
-
-ggplot(combo_bird_sd_geompoint,aes(Year, count_sd, col=treatment))+
-  geom_point()+
-  geom_path(aes(as.numeric(Year)))+
-  scale_colour_manual(values=c( "#F0E442", "#009E73"),labels=c("ABG","PBG"))+
-  geom_errorbar(aes(ymax=count_sd+1.96*(sdsd),
-                    ymin=count_sd-1.96*(sdsd)),width=.2)+
-  scale_x_continuous(breaks=2011:2021)
