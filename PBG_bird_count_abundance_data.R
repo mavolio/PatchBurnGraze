@@ -1,6 +1,6 @@
 #PBG Bird count and community metrics
 #Authors: Joshua Ajowele
-#Started: 26 May 2022 last modified: 08 Feb 2025
+#Started: 26 May 2022 last modified: 21 Feb 2025
 
 #load library####
 library(tidyverse)
@@ -502,5 +502,93 @@ ggplot(yrsincef_non_grass_bird_yr, aes(yrsince_fire, total, fill=yrsince_fire))+
   ylab("non-grassland Bird count")
 
 
+#community composition 
+bird_com_comp<-yrsin_bird_comm%>%
+  ungroup()%>%
+  select(-TransectName, -total_max, -rep_id)%>%
+  filter(!Year%in%2011:2015)%>%
+  pivot_wider(names_from = SpeciesCode, values_from = abund, values_fill = 0)
+
+#separate species abundance from environmental variables
+bird_comp_sp<-bird_com_comp%>%
+  select(-1:-4)
+bird_comp_env<-bird_com_comp%>%
+  select(1:4)
+
+#compare compositional difference
+library(pairwiseAdonis)
+comp_vegdist<-vegdist(bird_comp_sp)
+permanova_bird_comp<-adonis(comp_vegdist~bird_comp_env$yrsince_fire+bird_comp_env$Watershed+as.factor(bird_comp_env$Year))
+permanova_bird<-permanova_bird_comp$aov.tab
+pairwise_perm<-pairwise.adonis2(bird_comp_sp~yrsince_fire+Watershed+as.factor(Year), data=bird_comp_env)
+
+write.csv(pairwise_perm,"C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/pairwise_bird_comp.csv")
+
+#visual with NMDS
+#get nmds1 and 2
+mds_all <- metaMDS(bird_comp_sp, distance = "bray")
+#stress 0.21
+#combine NMDS1 and 2 with factor columns and create centroids
+nmds_sp_scores <- data.frame(bird_comp_env, scores(mds_all, display="sites"))%>%
+  group_by(Year,yrsince_fire,Watershed)%>%
+  mutate(NMDS1_mean=mean(NMDS1),
+         NMDS2_mean=mean(NMDS2))
+
+#plotting centroid through time
+ggplot(nmds_sp_scores, aes(x=NMDS1_mean, y=NMDS2_mean, col=yrsince_fire))+
+  geom_point(size=8)+
+  scale_shape_manual(values=c(15:18,0:2,5))+
+  scale_colour_manual(values=c("#F0E442", "#994F00", "#999999", "#0072B2"))
+#community metrics with all species####
+fire_bird_comm<-Yrs_since_fire_bird%>%
+  group_by(Year, FireGrzTrt, Watershed, Transect,SpeciesCode)%>%
+  summarise(total_max=max(total, na.rm=T))%>%
+  group_by(Year, FireGrzTrt, Watershed, Transect)%>%
+  mutate(abund=(total_max/sum(total_max))*100)%>%
+  select(-total_max)%>%
+  pivot_wider(names_from = SpeciesCode, values_from = abund, values_fill = 0)
+
+#split intop abundance and enironmental variables
+fire_sp<-fire_bird_comm%>%
+  ungroup()%>%
+  select(-1:-4)
+fire_env<-fire_bird_comm%>%
+  select(1:4)
+
+#calculating permanova and betadiversity
+#creating a loop to do this
+year_vec_bird <- unique(fire_env$Year)
+bird_perm <- {}
+bird_beta <- {}
 
 
+for(YEAR in 1:length(year_vec_bird)){
+  vdist_temp_bird <- vegdist(filter(fire_sp, fire_env$Year ==  year_vec_bird[YEAR]))
+  permanova_temp_bird <- adonis(vdist_temp_bird ~ subset(fire_env, Year == year_vec_bird[YEAR])$FireGrzTrt)
+  permanova_out_temp_bird <- data.frame(Year = year_vec_bird[YEAR], 
+                                      DF = permanova_temp_bird$aov.tab[1,1],
+                                      F_value = permanova_temp_bird$aov.tab[1,4],
+                                      P_value = permanova_temp_bird$aov.tab[1,6])
+  bird_perm <- rbind(bird_perm,permanova_out_temp_bird)
+  
+  bdisp_temp_bird <- betadisper(vdist_temp_bird, filter(fire_env, Year==year_vec_bird[YEAR])$FireGrzTrt, type = "centroid", bias.adjust = TRUE)
+  bdisp_out_temp_bird <- data.frame(filter(fire_env, Year==year_vec_bird[YEAR]), distance = bdisp_temp_bird$distances)
+  bird_beta <- rbind(bird_beta, bdisp_out_temp_bird)
+  
+  rm(vdist_temp_bird, permanova_temp_bird, permanova_out_temp_bird, bdisp_temp_bird, bdisp_out_temp_bird)
+}
+ 
+#view bet diversity
+beta_diver<-bird_beta%>%
+  group_by(Year, FireGrzTrt)%>%
+  summarise(beta=mean(distance, na.rm=T),
+            se=SE_function(distance))%>%
+  group_by(FireGrzTrt)%>%
+  summarise(beta_a=mean(beta, na.rm=T),
+            se_a=mean(se,na.rm=T))
+#plot
+ggplot(beta_diver,aes(x=FireGrzTrt,fill=FireGrzTrt))+
+  geom_bar(stat = "identity",aes(y=beta_a),width = 0.5)+
+  geom_errorbar(aes(ymin=beta_a-se_a,
+                    ymax=beta_a+se_a),width=0.05,linetype=1)+
+  scale_fill_manual(values=c( "#F0E442", "#009E73"))
