@@ -3362,8 +3362,8 @@ multi_panel_graph <- grid.arrange(
 
 
 #### Years Since Burned Graph Settings ####
-Axis_Label_Size_1 <- 14 #The actual ticks and treatments
-Axis_Text_Size <- 16 #Text on axis like abuandance, richness etc
+Axis_Label_Size_1 <- 20 #The actual ticks and treatments
+Axis_Text_Size <- 24 #Text on axis like abundance, richness etc
 #### 2021 Years Since Burned, Count Evenness Graphs ####
 # Box plot for count
 count_boxplot <- ggplot(Abundance_Data2021, aes(x=TreatmentSB, y=Count, fill=TreatmentSB)) +
@@ -3375,9 +3375,9 @@ count_boxplot <- ggplot(Abundance_Data2021, aes(x=TreatmentSB, y=Count, fill=Tre
   theme(legend.position = "none", plot.title = element_text(size = 9),
         axis.text.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis labels
         axis.text.y = element_text(size = Axis_Label_Size_1),
-        axis.title.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis title
-        axis.title.y = element_text(size = Axis_Label_Size_1)) + # Increase the size of y-axis title
-  scale_x_discrete(labels = c("ABG_0" = "ABG 0", "PBG_0" = "PBG 0", "PBG_1" = "PBG 1", "PBG_2" = "PBG 2")) + # Set custom axis labels
+        axis.title.x = element_text(size = Axis_Text_Size), # Increase the size of x-axis title
+        axis.title.y = element_text(size = Axis_Text_Size)) + # Increase the size of y-axis title
+  scale_x_discrete(labels = c("ABG_0" = "A0", "PBG_0" = "P0", "PBG_1" = "P1", "PBG_2" = "P2")) + # Set custom axis labels
   theme(legend.position = "none", plot.title = element_text(size = 9),
         axis.text.x = element_text(angle = 0, hjust = 0.5)) # Adjust x-axis text angle for
 
@@ -3399,9 +3399,9 @@ richness_boxplot <- ggplot(Joined2021, aes(x=TreatmentSB, y=richness, fill=Treat
   theme(legend.position = "none", plot.title = element_text(size = 9),
         axis.text.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis labels
         axis.text.y = element_text(size = Axis_Label_Size_1),
-        axis.title.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis title
-        axis.title.y = element_text(size = Axis_Label_Size_1)) + # Increase the size of y-axis title
-  scale_x_discrete(labels = c("ABG_0" = "ABG 0", "PBG_0" = "PBG 0", "PBG_1" = "PBG 1", "PBG_2" = "PBG 2")) + # Set custom axis labels
+        axis.title.x = element_text(size = Axis_Text_Size), # Increase the size of x-axis title
+        axis.title.y = element_text(size = Axis_Text_Size)) + # Increase the size of y-axis title
+  scale_x_discrete(labels = c("ABG_0" = "A0", "PBG_0" = "P0", "PBG_1" = "P1", "PBG_2" = "P2")) + # Set custom axis labels
   theme(legend.position = "none", plot.title = element_text(size = 9),
         axis.text.x = element_text(angle = 0, hjust = 0.5)) # Adjust x-axis text angle for
 # Display the plot
@@ -3422,9 +3422,9 @@ evenness_boxplot <- ggplot(Joined2021, aes(x=TreatmentSB, y=Evar, fill=Treatment
   theme(legend.position = "none", plot.title = element_text(size = 9),
         axis.text.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis labels
         axis.text.y = element_text(size = Axis_Label_Size_1),
-        axis.title.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis title
-        axis.title.y = element_text(size = Axis_Label_Size_1)) + # Increase the size of y-axis title
-  scale_x_discrete(labels = c("ABG_0" = "ABG 0", "PBG_0" = "PBG 0", "PBG_1" = "PBG 1", "PBG_2" = "PBG 2")) + # Set custom axis labels
+        axis.title.x = element_text(size = Axis_Text_Size), # Increase the size of x-axis title
+        axis.title.y = element_text(size = Axis_Text_Size)) + # Increase the size of y-axis title
+  scale_x_discrete(labels = c("ABG_0" = "A0", "PBG_0" = "P0", "PBG_1" = "P1", "PBG_2" = "P2")) + # Set custom axis labels
   theme(legend.position = "none", plot.title = element_text(size = 9),
         axis.text.x = element_text(angle = 0, hjust = 0.5)) # Adjust x-axis text angle for
 # Display the plot
@@ -3446,9 +3446,9 @@ count_boxplot_2022 <- ggplot(Abundance_Data2022, aes(x=TreatmentSB, y=Count, fil
   theme(legend.position = "none", plot.title = element_text(size = 9),
         axis.text.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis labels
         axis.text.y = element_text(size = Axis_Label_Size_1),
-        axis.title.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis title
-        axis.title.y = element_text(size = Axis_Label_Size_1)) + # Increase the size of y-axis title
-  scale_x_discrete(labels = c("ABG_0" = "ABG 0", "PBG_0" = "PBG 0", "PBG_1" = "PBG 1", "PBG_2" = "PBG 2")) + # Set custom axis labels
+        axis.title.x = element_text(size = Axis_Text_Size), # Increase the size of x-axis title
+        axis.title.y = element_text(size = Axis_Text_Size)) + # Increase the size of y-axis title
+  scale_x_discrete(labels = c("ABG_0" = "A0", "PBG_0" = "P0", "PBG_1" = "P1", "PBG_2" = "P2")) + # Set custom axis labels
   theme(legend.position = "none", plot.title = element_text(size = 9),
         axis.text.x = element_text(angle = 0, hjust = 0.5)) # Adjust x-axis text angle for
 
@@ -3469,9 +3469,9 @@ richness_boxplot_2022 <- ggplot(Joined2022, aes(x=TreatmentSB, y=richness, fill=
   theme(legend.position = "none", plot.title = element_text(size = 9),
         axis.text.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis labels
         axis.text.y = element_text(size = Axis_Label_Size_1),
-        axis.title.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis title
-        axis.title.y = element_text(size = Axis_Label_Size_1)) + # Increase the size of y-axis title
-  scale_x_discrete(labels = c("ABG_0" = "ABG 0", "PBG_0" = "PBG 0", "PBG_1" = "PBG 1", "PBG_2" = "PBG 2")) + # Set custom axis labels
+        axis.title.x = element_text(size = Axis_Text_Size), # Increase the size of x-axis title
+        axis.title.y = element_text(size = Axis_Text_Size)) + # Increase the size of y-axis title
+  scale_x_discrete(labels = c("ABG_0" = "A0", "PBG_0" = "P0", "PBG_1" = "P1", "PBG_2" = "P2")) + # Set custom axis labels
   theme(legend.position = "none", plot.title = element_text(size = 9),
         axis.text.x = element_text(angle = 0, hjust = 0.5)) # Adjust x-axis text angle for
 
@@ -3492,9 +3492,9 @@ evenness_boxplot_2022 <- ggplot(Joined2022, aes(x=TreatmentSB, y=Evar, fill=Trea
   theme(legend.position = "none", plot.title = element_text(size = 9),
         axis.text.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis labels
         axis.text.y = element_text(size = Axis_Label_Size_1),
-        axis.title.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis title
-        axis.title.y = element_text(size = Axis_Label_Size_1)) + # Increase the size of y-axis title
-  scale_x_discrete(labels = c("ABG_0" = "ABG 0", "PBG_0" = "PBG 0", "PBG_1" = "PBG 1", "PBG_2" = "PBG 2")) + # Set custom axis labels
+        axis.title.x = element_text(size = Axis_Text_Size), # Increase the size of x-axis title
+        axis.title.y = element_text(size = Axis_Text_Size)) + # Increase the size of y-axis title
+  scale_x_discrete(labels = c("ABG_0" = "A0", "PBG_0" = "P0", "PBG_1" = "P1", "PBG_2" = "P2")) + # Set custom axis labels
   theme(legend.position = "none", plot.title = element_text(size = 9),
         axis.text.x = element_text(angle = 0, hjust = 0.5)) # Adjust x-axis text angle for
 # Display the plot
@@ -3517,9 +3517,9 @@ count_boxplot_2023 <- ggplot(Abundance_Data2023, aes(x=TreatmentSB, y=Count, fil
   theme(legend.position = "none", plot.title = element_text(size = 9),
         axis.text.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis labels
         axis.text.y = element_text(size = Axis_Label_Size_1),
-        axis.title.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis title
-        axis.title.y = element_text(size = Axis_Label_Size_1)) + # Increase the size of y-axis title
-  scale_x_discrete(labels = c("ABG_0" = "ABG 0", "PBG_0" = "PBG 0", "PBG_1" = "PBG 1", "PBG_2" = "PBG 2")) + # Set custom axis labels
+        axis.title.x = element_text(size = Axis_Text_Size), # Increase the size of x-axis title
+        axis.title.y = element_text(size = Axis_Text_Size)) + # Increase the size of y-axis title
+  scale_x_discrete(labels = c("ABG_0" = "A0", "PBG_0" = "P0", "PBG_1" = "P1", "PBG_2" = "P2")) + # Set custom axis labels
   theme(legend.position = "none", plot.title = element_text(size = 9),
         axis.text.x = element_text(angle = 0, hjust = 0.5)) # Adjust x-axis text angle for
 # Display the plot
@@ -3541,9 +3541,9 @@ richness_boxplot_2023 <- ggplot(Joined2023, aes(x=TreatmentSB, y=richness, fill=
   theme(legend.position = "none", plot.title = element_text(size = 9),
         axis.text.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis labels
         axis.text.y = element_text(size = Axis_Label_Size_1),
-        axis.title.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis title
-        axis.title.y = element_text(size = Axis_Label_Size_1)) + # Increase the size of y-axis title
-  scale_x_discrete(labels = c("ABG_0" = "ABG 0", "PBG_0" = "PBG 0", "PBG_1" = "PBG 1", "PBG_2" = "PBG 2")) + # Set custom axis labels
+        axis.title.x = element_text(size = Axis_Text_Size), # Increase the size of x-axis title
+        axis.title.y = element_text(size = Axis_Text_Size)) + # Increase the size of y-axis title
+  scale_x_discrete(labels = c("ABG_0" = "A0", "PBG_0" = "P0", "PBG_1" = "P1", "PBG_2" = "P2")) + # Set custom axis labels
   theme(legend.position = "none", plot.title = element_text(size = 9),
         axis.text.x = element_text(angle = 0, hjust = 0.5)) # Adjust x-axis text angle for
 richness_boxplot_2023
@@ -3563,9 +3563,9 @@ evenness_boxplot_2023 <- ggplot(Joined2023, aes(x=TreatmentSB, y=Evar, fill=Trea
   theme(legend.position = "none", plot.title = element_text(size = 9),
         axis.text.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis labels
         axis.text.y = element_text(size = Axis_Label_Size_1),
-        axis.title.x = element_text(size = Axis_Label_Size_1), # Increase the size of x-axis title
-        axis.title.y = element_text(size = Axis_Label_Size_1)) + # Increase the size of y-axis title
-  scale_x_discrete(labels = c("ABG_0" = "ABG 0", "PBG_0" = "PBG 0", "PBG_1" = "PBG 1", "PBG_2" = "PBG 2")) + # Set custom axis labels
+        axis.title.x = element_text(size = Axis_Text_Size), # Increase the size of x-axis title
+        axis.title.y = element_text(size = Axis_Text_Size)) + # Increase the size of y-axis title
+  scale_x_discrete(labels = c("ABG_0" = "A0", "PBG_0" = "P0", "PBG_1" = "P1", "PBG_2" = "P2")) + # Set custom axis labels
   theme(legend.position = "none", plot.title = element_text(size = 9),
         axis.text.x = element_text(angle = 0, hjust = 0.5)) # Adjust x-axis text angle for
 # Display the plot
