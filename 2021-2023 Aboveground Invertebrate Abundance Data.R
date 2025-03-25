@@ -3362,13 +3362,13 @@ multi_panel_graph <- grid.arrange(
 
 
 #### Years Since Burned Graph Settings ####
-Axis_Label_Size_1 <- 14 #The actualy ticks and treatments
-Axis_Text_Size <- 16 #Text on axislike abuandance, richness etc
+Axis_Label_Size_1 <- 14 #The actual ticks and treatments
+Axis_Text_Size <- 16 #Text on axis like abuandance, richness etc
 #### 2021 Years Since Burned, Count Evenness Graphs ####
 # Box plot for count
 count_boxplot <- ggplot(Abundance_Data2021, aes(x=TreatmentSB, y=Count, fill=TreatmentSB)) +
   geom_boxplot() +
-  labs(title="", x="Treatment", y="") +
+  labs(title="", x="Treatment", y="Abundance") +
   scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red", "ABG_0" = "blue")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   theme_minimal() +
   #annotate("text", x = -Inf, y = Inf, label = "P value: 0.857", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
@@ -3392,7 +3392,7 @@ count_boxplot
 # Boxplot for Richness
 richness_boxplot <- ggplot(Joined2021, aes(x=TreatmentSB, y=richness, fill=TreatmentSB)) +
   geom_boxplot() +
-  labs(title="", x="Treatment", y="") +
+  labs(title="", x="Treatment", y="Richness") +
   scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   theme_minimal() +
  # annotate("text", x = -Inf, y = Inf, label = "P value: 0.725", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
@@ -3415,7 +3415,7 @@ richness_boxplot
 # Boxplot for Evenness
 evenness_boxplot <- ggplot(Joined2021, aes(x=TreatmentSB, y=Evar, fill=TreatmentSB)) +
   geom_boxplot() +
-  labs(title="", x="Treatment", y="") +
+  labs(title="", x="Treatment", y="Evenness") +
   scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   theme_minimal() +
   #annotate("text", x = -Inf, y = Inf, label = "P value: 0.091", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
@@ -3439,7 +3439,7 @@ evenness_boxplot
 # Box plot for count
 count_boxplot_2022 <- ggplot(Abundance_Data2022, aes(x=TreatmentSB, y=Count, fill=TreatmentSB)) +
   geom_boxplot() +
-  labs(title="", x="Treatment", y="") +
+  labs(title="", x="Treatment", y="Abundance") +
   scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red", "ABG_0" = "blue")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   theme_minimal() +
  # annotate("text", x = -Inf, y = Inf, label = "P value: 0.553", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
@@ -3462,7 +3462,7 @@ count_boxplot_2022
 # Boxplot for Richness
 richness_boxplot_2022 <- ggplot(Joined2022, aes(x=TreatmentSB, y=richness, fill=TreatmentSB)) +
   geom_boxplot() +
-  labs(title="", x="Treatment", y="") +
+  labs(title="", x="Treatment", y="Richness") +
   scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   theme_minimal() +
  # annotate("text", x = -Inf, y = Inf, label = "P value: 0.062", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
@@ -3485,7 +3485,7 @@ richness_boxplot_2022
 # Boxplot for Evenness
 evenness_boxplot_2022 <- ggplot(Joined2022, aes(x=TreatmentSB, y=Evar, fill=TreatmentSB)) +
   geom_boxplot() +
-  labs(title="", x="Treatment", y="") +
+  labs(title="", x="Treatment", y="Evenness") +
   scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   theme_minimal() +
 #  annotate("text", x = -Inf, y = Inf, label = "P value: 0.446", vjust = 1, hjust = 0, size = 3.5, color = "black") + 
@@ -3509,7 +3509,7 @@ evenness_boxplot_2022
 # Box plot for count
 count_boxplot_2023 <- ggplot(Abundance_Data2023, aes(x=TreatmentSB, y=Count, fill=TreatmentSB)) +
   geom_boxplot() +
-  labs(title="", x="Treatment", y="") +
+  labs(title="", x="Treatment", y="Abundance") +
   scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red", "ABG_0" = "blue")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   scale_x_discrete(labels = c("ABG_0" = "ABG 0", "PBG_0" = "PBG 0", "PBG_1" = "PBG 1", "PBG_2" = "PBG 2")) + # Set custom axis labels
   theme_minimal() +
@@ -3533,7 +3533,7 @@ count_boxplot_2023
 # Boxplot for Richness
 richness_boxplot_2023 <- ggplot(Joined2023, aes(x=TreatmentSB, y=richness, fill=TreatmentSB)) +
   geom_boxplot() +
-  labs(title="", x="Treatment", y="") +
+  labs(title="", x="Treatment", y="Richness") +
   scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   scale_x_discrete(labels = c("ABG_0" = "ABG 0", "PBG_0" = "PBG 0", "PBG_1" = "PBG 1", "PBG_2" = "PBG 2")) + # Set custom axis labels
   theme_minimal() +
@@ -3555,7 +3555,7 @@ richness_boxplot_2023
 # Boxplot for Evenness
 evenness_boxplot_2023 <- ggplot(Joined2023, aes(x=TreatmentSB, y=Evar, fill=TreatmentSB)) +
   geom_boxplot() +
-  labs(title="", x="Treatment", y="") +
+  labs(title="", x="Treatment", y="Evenness") +
   scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) + # Color PBG_0, PBG_1, PBG_2 as red, ABG_0 as blue
   scale_x_discrete(labels = c("ABG_0" = "ABG 0", "PBG_0" = "PBG 0", "PBG_1" = "PBG 1", "PBG_2" = "PBG 2")) + # Set custom axis labels
   theme_minimal() +
@@ -5318,10 +5318,18 @@ beta_diversity_results <- calculate_beta_vegan(
 # Print results
 print(beta_diversity_results)
 
-# PERMANOVA test
-print(permanova <- adonis2(formula = abundanceWide_2021[,8:150]~TreatmentSB, data=abundanceWide_2021, permutations=999, method="bray"))
+distances <- vegdist(abundanceWide_2021[,8:ncol(abundanceWide_2021)], method = "bray")
+permdisp <- betadisper(distances, abundanceWide_2021$TreatmentSB)
 
-#F = 1.2983, P = 0.093 
+# Test for significant differences in dispersion
+anova(permdisp)
+# > anova(permdisp)
+# Analysis of Variance Table
+# 
+# Response: Distances
+# Df  Sum Sq   Mean Sq F value Pr(>F)
+# Groups     3 0.01229 0.0040981  0.3774 0.7696
+# Residuals 57 0.61896 0.0108589    
 
 pairwise.adonis<-pairwise.adonis2(abundanceWide_2021[,8:150]~TreatmentSB, data = abundanceWide_2021)
 pairwise.adonis
@@ -5338,23 +5346,30 @@ pairwise.adonis
 beta_diversity_results$TreatmentSB <- factor(beta_diversity_results$TreatmentSB, 
                                              levels = c("ABG_0", "PBG_0", "PBG_1", "PBG_2"))
 
+
+
+# Create the bar plot with custom labels
 Beta_barplot_2021 <- ggplot(beta_diversity_results, aes(x = TreatmentSB, y = BetaDiversity, fill = factor(TreatmentSB))) +
   stat_summary(fun = "mean", geom = "bar", position = "dodge") +  # Use stat_summary for bar plot with mean values
-  labs(title = "",
-       x = "Treatment",
-       y = "") +
+  labs(
+    title = "",
+    x = "Treatment",
+    y = "Beta Diversity"
+  ) +
   scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) +  # Custom colors for ABG and PBG
-  scale_x_discrete(labels = gsub("_", " ", levels(beta_diversity_results$TreatmentSB))) +  # Replace underscores with spaces
+  scale_x_discrete(
+    labels = c("ABG_0" = "A0", "PBG_0" = "P0", "PBG_1" = "P1", "PBG_2" = "P2")  # Custom labels
+  ) +
   theme_minimal() +
   theme(
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
-    axis.text = element_text(size = Axis_Label_Size_1),
-    axis.title = element_text(size = Axis_Text_Size),
-    legend.position = "none" # Remove legend if not needed
+    axis.text = element_text(size = Axis_Label_Size_1),  # Ensure Axis_Label_Size_1 is defined
+    axis.title = element_text(size = Axis_Text_Size),    # Ensure Axis_Text_Size is defined
+    legend.position = "none"  # Remove legend if not needed
   )
 
-# Display the bar plot
+# Display the plot
 Beta_barplot_2021
 
 
@@ -5380,9 +5395,23 @@ print(beta_diversity_results)
 # 3       PBG_1     0.4365440
 # 4       PBG_2     0.4452078
 
-# PERMANOVA test
-print(permanova <- adonis2(formula = abundanceWide_2022[,8:121]~TreatmentSB, data=abundanceWide_2022, permutations=999, method="bray"))
+# Calculate beta diversity (distance to centroid) using PERMDISP
+distances <- vegdist(abundanceWide_2022[,8:121], method = "bray")
+permdisp <- betadisper(distances, abundanceWide_2022$TreatmentSB)
 
+# Test for significant differences in dispersion
+anova(permdisp)
+
+# > anova(permdisp)
+# Analysis of Variance Table
+# 
+# Response: Distances
+# Df  Sum Sq   Mean Sq F value Pr(>F)
+# Groups     3 0.00126 0.0004185  0.0305 0.9927
+# Residuals 60 0.82207 0.0137012   
+
+# Perform permutation test
+permutest(permdisp, permutations = 999)
 # F = 2.4861, p = 0.003 **
 
 # Run pairwise.adonis2
@@ -5393,27 +5422,34 @@ pairwise.adonis
 #### Beta-Diversity Years Since Burned Graph 2022 ####
 # Box plot of Beta Diversity
 
+# Ensure TreatmentSB is a factor with the correct order
 beta_diversity_results$TreatmentSB <- factor(beta_diversity_results$TreatmentSB, 
                                              levels = c("ABG_0", "PBG_0", "PBG_1", "PBG_2"))
 
+# Create the bar plot with custom labels
 Beta_barplot_2022 <- ggplot(beta_diversity_results, aes(x = TreatmentSB, y = BetaDiversity, fill = factor(TreatmentSB))) +
   stat_summary(fun = "mean", geom = "bar", position = "dodge") +  # Use stat_summary for bar plot with mean values
-  labs(title = "",
-       x = "Treatment",
-       y = "") +
+  labs(
+    title = "",
+    x = "Treatment",
+    y = "Beta Diversity"
+  ) +
   scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) +  # Custom colors for ABG and PBG
-  scale_x_discrete(labels = gsub("_", " ", levels(beta_diversity_results$TreatmentSB))) +  # Replace underscores with spaces
+  scale_x_discrete(
+    labels = c("ABG_0" = "A0", "PBG_0" = "P0", "PBG_1" = "P1", "PBG_2" = "P2")  # Set explicit labels
+  ) +
   theme_minimal() +
   theme(
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
-    axis.text = element_text(size = Axis_Label_Size_1),
-    axis.title = element_text(size = Axis_Text_Size),
-    legend.position = "none" # Remove legend if not needed
+    axis.text = element_text(size = Axis_Label_Size_1),  # Ensure Axis_Label_Size_1 is defined
+    axis.title = element_text(size = Axis_Text_Size),    # Ensure Axis_Text_Size is defined
+    legend.position = "none"  # Remove legend if not needed
   )
 
-# Display the bar plot
+# Display the plot
 Beta_barplot_2022
+
 
 #### Beta Diversity Years Since Burn 2023 ####
 species_columns <- 8:ncol(abundanceWide_2023)
@@ -5434,29 +5470,48 @@ print(beta_diversity_results)
 # 3       PBG_1     0.5011592
 # 4       PBG_2     0.5262528
 
-# PERMANOVA test
-print(permanova <- adonis2(formula = abundanceWide_2023[,8:76]~TreatmentSB, data=abundanceWide_2023, permutations=999, method="bray"))
+# Calculate beta diversity (distance to centroid) using PERMDISP
+distances <- vegdist(abundanceWide_2023[,8:ncol(abundanceWide_2023)], method = "bray")
+permdisp <- betadisper(distances, abundanceWide_2023$TreatmentSB)
+
+# Test for significant differences in dispersion
+anova(permdisp)
+
+# > anova(permdisp)
+# Analysis of Variance Table
+# 
+# Response: Distances
+# Df  Sum Sq   Mean Sq F value Pr(>F)
+# Groups     3 0.00772 0.0025719   0.101 0.9592
+# Residuals 60 1.52828 0.0254714               
 
 #### Beta-Diversity Years Since Burned Graph 2023 ####
 # Box plot of Beta Diversity
 
+# Ensure TreatmentSB is a factor with the correct order
 beta_diversity_results$TreatmentSB <- factor(beta_diversity_results$TreatmentSB, 
                                              levels = c("ABG_0", "PBG_0", "PBG_1", "PBG_2"))
 
+# Create the bar plot with correct custom labels
 Beta_barplot_2023 <- ggplot(beta_diversity_results, aes(x = TreatmentSB, y = BetaDiversity, fill = factor(TreatmentSB))) +
   stat_summary(fun = "mean", geom = "bar", position = "dodge") +  # Use stat_summary for bar plot with mean values
-  labs(title = "",
-       x = "Treatment",
-       y = "") +
+  labs(
+    title = "",
+    x = "Treatment",
+    y = "Beta Diversity"
+  ) +
   scale_fill_manual(values = c("ABG_0" = "blue", "PBG_0" = "red", "PBG_1" = "red", "PBG_2" = "red")) +  # Custom colors for ABG and PBG
-  scale_x_discrete(labels = gsub("_", " ", levels(beta_diversity_results$TreatmentSB))) +  # Replace underscores with spaces
+  scale_x_discrete(
+    labels = c("ABG_0" = "A0", "PBG_0" = "P0", "PBG_1" = "P1", "PBG_2" = "P2")  # Explicit label mapping
+  ) +
   theme_minimal() +
   theme(
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
-    axis.text = element_text(size = Axis_Label_Size_1),
-    axis.title = element_text(size = Axis_Text_Size),
-    legend.position = "none" # Remove legend if not needed
+    axis.text = element_text(size = Axis_Label_Size_1),  # Ensure Axis_Label_Size_1 is defined
+    axis.title = element_text(size = Axis_Text_Size),    # Ensure Axis_Text_Size is defined
+    legend.position = "none"  # Remove legend if not needed
   )
 
+# Display the bar plot
 Beta_barplot_2023

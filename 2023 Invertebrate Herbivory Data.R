@@ -9,6 +9,7 @@ library(ggpubr)
 library(RColorBrewer)
 library(tidyverse)
 library(car)
+library(gridExtra)
 
 # Add end a model for TreatmentSB (ABG + PBG 1-3) 
 
@@ -239,3 +240,51 @@ print(damage_by_species)
 #### Combined Graph ####
 
 multi_panel_graph <- grid.arrange(ABGvsPBG, YearSinceBurned, nrow = 1)
+#### New Graphs ####
+
+# ABG vs PBG Plot
+ABGvsPBG <- ggplot(data=Invertebrate_Herbivory_2023, aes(x=Treatment, y=Herbivory)) +  
+  geom_boxplot(aes(fill=Treatment), width=0.1, position=position_dodge(width=0.9), outlier.shape=NA) + 
+  geom_violin(aes(fill=Treatment), size=1, bw=.3, position=position_dodge(width=0.9)) +
+  geom_jitter(position=position_jitter(width=0.2, height=0, seed=123), alpha=0.5) +
+  theme_minimal() +
+  theme(
+    panel.grid = element_blank(), 
+    legend.position = "none",
+    legend.text = element_text(size = 18),      
+    legend.title = element_text(size = 0),      
+   # axis.title = element_text(size = 24),       # Increased axis label size
+    axis.text = element_text(size = 30)         # Increased tick label size
+  ) +
+  scale_fill_manual(values=c("ABG"="blue", "PBG"="red")) +
+  labs(x="", 
+  y="")  
+# Ensuring clear axis labels
+
+
+# Year Since Burned Plot
+YearSinceBurned <- ggplot(data=Invertebrate_Herbivory_2023, aes(x=TreatmentSB, y=Herbivory, fill=TreatmentSB)) + 
+  geom_violin(color="black", size=1, bw=.3) +
+  geom_boxplot(width=0.1, position=position_dodge(width=0.9), outlier.shape=NA) + 
+  geom_jitter(position=position_jitter(width=0.2, height=0, seed=123), alpha=0.5) +
+  theme_minimal() +
+  scale_fill_manual(
+    values=c("ABG_0"="blue", "PBG_0"="red", "PBG_1"="red", "PBG_2"="red"),
+    labels=c("ABG_0"="ABG 0", "PBG_0"="PBG 0", "PBG_1"="PBG 1", "PBG_2"="PBG 2")
+  ) +
+  scale_x_discrete(labels=c("ABG_0"="ABG 0", "PBG_0"="PBG 0", "PBG_1"="PBG 1", "PBG_2"="PBG 2")) +  
+  labs(fill="Treatment") +  
+  theme(
+    panel.grid = element_blank(), 
+    legend.position = "none",       
+    legend.text = element_text(size = 18),      
+    legend.title = element_text(size = 20),     
+   # axis.title = element_text(size = 24),       # Increased axis label size
+    axis.text = element_text(size = 30)         # Increased tick label size
+  ) + 
+  labs(x = "", 
+     y = ""
+       )
+
+# Display graphs side by side
+grid.arrange(ABGvsPBG, YearSinceBurned, nrow = 1)
