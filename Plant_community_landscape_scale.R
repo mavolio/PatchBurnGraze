@@ -1,7 +1,7 @@
 #Patch-Burn Synthesis Project
 #Plant community data at the landscape scale
 #Author: Joshua Adedayo Ajowele joshuaajowele@gmail.com
-#Started: May 13, 2024 last modified:   Feb 1, 2025
+#Started: May 13, 2024 last modified:   April, 2025
 
 #load library
 library(tidyverse)
@@ -964,6 +964,118 @@ wood<-sp_comp_abund_model%>%
   filter(life_form=="p_w")
 wood_model<-lmer(abundance_m~FireGrzTrt*as.factor(RecYear)+(1|Unit),
                    data=wood)
+check_model(wood_model)#looks good
+check_normality(wood_model)
+anova(wood_model)
+
+
+#calculating lifeforms based on absolute cover/abundance
+#merging key with dataset
+sp_comp_abund<-species_comp_abund%>%
+  left_join(watershed_key,by="Watershed")%>%
+  left_join(Watershed_key2,by="Watershed")%>%
+  left_join(lifeforms_data, by="SpeCode")%>%
+  filter(Transect!="C" | Watershed!="C03C")%>%
+  filter(Watershed!="C03C" | Transect!="D")%>%
+  filter(Watershed!="C03B" | Transect!="A")%>%
+  filter(Watershed!="C03B" | Transect!="B")%>%
+  filter(Watershed!="C03B" | Transect!="C")%>%
+  filter(Watershed!="C03A" | Transect!="A")%>%
+  filter(Watershed!="C03A" | Transect!="B")%>%
+  filter(Watershed!="C03A" | Transect!="C")%>%
+  filter(Watershed!="C3SC" | Transect!="A")%>%
+  filter(Watershed!="C3SC" | Transect!="B")%>%
+  filter(Watershed!="C3SC" | Transect!="C")%>%
+  filter(Watershed!="C3SA" | Transect!="B")%>%
+  filter(Watershed!="C3SA" | Transect!="C")%>%
+  filter(Watershed!="C3SA" | Transect!="D")%>%
+  filter(Watershed!="C3SB" | Transect!="A")%>%
+  filter(Watershed!="C3SB" | Transect!="B")%>%
+  group_by(Unit,RecYear,FireGrzTrt,life_form,sp)%>%
+  summarise(abundance_avg=mean(abundance,na.rm=T))%>%
+  group_by(Unit,RecYear,FireGrzTrt,life_form)%>%
+  summarise(abundance_m=sum(abundance_avg,na.rm=T))%>%
+  group_by(Unit,FireGrzTrt,life_form)%>%
+  summarise(abundance=mean(abundance_m,na.rm=T))
+
+#prepare data for figure 
+sp_comp_abund_viz<-sp_comp_abund%>%
+  group_by(FireGrzTrt,life_form)%>%
+  summarise(abundance=mean(abundance,na.rm=T))
+ggplot(sp_comp_abund_viz, aes(y=abundance,x=life_form,fill=FireGrzTrt))+
+  geom_bar(position = "fill", stat = "identity")+#position fill converts ABG,PBG to percenatge for each lifeform
+  scale_fill_manual(values=c("#F0E442", "#009E73"))
+
+#alternative figure
+ggplot(sp_comp_abund_viz, aes(y=abundance,fill=life_form,x=FireGrzTrt))+
+  geom_bar(position = "stack", stat = "identity")+
+  scale_fill_bluebrown()
+
+#merging key with dataset
+sp_comp_abund_model<-species_comp_abund%>%
+  left_join(watershed_key,by="Watershed")%>%
+  left_join(Watershed_key2,by="Watershed")%>%
+  left_join(lifeforms_data, by="SpeCode")%>%
+  filter(Transect!="C" | Watershed!="C03C")%>%
+  filter(Watershed!="C03C" | Transect!="D")%>%
+  filter(Watershed!="C03B" | Transect!="A")%>%
+  filter(Watershed!="C03B" | Transect!="B")%>%
+  filter(Watershed!="C03B" | Transect!="C")%>%
+  filter(Watershed!="C03A" | Transect!="A")%>%
+  filter(Watershed!="C03A" | Transect!="B")%>%
+  filter(Watershed!="C03A" | Transect!="C")%>%
+  filter(Watershed!="C3SC" | Transect!="A")%>%
+  filter(Watershed!="C3SC" | Transect!="B")%>%
+  filter(Watershed!="C3SC" | Transect!="C")%>%
+  filter(Watershed!="C3SA" | Transect!="B")%>%
+  filter(Watershed!="C3SA" | Transect!="C")%>%
+  filter(Watershed!="C3SA" | Transect!="D")%>%
+  filter(Watershed!="C3SB" | Transect!="A")%>%
+  filter(Watershed!="C3SB" | Transect!="B")%>%
+  group_by(Unit,RecYear,FireGrzTrt,sp, life_form)%>%
+  summarise(abundance_avg=mean(abundance,na.rm=T))%>%
+  group_by(Unit,RecYear,FireGrzTrt,life_form)%>%
+  summarise(abundance_m=sum(abundance_avg,na.rm=T))
+
+P_gramm<-sp_comp_abund_model%>%
+  filter(life_form=="p_g")
+#model for functiongal group
+p_gramminoid_model<-lmer(abundance_m~FireGrzTrt*as.factor(RecYear)+(1|Unit),
+                         data=P_gramm)
+check_model(p_gramminoid_model)#looks good
+anova(p_gramminoid_model)#interaction effect
+
+a_gramm<-sp_comp_abund_model%>%
+  filter(life_form=="a_g")
+a_gramm_model<-lmer(log(abundance_m)~FireGrzTrt*as.factor(RecYear)+(1|Unit),
+                    data=a_gramm)
+check_model(a_gramm_model)#looks good
+check_normality(a_gramm_model)
+anova(a_gramm_model)
+
+p_forb<-sp_comp_abund_model%>%
+  filter(life_form=="p_f")
+p_forb_model<-lmer(abundance_m~FireGrzTrt*as.factor(RecYear)+(1|Unit),
+                   data=p_forb)
+check_model(p_forb_model)#looks good
+check_normality(p_forb_model)
+anova(p_forb_model)#no interaction effect
+summary(p_forb_model)
+#convergence warning due to random effect being zero; same result output when LM was used
+
+a_forb<-sp_comp_abund_model%>%
+  filter(life_form=="a_f")
+a_forb_model<-lmer(abundance_m~FireGrzTrt*as.factor(RecYear)+(1|Unit),
+                   data=a_forb)
+check_model(a_forb_model)#looks good
+check_normality(a_forb_model)
+anova(a_forb_model)
+summary(a_forb_model)
+
+wood<-sp_comp_abund_model%>%
+  filter(life_form=="p_w")
+wood_model<-lmer(abundance_m~FireGrzTrt*as.factor(RecYear)+(1|Unit),
+                 data=wood)
 check_model(wood_model)#looks good
 check_normality(wood_model)
 anova(wood_model)
