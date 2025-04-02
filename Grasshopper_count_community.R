@@ -1649,6 +1649,7 @@ grassh_feeding_df <- grasshopperspcomp_df%>%
 #prepare data for figure 
 grassh_feeding_viz<-grassh_feeding_df%>%
   group_by(FireGrzTrt,feeding)%>%
+  filter(feeding!="unknown")%>%
   summarise(abundance=mean(abundance,na.rm=T))
 ggplot(grassh_feeding_viz, aes(y=abundance,fill=feeding,x=FireGrzTrt))+
   geom_bar(position = "stack", stat = "identity")+
