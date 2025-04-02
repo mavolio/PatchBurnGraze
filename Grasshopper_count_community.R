@@ -1,6 +1,6 @@
 #BPBG grasshopper count and community metrics
 #Authors: Joshua Ajowele
-#Started: 26 May 2022 last modified: 8 Feb 2025
+#Started: 26 May 2022 last modified: April 2025
 #load library
 library(tidyverse)
 library(vegan)
@@ -1688,6 +1688,90 @@ unknown_feed_model<-lmer(log(abundance)~FireGrzTrt*as.factor(RecYear)+(1|Unit),
                      data=unknown_feeders)
 check_model(unknown_feed_model)
 anova(unknown_feed_model)#doesn't make sense to run this-no meaningful interpretation
+
+
+#abvsolute abundance of feeding guilds####
+#create df with feeding guild abundanc###
+grassh_feeding_df <- grasshopperspcomp_df%>%
+  full_join(watershed_key, by = "Watershed")%>%
+  left_join(Watershed_key2,by="Watershed")%>%
+  mutate(spe=paste(Genus,Species, sep="_"))%>%
+  mutate(RecYear = Recyear)%>%
+  filter(!RecYear== 2010)%>%
+  filter(!spe%in%c("Oecanthinae_spp.","Tettigoniidae_spp.","Gryllidae_spp.",
+                   "Conocephalus_spp.","Neoconocephalus_robustus","Scudderia_texensis",
+                   "Arethaea_constricta","Orchelimum_spp.","Amblycorypha_oblongifolia","Pediodectes_haldemani",
+                   "Amblycorypha_rotundifolia","Neoconocephalus_spp.","Neoconocephalus_ensiger","Pediodectes_nigromarginatus",
+                   "Scudderia_furcata","Scudderia_spp."))%>%
+  #using the max cover from the two sweeps done on each transect
+  group_by(Unit,RecYear,FireGrzTrt,Watershed,Repsite,spe)%>%
+  summarise(Total=max(Total))%>%
+  filter(Repsite!="C" | Watershed!="C03C")%>%
+  filter(Watershed!="C03C" | Repsite!="D")%>%
+  filter(Watershed!="C03B" | Repsite!="A")%>%
+  filter(Watershed!="C03B" | Repsite!="B")%>%
+  filter(Watershed!="C03B" | Repsite!="C")%>%
+  filter(Watershed!="C03A" | Repsite!="A")%>%
+  filter(Watershed!="C03A" | Repsite!="B")%>%
+  filter(Watershed!="C03A" | Repsite!="C")%>%
+  filter(Watershed!="C3SC" | Repsite!="A")%>%
+  filter(Watershed!="C3SC" | Repsite!="B")%>%
+  filter(Watershed!="C3SC" | Repsite!="C")%>%
+  filter(Watershed!="C3SA" | Repsite!="B")%>%
+  filter(Watershed!="C3SA" | Repsite!="C")%>%
+  filter(Watershed!="C3SA" | Repsite!="D")%>%
+  filter(Watershed!="C3SB" | Repsite!="A")%>%
+  filter(Watershed!="C3SB" | Repsite!="B")%>%
+  left_join(feeding_df, by="spe")%>%
+  group_by(Unit,RecYear,FireGrzTrt,spe, feeding)%>%
+  summarise(total_avg=mean(Total,na.rm=T))%>%
+  group_by(Unit,RecYear,FireGrzTrt,feeding)%>%
+  summarise(abundance=sum(total_avg,na.rm=T))
+
+#prepare data for figure 
+grassh_feeding_viz<-grassh_feeding_df%>%
+  group_by(FireGrzTrt,feeding)%>%
+  filter(feeding!="unknown")%>%
+  summarise(abundance=mean(abundance,na.rm=T))
+ggplot(grassh_feeding_viz, aes(y=abundance,fill=feeding,x=FireGrzTrt))+
+  geom_bar(position = "stack", stat = "identity")+
+  scale_fill_bluebrown()
+
+
+
+#model for diff feeding guild
+#grass feeders relative abundance
+grass_feeders<-grassh_feeding_df%>%
+  filter(feeding=="grass")
+grass_feed_model<-lmer(abundance~FireGrzTrt*as.factor(RecYear)+(1|Unit),
+                       data=grass_feeders)
+check_model(grass_feed_model)#looks good
+anova(grass_feed_model)
+
+#grass feeders relative abundance
+forb_feeders<-grassh_feeding_df%>%
+  filter(feeding=="forb")
+forb_feed_model<-lmer(abundance~FireGrzTrt*as.factor(RecYear)+(1|Unit),
+                      data=forb_feeders)
+check_heteroscedasticity(forb_feed_model)#looks good
+anova(forb_feed_model)#no interaction
+
+mix_feeders<-grassh_feeding_df%>%
+  filter(feeding=="mix")
+mix_feed_model<-lmer(log(abundance)~FireGrzTrt*as.factor(RecYear)+(1|Unit),
+                     data=mix_feeders)
+check_model(mix_feed_model)
+anova(mix_feed_model)
+
+unknown_feeders<-grassh_feeding_df%>%
+  filter(feeding=="unknown")%>%
+  filter(!RecYear==2020)%>%#2value is missing for ABG in 2012 & 2020
+  filter(!RecYear==2012)
+unknown_feed_model<-lmer(log(abundance)~FireGrzTrt*as.factor(RecYear)+(1|Unit),
+                         data=unknown_feeders)
+check_model(unknown_feed_model)
+anova(unknown_feed_model)#doesn't make sense to run this-no meaningful interpretation
+
 
 
 #community composition for year since fire####
