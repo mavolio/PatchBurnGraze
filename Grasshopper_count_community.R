@@ -807,9 +807,9 @@ gh_combine_mean_sd<-ghcount_master_combine_mean_sd_cv%>%
          pval_sd=2*pnorm(-abs(zscore_sd)),
          zscore_cv=(ghcount_ABG_cv-gh_PBG_cv_M)/gh_PBG_cv_sd,
          pval_cv=2*pnorm(-abs(zscore_cv)))
-write.csv(gh_combine_mean_sd, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/gh_count_mean_sd_combined_unit.csv")
-gh_combine_mean_sd<-read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/gh_count_mean_sd_combined_unit.csv")%>%
-  select(-X)
+#write.csv(gh_combine_mean_sd, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/gh_count_mean_sd_combined_unit.csv")
+#gh_combine_mean_sd<-read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/gh_count_mean_sd_combined_unit.csv")%>%
+  #select(-X)
 #create visuals####
 #grasshopper average count
 combo_ghcount_geompoint_M<-gh_combine_mean_sd%>%
@@ -938,8 +938,8 @@ ghcount_master_combine_stab<-ghcount_master_stab%>%
   left_join(grass_ABG_count, by="RecYear")%>%
   mutate(zscore=(ghcount_ABG_stab-PBG_stab_M)/PBG_stab_sd)%>%
   mutate(pval=2*pnorm(-abs(zscore)))
-write.csv(ghcount_master_combine_stab, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/gh_stability_combined_unit.csv")
-ghcount_master_combine_stab<-read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/gh_stability_combined_unit.csv")
+#write.csv(ghcount_master_combine_stab, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/gh_stability_combined_unit.csv")
+#ghcount_master_combine_stab<-read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/gh_stability_combined_unit.csv")
 #start from zero
 ggplot(ghcount_master_combine_stab,aes(count_PBG_stab))+
   geom_density(size=2,col="#009E73")+
@@ -1036,6 +1036,13 @@ qqnorm(resid(yrs_ghcount_model))
 #multiple comparison
 testInteractions(yrs_ghcount_model, pairwise="yrsins_fire", fixed="RecYear",
                  adjustment="BH")
+yrs_interact<-interactionMeans(yrs_ghcount_model)
+#refit model to test fixed effect differences
+#yrs_ghcount_model<-lmer(log(Tcount)~yrsins_fire+RecYear+(1|Unit/Watershed),
+                       # data=ghcount_yrs)
+#test fixed effect differences
+#testInteractions(yrs_ghcount_model, pairwise="yrsins_fire",
+                 #adjustment="BH")
 #comparison for fixed effect
 testInteractions(yrs_ghcount_model, pairwise = "yrsins_fire", slope="RecYear")
 
@@ -1380,7 +1387,7 @@ for(YEAR in 1:length(year_vec_gh)){
   
   rm(vdist_temp_gh, permanova_temp_gh, permanova_out_temp_gh, bdisp_temp_gh, bdisp_out_temp_gh)
 }
-write.csv(gh_beta, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/Grasshoper_betadiver.csv")
+
 write.csv(gh_perm, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/Grasshopper_permanova.csv")
 
 
@@ -1406,7 +1413,7 @@ for(YEAR in 1:length(year_vec_gh)){
   
   rm(vdist_temp_gh, permanova_temp_gh, permanova_out_temp_gh, bdisp_temp_gh, bdisp_out_temp_gh)
 }
-
+write.csv(gh_beta_unit, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/Grasshoper_betadiver.csv")
 
 #model for betadiversity
 gh_beta_unit$RecYear<-as.factor(gh_beta_unit$RecYear)
