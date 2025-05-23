@@ -3842,11 +3842,11 @@ num_bootstrap <- 1000
 PBG_plot_master_2023 <- data.frame(iteration = 1:num_bootstrap, beta_diversity = numeric(num_bootstrap))
 
 for (BOOT in 1:num_bootstrap) {
-  Joined_New_Key <- Joined_New_2023 %>%
-    sample_n(16, replace = TRUE) %>%
-    select(plot_index) %>%
-    ungroup()
-  
+  # Joined_New_Key <- Joined_New_2023 %>%
+  #   sample_n(16, replace = TRUE) %>%
+  #   select(plot_index) %>%
+  #   ungroup()
+  # 
   sampled_samples <- sample(unique(Joined_New_2023$Sample), 16, replace = T)
   
   PBG_plot_ready <- Joined_New_2023 %>%
