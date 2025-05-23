@@ -1635,6 +1635,8 @@ NMMDS_ABG_VS_PBG <- grid.arrange(
 ggsave("NMMDS_ABG_VS_PBG.png", NMMDS_ABG_VS_PBG, width = 40, height = 40)
 
 ggsave("2021-2023 NMDS.png", NMMDS_BIG, width = 40, height = 40)
+ggsave("2021-2023 NMDS.emf", NMMDS_BIG, width = 40, height = 40)
+
 
 #### Overall PERMANOVA & NMDS ####
 
@@ -3592,22 +3594,6 @@ legend_2 <- ggplot(average_richness_2021, aes(x = mean_richness, color = "PBG"))
 
 legend <- get_legend(legend_2)
 
-#### 2021-2023 Multi-panel Years Since Burned ####
-# Arrange plots into a multipanel graph
-theme_set(theme_bw())
-
-
-multi_panel_graph <- grid.arrange(
-  richness_boxplot, evenness_boxplot, count_boxplot, Beta_barplot_2021,
-  richness_boxplot_2022, evenness_boxplot_2022, count_boxplot_2022, Beta_barplot_2022,
-  richness_boxplot_2023, evenness_boxplot_2023, count_boxplot_2023, Beta_barplot_2023,
-  nrow = 3, ncol = 4)
-
-
-# Display the multipanel graph
-multi_panel_graph
-
-
 #### Beta Diversity 2021 ####
 set.seed(123)
 
@@ -3615,7 +3601,7 @@ library(vegan)
 library(dplyr)
 
 
-#Caculating Beta Diversity for PBG
+#Calculating Beta Diversity for PBG
 
 Joined_New_2021 <- abundanceWide_2021 %>%
   filter(Treatment == "PBG") %>%
@@ -3626,18 +3612,20 @@ num_bootstrap <- 1000
 PBG_plot_master_2021 <- data.frame(iteration = 1:num_bootstrap, beta_diversity = numeric(num_bootstrap))
 
 for (BOOT in 1:num_bootstrap) {
-  Joined_New_Key <- Joined_New_2021 %>%
-    sample_n(16, replace = TRUE) %>%
-    select(plot_index) %>%
-    ungroup()
+  # Joined_New_Key <- Joined_New_2021 %>%
+  #   sample_n(16, replace = T) %>%
+  #   select(plot_index) %>%
+  #   ungroup()
+  
+  sampled_samples <- sample(unique(Joined_New_2021$Sample), 16, replace = TRUE)
   
   PBG_plot_ready <- Joined_New_2021 %>%
-    right_join(Joined_New_Key, by = "plot_index") %>%
-    mutate(iteration = BOOT)
+    filter(Sample %in% sampled_samples) %>% 
+    ungroup()
   
   data_matrix <- PBG_plot_ready %>%
     select(8:152) # Species column
-  
+
   dissimilarity_matrix <- vegdist(data_matrix, method = "bray")
   
   beta_diversity_value <- mean(dissimilarity_matrix)
@@ -3667,12 +3655,12 @@ ggplot(PBG_plot_master_2021, aes(x = beta_diversity)) +
 Joined_New_2021_A <- abundanceWide_2021 %>%
   filter(Treatment == "ABG")
 
-data_matrix_2 <- Joined_New_2021_A %>%
+data_matrix_2021 <- Joined_New_2021_A %>%
   select(8:151) # Species column
 
-dissimilarity_matrix_2 <- vegdist(data_matrix, method = "bray")
+dissimilarity_matrix_2021 <- vegdist(data_matrix_2021, method = "bray")
 
-beta_diversity_value_2 <- mean(dissimilarity_matrix)
+beta_diversity_value_2021 <- mean(dissimilarity_matrix_2021)
 
 #### Beta Diversity Graph 2021 ####
 
@@ -3680,7 +3668,7 @@ beta_diversity_value_2 <- mean(dissimilarity_matrix)
 # Beta Diversity Density plot
 Beta_2021 <- ggplot(PBG_plot_master_2021, aes(x = beta_diversity)) +
   geom_density(aes(y = ..scaled.., color = "PBG"), alpha = 0.5) +
-  geom_vline(aes(xintercept = beta_diversity_value_2, color = "ABG"), linetype = "dashed", size = 1) +
+  geom_vline(aes(xintercept = beta_diversity_value_2021, color = "ABG"), linetype = "dashed", size = 1) +
   labs(title = "",
        x = "",
        y = "") +
@@ -3706,13 +3694,13 @@ Beta_2021 <- ggplot(PBG_plot_master_2021, aes(x = beta_diversity)) +
 #### Beta Diversity Z-score 2021 ####
 
 #Getting average richness per iteration for bootstrapped dataframe
-PBG_average_beta <- PBG_plot_master_2021 %>%
+PBG_average_beta_2021 <- PBG_plot_master_2021 %>%
   summarize(mean_beta = mean(beta_diversity))
 
 
 # Z-Score for richness 
 
-Z_B <- ((beta_diversity_value_2) - (PBG_average_beta$mean_beta))/(sd(PBG_plot_master_2021$beta_diversity))
+Z_B <- ((beta_diversity_value_2021) - (PBG_average_beta_2021$mean_beta))/(sd(PBG_plot_master_2021$beta_diversity))
 Z_B
 
 
@@ -3722,7 +3710,7 @@ p_value_B <- 1 - pnorm(Z_B)
 
 print(p_value_B)
 
-#Z-score = 0.2103348, p = 0.4167032
+#Z-score = -0.04867314, 0.5194101
 
 
 
@@ -3782,10 +3770,10 @@ ggplot(PBG_plot_master_2022, aes(x = beta_diversity)) +
 Joined_New_2022_A <- abundanceWide_2022 %>%
   filter(Treatment == "ABG")
 
-data_matrix_2 <- Joined_New_2022_A %>%
+data_matrix_2022 <- Joined_New_2022_A %>%
   select(8:121) # Species column
 
-dissimilarity_matrix_2 <- vegdist(data_matrix_2, method = "bray")
+dissimilarity_matrix_2 <- vegdist(data_matrix_2022, method = "bray")
 
 beta_diversity_value_2 <- mean(dissimilarity_matrix_2)
 
@@ -5281,6 +5269,7 @@ ggsave(
   dpi = 300                               # Resolution in dots per inch
 )
 
+
 #### Beta Diversity Years Since Burn 2021 ####
 # Group data by TreatmentSB and calculate beta diversity for each group
 calculate_beta_vegan <- function(data, species_columns, group_column) {
@@ -5515,3 +5504,18 @@ Beta_barplot_2023 <- ggplot(beta_diversity_results, aes(x = TreatmentSB, y = Bet
 
 # Display the bar plot
 Beta_barplot_2023
+
+#### 2021-2023 Multi-panel Years Since Burned ####
+# Arrange plots into a multipanel graph
+theme_set(theme_bw())
+
+
+multi_panel_graph <- grid.arrange(
+  richness_boxplot, evenness_boxplot, count_boxplot, Beta_barplot_2021,
+  richness_boxplot_2022, evenness_boxplot_2022, count_boxplot_2022, Beta_barplot_2022,
+  richness_boxplot_2023, evenness_boxplot_2023, count_boxplot_2023, Beta_barplot_2023,
+  nrow = 3, ncol = 4)
+
+
+# Display the multipanel graph
+multi_panel_graph
