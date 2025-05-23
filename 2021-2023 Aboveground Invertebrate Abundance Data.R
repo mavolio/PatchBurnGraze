@@ -3733,14 +3733,20 @@ num_bootstrap <- 1000
 PBG_plot_master_2022 <- data.frame(iteration = 1:num_bootstrap, beta_diversity = numeric(num_bootstrap))
 
 for (BOOT in 1:num_bootstrap) {
-  Joined_New_Key <- Joined_New_2022 %>%
-    sample_n(16, replace = TRUE) %>%
-    select(plot_index) %>%
-    ungroup()
+  # Joined_New_Key <- Joined_New_2022 %>%
+  #   sample_n(16, replace = TRUE) %>%
+  #   select(plot_index) %>%
+  #   ungroup()
+  
+  sampled_samples <- sample(unique(Joined_New_2022$Sample), 16, replace = T)
   
   PBG_plot_ready <- Joined_New_2022 %>%
-    right_join(Joined_New_Key, by = "plot_index") %>%
-    mutate(iteration = BOOT)
+    filter(Sample %in% sampled_samples) %>% 
+    ungroup()
+  
+  # PBG_plot_ready <- Joined_New_2022 %>%
+  #   right_join(Joined_New_Key, by = "plot_index") %>%
+  #   mutate(iteration = BOOT)
   
   data_matrix <- PBG_plot_ready %>%
     select(8:122) # Species column
@@ -3841,9 +3847,16 @@ for (BOOT in 1:num_bootstrap) {
     select(plot_index) %>%
     ungroup()
   
+  sampled_samples <- sample(unique(Joined_New_2023$Sample), 16, replace = T)
+  
   PBG_plot_ready <- Joined_New_2023 %>%
-    right_join(Joined_New_Key, by = "plot_index") %>%
-    mutate(iteration = BOOT)
+    filter(Sample %in% sampled_samples) %>% 
+    ungroup()  
+  
+  
+  # PBG_plot_ready <- Joined_New_2023 %>%
+  #   right_join(Joined_New_Key, by = "plot_index") %>%
+  #   mutate(iteration = BOOT)
   
   data_matrix <- PBG_plot_ready %>%
     select(8:77) # Species column
