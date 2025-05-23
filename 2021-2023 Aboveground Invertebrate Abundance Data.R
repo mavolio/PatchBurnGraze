@@ -3617,7 +3617,7 @@ for (BOOT in 1:num_bootstrap) {
   #   select(plot_index) %>%
   #   ungroup()
   
-  sampled_samples <- sample(unique(Joined_New_2021$Sample), 16, replace = TRUE)
+  sampled_samples <- sample(unique(Joined_New_2021$Sample), 16, replace = T)
   
   PBG_plot_ready <- Joined_New_2021 %>%
     filter(Sample %in% sampled_samples) %>% 
@@ -3710,7 +3710,7 @@ p_value_B <- 1 - pnorm(Z_B)
 
 print(p_value_B)
 
-#Z-score = -0.04867314, 0.5194101
+#Z-score = 1.590114, 0.05590451
 
 
 
