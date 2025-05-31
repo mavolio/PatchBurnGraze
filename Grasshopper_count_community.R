@@ -1875,11 +1875,11 @@ nmds_sp_scores <- data.frame(nmds_env, scores(mds_all, display="sites"))%>%
          NMDS2_mean=mean(NMDS2))
 
 #plotting centroid through time
-ggplot(nmds_sp_scores, aes(x=NMDS1_mean, y=NMDS2_mean, col=yrsins_fire, shape=Unit))+
-  geom_point(size=8)+
+ggplot(nmds_sp_scores, aes(x=NMDS1_mean, y=NMDS2_mean, fill=yrsins_fire))+
+  geom_point(size=8, shape=21, stroke=1)+
   geom_path()+
   scale_shape_manual(values=c(15:18,0:2,5))+
-  scale_colour_manual(values=c("#F0E442", "#994F00", "#999999", "#0072B2"))+
+  scale_fill_manual(values=c("#F0E442", "#994F00", "#999999", "#0072B2"))+
 facet_wrap(~Unit, scales="free")#8.33 x 4.17
 
 #just checking if any species is an indicator distingushing treatent
