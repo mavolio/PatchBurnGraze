@@ -580,11 +580,11 @@ burn_time_mds_scores <- data.frame(burn_time_env_data, scores(burn_time_mds_all,
          NMDS2_mean=mean(NMDS2))
 
 #plotting centroid through time
-ggplot(burn_time_mds_scores, aes(x=NMDS1_mean, y=NMDS2_mean, col=yrsins_fire, shape=Watershed))+
-  geom_point(size=8)+
+ggplot(burn_time_mds_scores, aes(x=NMDS1_mean, y=NMDS2_mean, fill=yrsins_fire))+
+  geom_point(size=8,shape=21, stroke=1)+#selecting shape 21 allows changes to border color
   geom_path()+
   scale_shape_manual(values=c(15:18,0:2,5))+
-  scale_colour_manual(values=c("#F0E442", "#994F00", "#999999", "#0072B2"))#+
+  scale_fill_manual(values=c("#F0E442", "#994F00", "#999999", "#0072B2"))+
   facet_wrap(~Unit, scales="free")#8.33 x 5.5
 
 #calculating permanova
@@ -991,12 +991,14 @@ sp_comp_abund<-species_comp_abund%>%
   filter(Watershed!="C3SA" | Transect!="D")%>%
   filter(Watershed!="C3SB" | Transect!="A")%>%
   filter(Watershed!="C3SB" | Transect!="B")%>%
+  group_by(Unit,RecYear,FireGrzTrt,sp)%>%
+  mutate(abundance_avg=mean(abundance,na.rm=T))%>%
   group_by(Unit,RecYear,FireGrzTrt,life_form,sp)%>%
-  summarise(abundance_avg=mean(abundance,na.rm=T))%>%
+  summarise(abundance_m=mean(abundance_avg,na.rm=T))%>%
   group_by(Unit,RecYear,FireGrzTrt,life_form)%>%
-  summarise(abundance_m=sum(abundance_avg,na.rm=T))%>%
+  summarise(abundance_y=sum(abundance_m,na.rm=T))%>%
   group_by(Unit,FireGrzTrt,life_form)%>%
-  summarise(abundance=mean(abundance_m,na.rm=T))
+  summarise(abundance=mean(abundance_y, na.rm=T))
 
 #prepare data for figure 
 sp_comp_abund_viz<-sp_comp_abund%>%
@@ -1032,10 +1034,12 @@ sp_comp_abund_model<-species_comp_abund%>%
   filter(Watershed!="C3SA" | Transect!="D")%>%
   filter(Watershed!="C3SB" | Transect!="A")%>%
   filter(Watershed!="C3SB" | Transect!="B")%>%
+  group_by(Unit,RecYear,FireGrzTrt,sp)%>%
+  mutate(abundance_avg=mean(abundance,na.rm=T))%>%
   group_by(Unit,RecYear,FireGrzTrt,sp, life_form)%>%
-  summarise(abundance_avg=mean(abundance,na.rm=T))%>%
+  summarise(abundance=mean(abundance_avg,na.rm=T))%>%
   group_by(Unit,RecYear,FireGrzTrt,life_form)%>%
-  summarise(abundance_m=sum(abundance_avg,na.rm=T))
+  summarise(abundance_m=sum(abundance,na.rm=T))
 
 P_gramm<-sp_comp_abund_model%>%
   filter(life_form=="p_g")
