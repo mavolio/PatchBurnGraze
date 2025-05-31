@@ -585,7 +585,7 @@ ggplot(burn_time_mds_scores, aes(x=NMDS1_mean, y=NMDS2_mean, fill=yrsins_fire))+
   geom_path()+
   scale_shape_manual(values=c(15:18,0:2,5))+
   scale_fill_manual(values=c("#F0E442", "#994F00", "#999999", "#0072B2"))+
-  facet_wrap(~Unit, scales="free")#8.33 x 5.5
+  facet_wrap(~Unit, scales="free")#8.33 x 4.17
 
 #calculating permanova
 #creating a loop to do this
