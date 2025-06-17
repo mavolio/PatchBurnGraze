@@ -1794,13 +1794,15 @@ Weight_2021 <- Weight_2_combined %>%
 
 Joined_New_2021 <- Joined2021 %>%
   filter(Treatment == "PBG") %>%
-  group_by(block) %>%
+ group_by(block) %>%
   mutate(plot_index=1:length(block)) %>% 
-  filter(Plot %in% c("2", "4"))
+  filter(Plot %in% c("2", "4")) #%>% 
+ ungroup()
 
 total_counts_2021 <- total_counts_2021 %>% filter(Treatment == "PBG") %>% group_by(block) %>% 
   mutate(plot_index=1:length(block)) %>%  filter() %>%  
-  filter(Plot %in% c("2", "4"))
+  filter(Plot %in% c("2", "4")) %>% 
+  ungroup()
 
 Combined_Data_2021 <- left_join(Joined_New_2021, total_counts_2021, by = c("WS", "Trans", "Plot", "block", "plot_index")) %>% 
   select(-TreatmentSB) %>%
@@ -1812,7 +1814,8 @@ Combined_Data_2021 <- left_join(Weight_2021, Combined_Data_2021, by = c("WS", "T
 
 #Drop big outliers 
 Combined_Data_2021 <- Combined_Data_2021 %>%
-  filter(combined_weight <= 190)
+  filter(combined_weight <= 190) %>% 
+  mutate(Sample = paste(WS, Trans, Plot, sep = "_"))
 
 
 num_bootstrap <- 1000
@@ -1820,13 +1823,14 @@ bootstrap_vector <- 1:num_bootstrap
 PBG_plot_master_2021 <- data.frame()  # Initialize an empty dataframe
 
 for (BOOT in bootstrap_vector) {
-  Joined_New_Key_2021 <- Combined_Data_2021 %>%
-    dplyr::select(1:10) %>%
-    unique() %>%
-    group_by(block) %>%
-    sample_n(16, replace = TRUE) %>%
-    dplyr::select(plot_index) %>%
-    ungroup()
+     Joined_New_Key_2021 <- Combined_Data_2021 %>%
+     dplyr::select(1:10) %>%
+     unique() %>%
+     group_by(block) %>%
+     sample_n(8, replace = TRUE) %>%
+     dplyr::select(plot_index) %>%
+     ungroup()
+  
   
   # Join the sampled rows back to the original dataframe
   PBG_plot_ready_2021 <- Combined_Data_2021 %>%
@@ -1881,7 +1885,7 @@ for (BOOT in bootstrap_vector) {
     dplyr::select(1:10) %>%
     unique() %>%
     group_by(block) %>%
-    sample_n(16, replace = TRUE) %>%
+    sample_n(8, replace = TRUE) %>%
     dplyr::select(plot_index) %>%
     ungroup()
   
@@ -1935,7 +1939,7 @@ for (BOOT in bootstrap_vector) {
     dplyr::select(1:10) %>%
     unique() %>%
     group_by(block) %>%
-    sample_n(16, replace = TRUE) %>%
+    sample_n(8, replace = TRUE) %>%
     dplyr::select(plot_index) %>%
     ungroup()
   
@@ -2047,8 +2051,8 @@ p_value_R_2021 <- 2*pnorm(-abs(Z_R_2021))
 
 print(p_value_R_2021)
 
-#1.235378
-#P = 0.2166899
+#0.8696457
+#P = 0.3844941
 
 # Z-Score for evenness 
 Z_E_2021 <- ((mean_evenness_ABG_2021) - (PBG_mean_mean_evenness_2021))/(sd(average_evenness_2021$mean_evenness))
@@ -2057,8 +2061,8 @@ Z_E_2021
 p_value_E_2021 <- 2*pnorm(-abs(Z_E_2021))
 
 print(p_value_E_2021)
-#--0.1450691
-#P = 0.8846563
+# -0.1386678
+#P = 0.8897126
 
 # Z-Score for total count 
 Z_C_2021 <- ((ABG_mean_total_count_2021) - (PBG_mean_mean_total_count_2021))/(sd(average_total_count_2021$mean_count))
@@ -2067,8 +2071,8 @@ Z_C_2021
 p_value_C_2021 <- 2*pnorm(-abs(Z_C_2021))
 
 print(p_value_C_2021)
-#Z-Score: 1.145737
-#P = 0.2519041
+#Z-Score: 1.045274
+#P = 0.2958963
 
 # Z-Score for Weight
 
@@ -2079,8 +2083,8 @@ p_value_W_2021 <- 2*pnorm(-abs(Z_W_2021))
 
 print(p_value_W_2021)
 
-#Z-score = -0.8275585
-# P = 0.4079206
+#Z-score = -0.6202004
+# P = 0.5351259
 
 #### 2022 Z-Score Calculations ####
 
@@ -2170,24 +2174,24 @@ Z_R_2022 <- ((mean_richness_ABG_2022) - (PBG_mean_mean_richness_2022))/(sd(avera
 Z_R_2022
 p_value_R_2022 <- 2*pnorm(-abs(Z_R_2022))
 print(p_value_R_2022)
-#2.028526
-#P = 0.04250654
+#1.505147
+#P = 0.1322863
 
 # Z-Score for evenness 
 Z_E_2022 <- ((mean_evenness_ABG_2022) - (PBG_mean_mean_evenness_2022))/(sd(average_evenness_2022$mean_evenness))
 Z_E_2022
 p_value_E_2022 <- 2*pnorm(-abs(Z_E_2022))
 print(p_value_E_2022)
-#-0.9478015
-#P = 0.3432305
+# -0.6520824
+#P = 0.514348
 
 # Z-Score for total count 
 Z_C_2022 <- ((ABG_mean_total_count_2022) - (PBG_mean_mean_total_count_2022))/(sd(average_total_count_2022$mean_count))
 Z_C_2022
 p_value_C_2022 <- 2*pnorm(-abs(Z_C_2022))
 print(p_value_C_2022)
-#Z-Score: 1.514056
-#P = 0.1300116
+#Z-Score: 1.060754
+#P = 0.2888019
 
 #Z-score for Weight
 Z_W_2022 <- ((mean_weight_ABG_2022) - (PBG_mean_mean_total_weight_2022))/(sd(average_total_weight_2022$mean_weight))
@@ -2286,24 +2290,24 @@ Z_R_2023 <- ((mean_richness_ABG_2023) - (PBG_mean_mean_richness_2023))/(sd(avera
 Z_R_2023
 p_value_R_2023 <- 2*pnorm(-abs(Z_R_2023))
 print(p_value_R_2023)
-#-0.4446148
-#P =  0.6565981
+# -0.3112356
+#P =  0.7556215
 
 # Z-Score for evenness 
 Z_E_2023 <- ((mean_evenness_ABG_2023) - (PBG_mean_mean_evenness_2023))/(sd(average_evenness_2023$mean_evenness))
 Z_E_2023
 p_value_E_2023 <- 2*pnorm(-abs(Z_E_2023))
 print(p_value_E_2023)
-#-3.400096
-#P =0.000673623
+#-2.408272
+#P = 0.01602824
 
 # Z-Score for total count 
 Z_C_2023 <- ((ABG_mean_total_count_2023) - (PBG_mean_mean_total_count_2023))/(sd(average_total_count_2023$mean_count))
 Z_C_2023
 p_value_C_2023 <- 2*pnorm(-abs(Z_C_2023))
 print(p_value_C_2023)
-#Z-Score: 0.1427381
-#P = 0.8864971
+#Z-Score: 0.06626327
+#P = 0.9471682
 
 #Z-score for Weight
 Z_W_2023<- ((mean_weight_ABG_2023) - (PBG_mean_mean_total_weight_2023))/(sd(average_total_weight_2023$mean_weight))
@@ -3617,7 +3621,7 @@ for (BOOT in 1:num_bootstrap) {
   #   select(plot_index) %>%
   #   ungroup()
   
-  sampled_samples <- sample(unique(Joined_New_2021$Sample), 16, replace = T)
+  sampled_samples <- sample(unique(Joined_New_2021$Sample), 16, replace = F)
   
   PBG_plot_ready <- Joined_New_2021 %>%
     filter(Sample %in% sampled_samples) %>% 
@@ -3738,7 +3742,7 @@ for (BOOT in 1:num_bootstrap) {
   #   select(plot_index) %>%
   #   ungroup()
   
-  sampled_samples <- sample(unique(Joined_New_2022$Sample), 16, replace = T)
+  sampled_samples <- sample(unique(Joined_New_2022$Sample), 16, replace = F)
   
   PBG_plot_ready <- Joined_New_2022 %>%
     filter(Sample %in% sampled_samples) %>% 
@@ -3779,16 +3783,16 @@ Joined_New_2022_A <- abundanceWide_2022 %>%
 data_matrix_2022 <- Joined_New_2022_A %>%
   select(8:121) # Species column
 
-dissimilarity_matrix_2 <- vegdist(data_matrix_2022, method = "bray")
+dissimilarity_matrix_2022 <- vegdist(data_matrix_2022, method = "bray")
 
-beta_diversity_value_2 <- mean(dissimilarity_matrix_2)
+beta_diversity_value_2022 <- mean(dissimilarity_matrix_2022)
 
 #### Beta Diversity Graph 2022 ####
 
 # Beta Diversity Density plot
 Beta_2022 <- ggplot(PBG_plot_master_2022, aes(x = beta_diversity)) +
   geom_density(aes(y = ..scaled.., color = "PBG"), alpha = 0.5) +
-  geom_vline(aes(xintercept = beta_diversity_value_2, color = "ABG"), linetype = "dashed", size = 1) +
+  geom_vline(aes(xintercept = beta_diversity_value_2022, color = "ABG"), linetype = "dashed", size = 1) +
   labs(title = "",
        x = "",
        y = "") +
@@ -3823,7 +3827,7 @@ p_value_B <- 1 - pnorm(Z_B, lower.tail =  F)
 
 print(p_value_B)
 
-# Z-score = -0.01087649, p = 0.495661
+# Z-score =  -0.2603218, p = 0.3973078
 
 #### Beta Diversity 2023 ####
 set.seed(123)
@@ -3847,7 +3851,7 @@ for (BOOT in 1:num_bootstrap) {
   #   select(plot_index) %>%
   #   ungroup()
   # 
-  sampled_samples <- sample(unique(Joined_New_2023$Sample), 16, replace = T)
+  sampled_samples <- sample(unique(Joined_New_2023$Sample), 16, replace = F)
   
   PBG_plot_ready <- Joined_New_2023 %>%
     filter(Sample %in% sampled_samples) %>% 
@@ -3891,14 +3895,14 @@ data_matrix_2 <- Joined_New_2023_A %>%
 
 dissimilarity_matrix_2 <- vegdist(data_matrix_2, method = "bray")
 
-beta_diversity_value_2 <- mean(dissimilarity_matrix_2)
+beta_diversity_value_2023 <- mean(dissimilarity_matrix_2)
 
 #### Beta Diversity Graph 2023 ####
 
 # Beta Diversity Density plot
 Beta_2023 <- ggplot(PBG_plot_master_2023, aes(x = beta_diversity)) +
   geom_density(aes(y = ..scaled.., color = "PBG"), alpha = 0.5) +
-  geom_vline(aes(xintercept = beta_diversity_value_2, color = "ABG"), linetype = "dashed", size = 1) +
+  geom_vline(aes(xintercept = beta_diversity_value_2023, color = "ABG"), linetype = "dashed", size = 1) +
   labs(title = "",
        x = "",
        y = "") +
@@ -3933,7 +3937,7 @@ p_value_B <- 1 - pnorm(Z_B)
 
 print(p_value_B)
 
-# Z-score = 2.477193, p = 0.006621016
+# Z-score = 2.477193, p = 0.12904
  
 
 #### Functional Traits Unique Species Pull ####
@@ -5273,7 +5277,7 @@ multi_panel_graph <- grid.arrange(Beta_2021, Beta_2022, Beta_2023,
 )
 
 ggsave(
-  filename = "multi_panel_graph.png",     # File name
+  filename = "multi_panel_graph.emf",     # File name
   plot = multi_panel_graph,               # The arranged grid
   device = "png",                         # File type
   width = 8,                              # Width of the image in inches
