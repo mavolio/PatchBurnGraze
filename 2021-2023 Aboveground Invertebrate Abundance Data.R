@@ -539,7 +539,7 @@ permutest(dispersion, pairwise=TRUE, permutations=999)
 BC_Data <- metaMDS(abundanceWide[,8:89])
 sites <- 1:nrow(abundanceWide)
 BC_Meta_Data <- abundanceWide[,1:7]
-plot(BC_Data$points, col=as.factor(BC_Meta_Data$Treatment))
+plot(BC_Data$points, col=as.factor(BC_Meta_Dat a$Treatment))
 ordiellipse(BC_Data, groups = as.factor(BC_Meta_Data$Treatment), kind = "sd", display = "sites", label = T)
 
 #Generate ellipses
@@ -1801,8 +1801,7 @@ Joined_New_2021 <- Joined2021 %>%
 
 total_counts_2021 <- total_counts_2021 %>% filter(Treatment == "PBG") %>% group_by(block) %>% 
   mutate(plot_index=1:length(block)) %>%  filter() %>%  
-  filter(Plot %in% c("2", "4")) %>% 
-  ungroup()
+  filter(Plot %in% c("2", "4")) 
 
 Combined_Data_2021 <- left_join(Joined_New_2021, total_counts_2021, by = c("WS", "Trans", "Plot", "block", "plot_index")) %>% 
   select(-TreatmentSB) %>%
@@ -3784,11 +3783,32 @@ for (BOOT in 1:num_bootstrap) {
     select(8:122) # Species column
   
   dissimilarity_matrix <- vegdist(data_matrix, method = "bray")
+
+  #old code
   
-  beta_diversity_value <- mean(dissimilarity_matrix)
+  # beta_diversity_value <- mean(dissimilarity_matrix)
+  # 
+  # PBG_plot_master_2022$beta_diversity[BOOT] <- beta_diversity_value
+  
+  #Calculate Bray-Curtis dissimilarity
+  dissimilarity_matrix <- vegdist(data_matrix, method = "bray")
+  
+  #Create a dummy group vector (all "PBG")
+  group_vector <- rep("PBG", nrow(data_matrix))
+  
+  #Calculate beta disperion
+  beta <- betadisper(dissimilarity_matrix, group = group_vector)
+  
+  
+  #Extract mean
+  beta_diversity_value <- mean(beta$distances)
+  
+  
+  beta <- betadisper(dissimilarity_matrix, group = group_vector)
   
   PBG_plot_master_2022$beta_diversity[BOOT] <- beta_diversity_value
 }
+
 
 # Add Treatment column
 PBG_plot_master_2022$Treatment <- 'PBG'
@@ -3805,15 +3825,37 @@ ggplot(PBG_plot_master_2022, aes(x = beta_diversity)) +
 
 # Calculating ABG beta diversity
 
+# Joined_New_2022_A <- abundanceWide_2022 %>%
+#   filter(Treatment == "ABG")
+# 
+# data_matrix_2022 <- Joined_New_2022_A %>%
+#   select(8:121) # Species column
+# 
+# dissimilarity_matrix_2022 <- vegdist(data_matrix_2022, method = "bray")
+# 
+# beta_diversity_value_2022 <- mean(dissimilarity_matrix_2022)
+
+# Calculating ABG beta diversity for 2022
+
+# Step 1: Filter ABG plots from 2022
 Joined_New_2022_A <- abundanceWide_2022 %>%
   filter(Treatment == "ABG")
 
+# Step 2: Extract species abundance data (samples × taxa)
 data_matrix_2022 <- Joined_New_2022_A %>%
-  select(8:121) # Species column
+  select(8:121)  # Adjust if species columns differ in position
 
+# Step 3: Compute Bray-Curtis dissimilarity matrix
 dissimilarity_matrix_2022 <- vegdist(data_matrix_2022, method = "bray")
 
-beta_diversity_value_2022 <- mean(dissimilarity_matrix_2022)
+# Step 4: Create group vector (all ABG)
+group_vector_2022 <- rep("ABG", nrow(data_matrix_2022))
+
+# Step 5: Run betadisper
+beta_disp_2022 <- betadisper(dissimilarity_matrix_2022, group = group_vector_2022)
+
+# Step 6: Get mean distance to centroid (beta dispersion value)
+beta_diversity_value_2022 <- mean(beta_disp_2022$distances)
 
 #### Beta Diversity Graph 2022 ####
 
@@ -3892,10 +3934,30 @@ for (BOOT in 1:num_bootstrap) {
   
   data_matrix <- PBG_plot_ready %>%
     select(8:77) # Species column
+  # old code
   
+  # dissimilarity_matrix <- vegdist(data_matrix, method = "bray")
+  # 
+  # beta_diversity_value <- mean(dissimilarity_matrix)
+  # 
+  # PBG_plot_master_2023$beta_diversity[BOOT] <- beta_diversity_value
+  # 
+
+  #Calculate Bray-Curtis dissimilarity
   dissimilarity_matrix <- vegdist(data_matrix, method = "bray")
   
-  beta_diversity_value <- mean(dissimilarity_matrix)
+  #Create a dummy group vector (all "PBG")
+  group_vector <- rep("PBG", nrow(data_matrix))
+  
+  #Calculate beta disperion
+  beta <- betadisper(dissimilarity_matrix, group = group_vector)
+  
+  
+  #Extract mean
+  beta_diversity_value <- mean(beta$distances)
+  
+  
+  beta <- betadisper(dissimilarity_matrix, group = group_vector)
   
   PBG_plot_master_2023$beta_diversity[BOOT] <- beta_diversity_value
 }
@@ -3921,9 +3983,32 @@ Joined_New_2023_A <- abundanceWide_2023 %>%
 data_matrix_2 <- Joined_New_2023_A %>%
   select(8:76) # Species column
 
-dissimilarity_matrix_2 <- vegdist(data_matrix_2, method = "bray")
+# dissimilarity_matrix_2 <- vegdist(data_matrix_2, method = "bray")
+# 
+# beta_diversity_value_2023 <- mean(dissimilarity_matrix_2)
 
-beta_diversity_value_2023 <- mean(dissimilarity_matrix_2)
+# Calculating ABG beta diversity for 2023
+
+# Step 1: Filter ABG plots from 2023
+Joined_New_2023_A <- abundanceWide_2023 %>%
+  filter(Treatment == "ABG")
+
+# Step 2: Extract species abundance data (samples × taxa)
+data_matrix_2023 <- Joined_New_2023_A %>%
+  select(8:76)  # Adjust if species columns differ in position
+
+# Step 3: Compute Bray-Curtis dissimilarity matrix
+dissimilarity_matrix_2023 <- vegdist(data_matrix_2023, method = "bray")
+
+# Step 4: Create group vector (all ABG)
+group_vector_2023 <- rep("ABG", nrow(data_matrix_2023))
+
+# Step 5: Run betadisper
+beta_disp_2023 <- betadisper(dissimilarity_matrix_2023, group = group_vector_2023)
+
+# Step 6: Get mean distance to centroid (beta dispersion value)
+beta_diversity_value_2023 <- mean(beta_disp_2023$distances)
+
 
 #### Beta Diversity Graph 2023 ####
 
