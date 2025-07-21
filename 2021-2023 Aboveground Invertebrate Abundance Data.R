@@ -539,7 +539,7 @@ permutest(dispersion, pairwise=TRUE, permutations=999)
 BC_Data <- metaMDS(abundanceWide[,8:89])
 sites <- 1:nrow(abundanceWide)
 BC_Meta_Data <- abundanceWide[,1:7]
-plot(BC_Data$points, col=as.factor(BC_Meta_Dat a$Treatment))
+plot(BC_Data$points, col=as.factor(BC_Meta_Data$Treatment))
 ordiellipse(BC_Data, groups = as.factor(BC_Meta_Data$Treatment), kind = "sd", display = "sites", label = T)
 
 #Generate ellipses
@@ -1606,9 +1606,35 @@ permutest(dispersion, pairwise=TRUE, permutations=999)
 
 #F=12.871       , df=1,30, p=0.001 
 #### Multipanel NMDS ####
+library(cowplot)
+
+# Set legend on top for the top row
+# ABG_VS_PBG_NMDS_2021 <- ABG_VS_PBG_NMDS_2021 + theme(
+#   legend.position = "top",
+#   legend.key.size = unit(10, "lines"),     # smaller key boxes
+#   legend.text = element_text(size = 60),     # smaller text
+#   legend.title = element_blank(),           # optional: remove title
+# #  legend.spacing.x = unit(0.3, "cm")        # tighter spacing
+# )
+# 
+# Years_Since_Burned_NMDS_2021 <- Years_Since_Burned_NMDS_2021  + theme(
+#   legend.position = "top",
+#   legend.key.size = unit(10, "lines"),     # smaller key boxes
+#   legend.text = element_text(size = 60),     # smaller text
+#   legend.title = element_blank(),           # optional: remove title
+# #  legend.spacing.x = unit(0.3, "cm")        # tighter spacing
+# )
 
 
+# Remove legends from all other plots
+ABG_VS_PBG_NMDS_2021 <- ABG_VS_PBG_NMDS_2021 + theme(legend.position = "none")
+Years_Since_Burned_NMDS_2021 <- Years_Since_Burned_NMDS_2021 + theme(legend.position = "none")
+ABG_VS_PBG_NMDS_2022 <- ABG_VS_PBG_NMDS_2022 + theme(legend.position = "none")
+Years_Since_Burned_NMDS_2022 <- Years_Since_Burned_NMDS_2022 + theme(legend.position = "none")
+ABG_VS_PBG_NMDS_2023 <- ABG_VS_PBG_NMDS_2023 + theme(legend.position = "none")
+Years_Since_Burned_NMDS_2023 <- Years_Since_Burned_NMDS_2023 + theme(legend.position = "none")
 
+# Combine all plots
 NMMDS_BIG <- plot_grid(
   ABG_VS_PBG_NMDS_2021, Years_Since_Burned_NMDS_2021,
   ABG_VS_PBG_NMDS_2022, Years_Since_Burned_NMDS_2022,
@@ -1616,13 +1642,21 @@ NMMDS_BIG <- plot_grid(
   ncol = 2
 )
 
-
-# NMMDS_BIG <- grid.arrange(
+# NMMDS_BIG <- plot_grid(
 #   ABG_VS_PBG_NMDS_2021, Years_Since_Burned_NMDS_2021,
 #   ABG_VS_PBG_NMDS_2022, Years_Since_Burned_NMDS_2022,
 #   ABG_VS_PBG_NMDS_2023, Years_Since_Burned_NMDS_2023,
 #   ncol = 2
 # )
+
+
+
+ NMMDS_BIG <- grid.arrange(
+ ABG_VS_PBG_NMDS_2021, Years_Since_Burned_NMDS_2021,
+ ABG_VS_PBG_NMDS_2022, Years_Since_Burned_NMDS_2022,
+ ABG_VS_PBG_NMDS_2023, Years_Since_Burned_NMDS_2023,
+   ncol = 2
+ )
 
 
 NMMDS_ABG_VS_PBG <- grid.arrange(
@@ -3724,12 +3758,12 @@ Beta_2021 <- ggplot(PBG_plot_master_2021, aes(x = beta_diversity)) +
 
 #### Beta Diversity Z-score 2021 ####
 
-#Getting average richness per iteration for bootstrapped dataframe
+#Getting average beta diversity per iteration for bootstrapped dataframe
 PBG_average_beta_2021 <- PBG_plot_master_2021 %>%
   summarize(mean_beta = mean(beta_diversity))
 
 
-# Z-Score for richness 
+# Z-Score for beta-diversity 
 
 Z_B <- ((beta_diversity_value_2021) - (PBG_average_beta_2021$mean_beta))/(sd(PBG_plot_master_2021$beta_diversity))
 Z_B
@@ -3888,7 +3922,7 @@ PBG_average_beta <- PBG_plot_master_2022 %>%
 
 # Z-Score for richness 
 
-Z_B <- ((beta_diversity_value_2) - (PBG_average_beta$mean_beta))/(sd(PBG_plot_master_2022$beta_diversity))
+Z_B <- ((beta_diversity_value_2022) - (PBG_average_beta$mean_beta))/(sd(PBG_plot_master_2022$beta_diversity))
 Z_B
 
 p_value_B <- 1 - pnorm(Z_B, lower.tail =  F)
@@ -4041,7 +4075,7 @@ PBG_average_beta <- PBG_plot_master_2023 %>%
 
 # Z-Score for richness 
 
-Z_B <- ((beta_diversity_value_2) - (PBG_average_beta$mean_beta))/(sd(PBG_plot_master_2023$beta_diversity))
+Z_B <- ((beta_diversity_value_2023) - (PBG_average_beta$mean_beta))/(sd(PBG_plot_master_2023$beta_diversity))
 Z_B
 
 p_value_B <- 1 - pnorm(Z_B)
