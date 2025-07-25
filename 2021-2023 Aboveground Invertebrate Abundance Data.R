@@ -1830,8 +1830,7 @@ Joined_New_2021 <- Joined2021 %>%
   filter(Treatment == "PBG") %>%
  group_by(block) %>%
   mutate(plot_index=1:length(block)) %>% 
-  filter(Plot %in% c("2", "4")) #%>% 
- ungroup()
+  filter(Plot %in% c("2", "4")) 
 
 total_counts_2021 <- total_counts_2021 %>% filter(Treatment == "PBG") %>% group_by(block) %>% 
   mutate(plot_index=1:length(block)) %>%  filter() %>%  
@@ -4274,7 +4273,7 @@ Plot_master_2023 <- data.frame()  # Initialize an empty dataframe
 for (BOOT in bootstrap_vector) {
   # Sample unique plot_index values within each block for 2023
   New_Key_2023 <- sample_compact_2023 %>%
-    dplyr::select(1:12) %>%
+    dplyr::select(1:11) %>%
     unique() %>%
     group_by(block) %>%
     sample_n(16, replace = TRUE) %>%
@@ -5683,3 +5682,55 @@ multi_panel_graph <- grid.arrange(
 
 # Display the multipanel graph
 multi_panel_graph
+
+#### Updated Means Graph with Beta Diversity ####
+library(ggplot2)
+library(cowplot)
+
+# Define theme without legend
+my_theme <- theme_minimal(base_size = 12) +
+  theme(
+    axis.title = element_blank(),
+    axis.text = element_text(size = 15),
+    plot.margin = margin(5, 5, 5, 5),
+    legend.position = "none"
+  )
+
+# Rebuild richness_2021 with legend embedded in plot
+richness_2021_legend <- richness_2021 +
+  theme_minimal(base_size = 12) +
+  theme(
+    axis.title = element_blank(),
+    axis.text = element_text(size = 15),
+    plot.margin = margin(5, 5, 5, 5),
+    legend.position = c(0.05, 0.95),   # top-left inside plot
+    legend.justification = c("left", "top"),
+    legend.direction = "vertical",
+    legend.background = element_rect(fill = "white", color = NA),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 10)
+  )
+
+# Apply theme to all others
+plots_list <- list(
+  richness_2021_legend, evenness_2021, count_2021, Beta_2021,
+  richness_2022, evenness_2022, count_2022, Beta_2022,
+  richness_2023, evenness_2023, count_2023, Beta_2023
+)
+
+# Apply theme to all but richness_2021_legend
+plots_list[-1] <- lapply(plots_list[-1], function(p) p + my_theme)
+
+# Combine all into a grid
+final_plot <- plot_grid(
+  plotlist = plots_list,
+  ncol = 4,
+  align = "hv"
+)
+
+# Show it
+print(final_plot)
+
+ggsave("final_plot.emf", plot = final_plot, device = "emf", width = 18, height = 8, units = "in")
+
+ggsave("final_plot.png", plot = final_plot, device = "png", width = 18, height = 8, units = "in")
