@@ -288,3 +288,79 @@ YearSinceBurned <- ggplot(data=Invertebrate_Herbivory_2023, aes(x=TreatmentSB, y
 
 # Display graphs side by side
 grid.arrange(ABGvsPBG, YearSinceBurned, nrow = 1)
+
+#### New Graph for Manuscript ####
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+
+# Recalculate binary Damage
+Invertebrate_Herbivory_2023 <- Invertebrate_Herbivory_2023 %>%
+  mutate(Damage = ifelse(Herbivory > 0.1, 1, 0),
+         TreatmentSB_clean = gsub("_", " ", TreatmentSB))  # Replace underscores
+
+## ---- PANEL A (only legend, inset top-left, no box) ----
+panel_A <- Invertebrate_Herbivory_2023 %>%
+  group_by(Treatment, Sample) %>%
+  summarise(Prop_Damage = mean(Damage), .groups = "drop") %>%
+  ggplot(aes(x = Treatment, y = Prop_Damage, fill = Treatment)) +
+  geom_boxplot(width = 0.2, outlier.shape = NA) +
+  geom_jitter(width = 0.2, alpha = 0.4) +
+  scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red")) +
+  annotate("text", x = Inf, y = Inf, label = "A", hjust = 1.3, vjust = 1.5, size = 6) +
+  labs(x = "", y = "Proportion with Damage", fill = "Treatment") +
+  theme_minimal() +
+  theme(
+    legend.position = c(0.05, 0.95),
+    legend.justification = c(0, 1),
+    legend.background = element_blank(),
+    legend.box.background = element_blank(),
+    legend.key = element_blank(),
+    axis.text = element_text(size = 12),
+    title = element_text(size = 14)
+  )
+
+## ---- PANEL B (no legend, cleaned x-axis) ----
+panel_B <- Invertebrate_Herbivory_2023 %>%
+  group_by(TreatmentSB_clean, Sample) %>%
+  summarise(Prop_Damage = mean(Damage), .groups = "drop") %>%
+  ggplot(aes(x = TreatmentSB_clean, y = Prop_Damage, fill = TreatmentSB_clean)) +
+  geom_boxplot(width = 0.2, outlier.shape = NA) +
+  geom_jitter(width = 0.2, alpha = 0.4) +
+  scale_fill_manual(values = c("ABG 0"="blue", "PBG 0"="red", "PBG 1"="red", "PBG 2"="red")) +
+  annotate("text", x = Inf, y = Inf, label = "B", hjust = 1.3, vjust = 1.5, size = 6) +
+  labs(x = "", y = "Proportion with Damage") +
+  theme_minimal() +
+  theme(legend.position = "none",
+        axis.text = element_text(size = 12),
+        title = element_text(size = 14))
+
+## ---- PANEL C (no legend) ----
+panel_C <- ggplot(filter(Invertebrate_Herbivory_2023, Damage == 1),
+                  aes(x = Treatment, y = Herbivory, fill = Treatment)) +
+  geom_boxplot(width = 0.2, outlier.shape = NA) +
+  geom_jitter(width = 0.2, alpha = 0.4) +
+  scale_fill_manual(values = c("ABG" = "blue", "PBG" = "red")) +
+  annotate("text", x = Inf, y = Inf, label = "C", hjust = 1.3, vjust = 1.5, size = 6) +
+  labs(x = "", y = "Leaf Damage (%)") +
+  theme_minimal() +
+  theme(legend.position = "none",
+        axis.text = element_text(size = 12),
+        title = element_text(size = 14))
+
+## ---- PANEL D (no legend, cleaned x-axis) ----
+panel_D <- ggplot(filter(Invertebrate_Herbivory_2023, Damage == 1),
+                  aes(x = TreatmentSB_clean, y = Herbivory, fill = TreatmentSB_clean)) +
+  geom_boxplot(width = 0.2, outlier.shape = NA) +
+  geom_jitter(width = 0.2, alpha = 0.4) +
+  scale_fill_manual(values = c("ABG 0"="blue", "PBG 0"="red", "PBG 1"="red", "PBG 2"="red")) +
+  annotate("text", x = Inf, y = Inf, label = "D", hjust = 1.3, vjust = 1.5, size = 6) +
+  labs(x = "", y = "Leaf Damage (%)") +
+  theme_minimal() +
+  theme(legend.position = "none",
+        axis.text = element_text(size = 12),
+        title = element_text(size = 14))
+
+## ---- Combine & Save ----
+combined_figure <- grid.arrange(panel_A, panel_B, panel_C, panel_D, nrow = 2)
+ggsave("Figure_Herbivory_Panels.png", plot = combined_figure, width = 10, height = 8, dpi = 300)

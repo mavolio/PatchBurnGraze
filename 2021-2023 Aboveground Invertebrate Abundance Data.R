@@ -5683,6 +5683,9 @@ multi_panel_graph <- grid.arrange(
 # Display the multipanel graph
 multi_panel_graph
 
+ggsave("multi_panel_graph.png", plot = multi_panel_graph, width = 16, height = 12, dpi = 300)
+
+
 #### Updated Means Graph with Beta Diversity ####
 library(ggplot2)
 library(cowplot)
