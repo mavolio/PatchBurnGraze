@@ -1,6 +1,6 @@
 #BPBG grasshopper count and community metrics
 #Authors: Joshua Ajowele
-#Started: 26 May 2022 last modified: April 2025
+#Started: 26 May 2022 last modified: Oct 22 2025
 #load library
 library(tidyverse)
 library(vegan)
@@ -32,7 +32,7 @@ theme_update(axis.title.x=element_text(size=20, vjust=-0.35), axis.text.x=elemen
              panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
              legend.title=element_text(size=20), legend.text=element_text(size=20))
 ### Read in raw data
-grasshopperspcomp_df_raw <- read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/Grasshopper_comp_PBG_2010-2021_type3.csv")
+grasshopperspcomp_df_raw <- read.csv("C:/Users/Joshua/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/Grasshopper_comp_PBG_2010-2021_type3.csv")
 #turn all first letter of the genus to uppercase
 grasshopperspcomp_df_raw$Genus<-str_to_title(grasshopperspcomp_df_raw$Genus)
 
@@ -1037,15 +1037,9 @@ qqnorm(resid(yrs_ghcount_model))
 testInteractions(yrs_ghcount_model, pairwise="yrsins_fire", fixed="RecYear",
                  adjustment="BH")
 yrs_interact<-interactionMeans(yrs_ghcount_model)
-#refit model to test fixed effect differences
-#yrs_ghcount_model<-lmer(log(Tcount)~yrsins_fire+RecYear+(1|Unit/Watershed),
-                       # data=ghcount_yrs)
-#test fixed effect differences
-#testInteractions(yrs_ghcount_model, pairwise="yrsins_fire",
-                 #adjustment="BH")
-#comparison for fixed effect
-testInteractions(yrs_ghcount_model, pairwise = "yrsins_fire", slope="RecYear")
-
+#test for fixed effects diff after accounting for year
+testInteractions(yrs_ghcount_model, pairwise="yrsins_fire",
+                 adjustment="BH")
 #replacing spaces in column names with underscore 
 names(yrs_interact)<-str_replace_all(names(yrs_interact), " ","_")
 #df for visuals from model estimates
@@ -1062,18 +1056,34 @@ ggplot(yrs_interact_viz,aes(RecYear, yrs_interact_bt_mean, col=yrsins_fire))+
   scale_colour_manual(values=c( "#F0E442", "#994F00", "#999999", "#0072B2"))
 
 #average across years for simplification
-yrs_interact_bar<-yrs_interact_viz%>%
-  group_by(yrsins_fire)%>%
-  summarise(Grasshopper_count=mean(yrs_interact_bt_mean),
-            se_upper=mean(yrs_interact_bt_upper),
-            se_lower=mean(yrs_interact_bt_lower))
-ggplot(yrs_interact_bar,aes(x=yrsins_fire,fill=yrsins_fire))+
-  geom_bar(stat = "identity",aes(y=Grasshopper_count),width = 0.5)+
-  geom_errorbar(aes(ymin=se_lower,
-                    ymax=se_upper),width=0.2,linetype=1)+
+# yrs_interact_bar<-yrs_interact_viz%>%
+#   group_by(yrsins_fire)%>%
+#   summarise(Grasshopper_count=mean(yrs_interact_bt_mean),
+#             se_upper=mean(yrs_interact_bt_upper),
+#             se_lower=mean(yrs_interact_bt_lower))
+# ggplot(yrs_interact_bar,aes(x=yrsins_fire,fill=yrsins_fire))+
+#   geom_bar(stat = "identity",aes(y=Grasshopper_count),width = 0.5)+
+#   geom_errorbar(aes(ymin=se_lower,
+#                     ymax=se_upper),width=0.2,linetype=1)+
+#   scale_fill_manual(values=c( "#F0E442", "#994F00", "#999999", "#0072B2"))
+
+#visual for fixed effects only after accounting for year 
+yrs_wo_interact<-interactionMeans(yrs_ghcount_model, factors="yrsins_fire")
+#replacing spaces in column names with underscore 
+names(yrs_wo_interact)<-str_replace_all(names(yrs_wo_interact), " ","_")
+#rename model estimates for visual
+yrs_wo_interact_viz<-yrs_wo_interact%>%
+  mutate(yrs_interact_bt_mean=exp(adjusted_mean),
+         yrs_interact_bt_upper=exp(adjusted_mean+SE_of_link),
+         yrs_interact_bt_lower=exp(adjusted_mean-SE_of_link))
+#visual
+ggplot(yrs_wo_interact_viz,aes(x=yrsins_fire,fill=yrsins_fire))+
+  geom_bar(stat = "identity",aes(y=yrs_interact_bt_mean))+
+  geom_errorbar(aes(ymin=yrs_interact_bt_lower,
+                    ymax=yrs_interact_bt_upper),width=0.2,linetype=1)+
   scale_fill_manual(values=c( "#F0E442", "#994F00", "#999999", "#0072B2"))
 
-
+#visual
 #create df with individual species abundance####
 grassh_comm_df <- grasshopperspcomp_df%>%
   full_join(watershed_key, by = "Watershed")%>%
@@ -1191,6 +1201,8 @@ check_model(ghrich_model)
 #multiple comparison-not necessary since no interaction difference
 testInteractions(ghrich_model, pairwise="FireGrzTrt", fixed="RecYear",
                  adjustment="BH")
+#comparison of fixed effect
+testInteractions(ghrich_model, pairwise="FireGrzTrt")
 #using mean estimate to create figure 
 ghrich_interact<-interactionMeans(ghrich_model)
 #replacing spaces in column names with underscore 
@@ -1209,17 +1221,30 @@ ggplot(ghrich_interact_viz,aes(RecYear, ghrich_mean, col=FireGrzTrt))+
   scale_colour_manual(values=c( "#F0E442", "#009E73"))
 
 #average across years for simplification
-ghrich_interact_bar<-ghrich_interact_viz%>%
-  group_by(FireGrzTrt)%>%
-  summarise(gh_richness=mean(ghrich_mean),
-            se_upper=mean(ghrich_upper),
-            se_lower=mean(ghrich_lower))
-ggplot(ghrich_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
-  geom_bar(stat = "identity",aes(y=gh_richness),width = 0.25)+
-  geom_errorbar(aes(ymin=se_lower,
-                    ymax=se_upper),width=0.05,linetype=1)+
+# ghrich_interact_bar<-ghrich_interact_viz%>%
+#   group_by(FireGrzTrt)%>%
+#   summarise(gh_richness=mean(ghrich_mean),
+#             se_upper=mean(ghrich_upper),
+#             se_lower=mean(ghrich_lower))
+# ggplot(ghrich_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
+#   geom_bar(stat = "identity",aes(y=gh_richness),width = 0.25)+
+#   geom_errorbar(aes(ymin=se_lower,
+#                     ymax=se_upper),width=0.05,linetype=1)+
+#   scale_fill_manual(values=c( "#F0E442", "#009E73"))
+#visual for fixed effect
+ghrich_wo_interact<-interactionMeans(ghrich_model, factors = "FireGrzTrt")
+#replacing spaces in column names with underscore 
+names(ghrich_wo_interact)<-str_replace_all(names(ghrich_wo_interact), " ","_")
+#df for visuals from model estimates
+ghrich_wo_interact_viz<-ghrich_wo_interact%>%
+  mutate(ghrich_mean=exp(adjusted_mean),
+         ghrich_upper=exp(adjusted_mean+SE_of_link),
+         ghrich_lower=exp(adjusted_mean-SE_of_link))
+ggplot(ghrich_wo_interact_viz,aes(x=FireGrzTrt,fill=FireGrzTrt))+
+  geom_bar(stat = "identity",aes(y=ghrich_mean))+
+  geom_errorbar(aes(ymin=ghrich_lower,
+                    ymax=ghrich_upper),width=0.05,linetype=1)+
   scale_fill_manual(values=c( "#F0E442", "#009E73"))
-
 #evenness model
 ghevenness_model<-lmer(Evar~FireGrzTrt*RecYear+(1|Unit),
                    data=grassh_rich_diver)
@@ -1230,6 +1255,8 @@ check_model(ghevenness_model)
 #multiple comparison-not needed
 testInteractions(ghevenness_model, pairwise="FireGrzTrt", fixed="RecYear",
                  adjustment="BH")
+#fied effects comparison
+testInteractions(ghevenness_model, pairwise="FireGrzTrt")
 #using mean estimate to create figure 
 gheven_interact<-interactionMeans(ghevenness_model)
 #replacing spaces in column names with underscore 
@@ -1248,17 +1275,30 @@ ggplot(gheven_interact_viz,aes(RecYear, ghevenness_mean, col=FireGrzTrt))+
   scale_colour_manual(values=c( "#F0E442", "#009E73"))
 
 ##average across years for simplification
-gheven_interact_bar<-gheven_interact_viz%>%
-  group_by(FireGrzTrt)%>%
-  summarise(gh_evenness=mean(ghevenness_mean),
-            se_upper=mean(gheven_upper),
-            se_lower=mean(gheven_lower))
-ggplot(gheven_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
-  geom_bar(stat = "identity",aes(y=gh_evenness),width = 0.25)+
-  geom_errorbar(aes(ymin=se_lower,
-                    ymax=se_upper),width=0.05,linetype=1)+
+# gheven_interact_bar<-gheven_interact_viz%>%
+#   group_by(FireGrzTrt)%>%
+#   summarise(gh_evenness=mean(ghevenness_mean),
+#             se_upper=mean(gheven_upper),
+#             se_lower=mean(gheven_lower))
+# ggplot(gheven_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
+#   geom_bar(stat = "identity",aes(y=gh_evenness),width = 0.25)+
+#   geom_errorbar(aes(ymin=se_lower,
+#                     ymax=se_upper),width=0.05,linetype=1)+
+#   scale_fill_manual(values=c( "#F0E442", "#009E73"))
+#visual for fixed effect
+gheven_wo_interact<-interactionMeans(ghevenness_model, factors = "FireGrzTrt")
+#replacing spaces in column names with underscore 
+names(gheven_wo_interact)<-str_replace_all(names(gheven_wo_interact), " ","_")
+#df for visuals from model estimates
+gheven_wo_interact_viz<-gheven_wo_interact%>%
+  mutate(gheven_mean=adjusted_mean,
+         gheven_upper=adjusted_mean+SE_of_link,
+         gheven_lower=adjusted_mean-SE_of_link)
+ggplot(gheven_wo_interact_viz,aes(x=FireGrzTrt,fill=FireGrzTrt))+
+  geom_bar(stat = "identity",aes(y=gheven_mean))+
+  geom_errorbar(aes(ymin=gheven_lower,
+                    ymax=gheven_upper),width=0.05,linetype=1)+
   scale_fill_manual(values=c( "#F0E442", "#009E73"))
-
 #perform permanova and calculate betadiversity###
 #create df with individual species abundance####
 grassh_permav_df <- grasshopperspcomp_df%>%
@@ -1414,7 +1454,7 @@ for(YEAR in 1:length(year_vec_gh)){
   rm(vdist_temp_gh, permanova_temp_gh, permanova_out_temp_gh, bdisp_temp_gh, bdisp_out_temp_gh)
 }
 write.csv(gh_beta_unit, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/Grasshoper_betadiver.csv")
-
+#gh_beta_unit<-read_csv("C:/Users/Joshua/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/Grasshoper_betadiver.csv")
 #model for betadiversity
 gh_beta_unit$RecYear<-as.factor(gh_beta_unit$RecYear)
 gh_beta_model<-lmer(log(distance)~FireGrzTrt*RecYear+(1|Unit),
@@ -1425,6 +1465,9 @@ check_model(gh_beta_model)
 #pairwise interaction 
 testInteractions(gh_beta_model, fixed="RecYear",
                  pairwise = "FireGrzTrt", adjustment="BH")
+#fixed effect comparison
+testInteractions(gh_beta_model, pairwise="FireGrzTrt",
+                 adjustment="BH")
 #using mean estimate from post-hoc to create figure as a comparison to raw data
 model_estimates_beta<-interactionMeans(gh_beta_model)
 #replacing spaces in column names with underscore 
@@ -1442,17 +1485,31 @@ ggplot(model_estimates_beta_viz,aes(RecYear, gh_betadiv, col=FireGrzTrt))+
                     ymax=gh_upper),width=0.1,linetype=1)+
   scale_colour_manual(values=c( "#F0E442", "#009E73"))
 #summarize with a bargraph
-ghbeta_interact_bar<-model_estimates_beta_viz%>%
-  group_by(FireGrzTrt)%>%
-  summarise(gh_betadiver=mean(gh_betadiv),
-            se_upper=mean(gh_upper),
-            se_lower=mean(gh_lower))
-ggplot(ghbeta_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
-  geom_bar(stat = "identity",aes(y=gh_betadiver),width = 0.25)+
-  geom_errorbar(aes(ymin=se_lower,
-                    ymax=se_upper),width=0.05,linetype=1)+
+# ghbeta_interact_bar<-model_estimates_beta_viz%>%
+#   group_by(FireGrzTrt)%>%
+#   summarise(gh_betadiver=mean(gh_betadiv),
+#             se_upper=mean(gh_upper),
+#             se_lower=mean(gh_lower))
+# ggplot(ghbeta_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
+#   geom_bar(stat = "identity",aes(y=gh_betadiver),width = 0.25)+
+#   geom_errorbar(aes(ymin=se_lower,
+#                     ymax=se_upper),width=0.05,linetype=1)+
+#   scale_fill_manual(values=c( "#F0E442", "#009E73"))
+#fixed effect visuals
+#using mean estimate from post-hoc to create figure 
+model_estimates_beta1<-interactionMeans(gh_beta_model, factors="FireGrzTrt")
+#replacing spaces in column names with underscore 
+names(model_estimates_beta1)<-str_replace_all(names(model_estimates_beta1), " ","_")
+#df for visuals from model estimates
+model_estimates_beta1_viz<-model_estimates_beta1%>%
+  mutate(gh_betadiv=exp(adjusted_mean),
+         gh_upper=exp(adjusted_mean+SE_of_link),
+         gh_lower=exp(adjusted_mean-SE_of_link))
+ggplot(model_estimates_beta1_viz,aes(x=FireGrzTrt,fill=FireGrzTrt))+
+  geom_bar(stat = "identity",aes(y=gh_betadiv))+
+  geom_errorbar(aes(ymin=gh_lower,
+                    ymax=gh_upper),width=0.05,linetype=1)+
   scale_fill_manual(values=c( "#F0E442", "#009E73"))
-
 #simper analysis to find what species are driving difference in composition####
 #filter data for year with difference
 Gh_sp_data_2011 <- grassh_permav_df %>%
