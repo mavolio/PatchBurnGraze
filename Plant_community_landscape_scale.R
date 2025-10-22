@@ -1,7 +1,7 @@
 #Patch-Burn Synthesis Project
 #Plant community data at the landscape scale
 #Author: Joshua Adedayo Ajowele joshuaajowele@gmail.com
-#Started: May 13, 2024 last modified:   April, 2025
+#Started: May 13, 2024 last modified:   Oct, 2025
 
 #load library
 library(tidyverse)
@@ -29,7 +29,7 @@ theme_update(axis.title.x=element_text(size=20, vjust=-0.35), axis.text.x=elemen
 ### Read in raw data
 
 #import data as dataframe
-species_comp_data<- read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/PBG_plant_comp_2008_2022.csv")
+species_comp_data<- read.csv("C:/Users/Joshua/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/PBG_plant_comp_2008_2022.csv")
 
 #Creating a key for converting cover class to abundance 
 cover_key <-data.frame(CoverClass=0:7, abundance=c(0,0.5,3,15,37.5,62.5,85,97.5))
@@ -165,6 +165,9 @@ check_model(plrich_model)
 #multiple comparison
 testInteractions(plrich_model, pairwise="FireGrzTrt", fixed="RecYear",
                  adjustment="BH")
+#fixed effect
+testInteractions(plrich_model, pairwise="FireGrzTrt",
+                 adjustment="BH")
 #using mean estimate to create figure 
 plrich_interact<-interactionMeans(plrich_model)
 #replacing spaces in column names with underscore 
@@ -193,6 +196,20 @@ ggplot(plrich_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
   geom_errorbar(aes(ymin=se_lower,
                     ymax=se_upper),width=0.05,linetype=1)+
   scale_fill_manual(values=c( "#F0E442", "#009E73"))
+#fixed effect visual accounting for covariate
+plrich_fixed<-interactionMeans(plrich_model, factors = "FireGrzTrt")
+#replacing spaces in column names with underscore 
+names(plrich_fixed)<-str_replace_all(names(plrich_fixed), " ","_")
+#df for visuals from model estimates
+plrich_fixed_viz<-plrich_fixed%>%
+  mutate(plrich_mean=exp(adjusted_mean),
+         plrich_upper=exp(adjusted_mean+SE_of_link),
+         plrich_lower=exp(adjusted_mean-SE_of_link))
+ggplot(plrich_fixed_viz,aes(x=FireGrzTrt,fill=FireGrzTrt))+
+  geom_bar(stat = "identity",aes(y=plrich_mean))+
+  geom_errorbar(aes(ymin=plrich_lower,
+                    ymax=plrich_upper),width=0.05,linetype=1)+
+  scale_fill_manual(values=c( "#F0E442", "#009E73"))
 
 #evenness model
 plevenness_model<-lmer(Evar~FireGrzTrt*RecYear+(1|Unit),
@@ -206,6 +223,9 @@ summary(plevenness_model)
 #multiple comparison
 #testInteractions(plevenness_model, pairwise="FireGrzTrt", fixed="RecYear",
 #                 adjustment="BH")
+#fixed effect comparison
+testInteractions(plevenness_model, pairwise="FireGrzTrt",
+                                 adjustment="BH")
 #using mean estimate to create figure 
 pleven_interact<-interactionMeans(plevenness_model)
 #replacing spaces in column names with underscore 
@@ -234,8 +254,21 @@ ggplot(pleven_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
   geom_errorbar(aes(ymin=se_lower,
                     ymax=se_upper),width=0.05,linetype=1)+
   scale_fill_manual(values=c( "#F0E442", "#009E73"))
-
-
+#fixed effect visual
+#using mean estimate to create figure 
+pleven_fixed<-interactionMeans(plevenness_model, factors = "FireGrzTrt")
+#replacing spaces in column names with underscore 
+names(pleven_fixed)<-str_replace_all(names(pleven_fixed), " ","_")
+#df for visuals from model estimates
+pleven_fixed_viz<-pleven_fixed%>%
+  mutate(plevenness_mean=adjusted_mean,
+         pleven_upper=adjusted_mean+SE_of_link,
+         pleven_lower=adjusted_mean-SE_of_link)
+ggplot(pleven_fixed_viz,aes(x=FireGrzTrt,fill=FireGrzTrt))+
+  geom_bar(stat = "identity",aes(y=plevenness_mean))+
+  geom_errorbar(aes(ymin=pleven_lower,
+                    ymax=pleven_upper),width=0.05,linetype=1)+
+  scale_fill_manual(values=c( "#F0E442", "#009E73"))
 #community composition####
 sp_comp_comm<-species_comp%>%
   left_join(watershed_key,by="Watershed")%>%
@@ -377,8 +410,8 @@ for(YEAR in 1:length(year_vec_pl)){
   
   rm(vdist_temp_pl_unit, permanova_temp_pl_unit, permanova_out_temp_pl_unit, bdisp_temp_pl_unit, bdisp_out_temp_pl_unit)
 }
-write.csv(pl_beta_unit, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/plant_betadiver_sep_unit.csv")
-
+#write.csv(pl_beta_unit, "C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/plant_betadiver_sep_unit.csv")
+#pl_beta_unit<-read_csv("C:/Users/joshua/OneDrive - UNCG/UNCG PHD/Writing/2024_PBG_figures/plant_betadiver_sep_unit.csv")
 #model for betadiversity
 pl_beta_unit$RecYear<-as.factor(pl_beta_unit$RecYear)
 pl_beta_model<-lmer(log(distance)~FireGrzTrt*RecYear+(1|Unit),
@@ -390,6 +423,8 @@ check_model(pl_beta_model)
 #pairwise interaction 
 #testInteractions(pl_beta_model, fixed="RecYear",
 #                 pairwise = "FireGrzTrt", adjustment="BH")
+#fixed effect comparison
+testInteractions(pl_beta_model, pairwise="FireGrzTrt",adjustment="BH")
 #using mean estimate from post-hoc to create figure as a comparison to raw data
 model_estimates_beta<-interactionMeans(pl_beta_model)
 #replacing spaces in column names with underscore 
@@ -407,17 +442,30 @@ ggplot(model_estimates_beta_viz,aes(RecYear, pl_betadiv, col=FireGrzTrt))+
                     ymax=pl_upper),width=0.1,linetype=1)+
   scale_colour_manual(values=c( "#F0E442", "#009E73"))
 #summarize with a bargraph
-plbeta_interact_bar<-model_estimates_beta_viz%>%
-  group_by(FireGrzTrt)%>%
-  summarise(pl_betadiver=mean(pl_betadiv),
-            se_upper=mean(pl_upper),
-            se_lower=mean(pl_lower))
-ggplot(plbeta_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
-  geom_bar(stat = "identity",aes(y=pl_betadiver),width = 0.25)+
-  geom_errorbar(aes(ymin=se_lower,
-                    ymax=se_upper),width=0.05,linetype=1)+
+# plbeta_interact_bar<-model_estimates_beta_viz%>%
+#   group_by(FireGrzTrt)%>%
+#   summarise(pl_betadiver=mean(pl_betadiv),
+#             se_upper=mean(pl_upper),
+#             se_lower=mean(pl_lower))
+# ggplot(plbeta_interact_bar,aes(x=FireGrzTrt,fill=FireGrzTrt))+
+#   geom_bar(stat = "identity",aes(y=pl_betadiver),width = 0.25)+
+#   geom_errorbar(aes(ymin=se_lower,
+#                     ymax=se_upper),width=0.05,linetype=1)+
+#   scale_fill_manual(values=c( "#F0E442", "#009E73"))
+# #fixed effect visual
+model_fixed_beta<-interactionMeans(pl_beta_model, factors="FireGrzTrt")
+#replacing spaces in column names with underscore 
+names(model_fixed_beta)<-str_replace_all(names(model_fixed_beta), " ","_")
+#df for visuals from model estimates
+model_fixed_beta_viz<-model_fixed_beta%>%
+  mutate(pl_betadiv=exp(adjusted_mean),
+         pl_upper=exp(adjusted_mean+SE_of_link),
+         pl_lower=exp(adjusted_mean-SE_of_link))
+ggplot(model_fixed_beta_viz,aes(x=FireGrzTrt,fill=FireGrzTrt))+
+  geom_bar(stat = "identity",aes(y=pl_betadiv))+
+  geom_errorbar(aes(ymin=pl_lower,
+                    ymax=pl_upper),width=0.05,linetype=1)+
   scale_fill_manual(values=c( "#F0E442", "#009E73"))
-
 #simper analysis to determine species contributing 80% of difference in composition####
 #2021
 pl_sp_data_2021 <- sp_comp_comm %>%
