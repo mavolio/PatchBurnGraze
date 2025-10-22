@@ -2,7 +2,7 @@
 ####Plant Biomass from diskpasture meter
 ###Author: Joshua Ajowele
 ###collaborators: PBG synthesis group
-###last update:Feb 8 2025
+###last update:Oct 22 2025
 
 #packages 
 library(tidyverse)
@@ -33,7 +33,7 @@ theme_update(axis.title.x=element_text(size=20, vjust=-0.35), axis.text.x=elemen
 
 
 #import dataset as tibble
-biomass_diskpasture<- read_csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/Plant_Biomass_11_17_PBG031.csv")
+biomass_diskpasture<- read_csv("C:/Users/Joshua/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/Plant_Biomass_11_17_PBG031.csv")
 #modifying the data set by adding new columns
 biomass_reg <- biomass_diskpasture%>%
   #creating row number in order to visualise outliers in the graph
@@ -78,7 +78,7 @@ hist(sqrt(biomass_reg$total_biomass))
 
 ##import dataset as tibble
 #estimate biomass from regression equation
-Diskpast_data<- read_csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/Plant_Biomass_10_20_PBG032.csv")%>%
+Diskpast_data<- read_csv("C:/Users/Joshua/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/Plant_Biomass_10_20_PBG032.csv")%>%
   mutate(biom= 9.99+(0.7965*(Diskht)))%>%
   mutate(biomass= biom*biom)%>%
   rename(RecYear= Recyear)%>%
@@ -1680,6 +1680,7 @@ check_model(yrs_biomass_model)
 anova(yrs_biomass_model)
 qqnorm(resid(yrs_biomass_model))
 check_normality(yrs_biomass_model)
+
 #multiple comparison
 testInteractions(yrs_biomass_model, pairwise="yrsins_fire", fixed="RecYear",
                  adjustment="BH")
@@ -1711,17 +1712,31 @@ ggplot(yrs_interact_viz,aes(as.numeric(RecYear),col=yrsins_fire))+
 
 #average across years for simplification
 
-yrs_interact_bar<-yrs_interact_viz%>%
-  group_by(yrsins_fire)%>%
-  summarise(biomass_mean=mean(yrs_interact_bt_mean, na.rm=T),
-            se_upper=mean(yrs_interact_bt_upper,na.rm=T),
-            se_lower=mean(yrs_interact_bt_lower,na.rm=T))
-ggplot(yrs_interact_bar,aes(x=yrsins_fire,fill=yrsins_fire))+
-  geom_bar(stat = "identity",aes(y=biomass_mean),width = 0.5)+
-  geom_errorbar(aes(ymin=se_lower,
-                    ymax=se_upper),width=0.2,linetype=1)+
-  scale_fill_manual(values=c( "#F0E442", "#994F00", "#999999", "#0072B2"))
+# yrs_interact_bar<-yrs_interact_viz%>%
+#   group_by(yrsins_fire)%>%
+#   summarise(biomass_mean=mean(yrs_interact_bt_mean, na.rm=T),
+#             se_upper=mean(yrs_interact_bt_upper,na.rm=T),
+#             se_lower=mean(yrs_interact_bt_lower,na.rm=T))
+# ggplot(yrs_interact_bar,aes(x=yrsins_fire,fill=yrsins_fire))+
+#   geom_bar(stat = "identity",aes(y=biomass_mean),width = 0.5)+
+#   geom_errorbar(aes(ymin=se_lower,
+#                     ymax=se_upper),width=0.2,linetype=1)+
+#   scale_fill_manual(values=c( "#F0E442", "#994F00", "#999999", "#0072B2"))
 
+#figure for just year since fire after accounting for year covariate
+yrs_wo_interact<-interactionMeans(yrs_biomass_model, factors = "yrsins_fire")
+names(yrs_wo_interact)<-str_replace_all(names(yrs_wo_interact), " ","_")
+#df for visuals from model estimates
+yrs_wo_interact_viz<-yrs_wo_interact%>%
+  mutate(yrs_interact_bt_mean=exp(adjusted_mean),
+         yrs_interact_bt_upper=exp(adjusted_mean+SE_of_link),
+         yrs_interact_bt_lower=exp(adjusted_mean-SE_of_link))
+#visual
+ggplot(yrs_wo_interact_viz,aes(x=yrsins_fire,fill=yrsins_fire))+
+  geom_bar(stat = "identity",aes(y=yrs_interact_bt_mean))+
+  geom_errorbar(aes(ymin=yrs_interact_bt_lower,
+                    ymax=yrs_interact_bt_upper),width=0.2,linetype=1)+
+  scale_fill_manual(values=c( "#F0E442", "#994F00", "#999999", "#0072B2"))
 #load in precipitation data####
 precip_data<-read.csv("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/Precipitation_1982_2023.csv")%>%
   #separate date into components
