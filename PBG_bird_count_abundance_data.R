@@ -35,11 +35,11 @@ theme_update(axis.title.x=element_text(size=20, vjust=-0.35), axis.text.x=elemen
              legend.title=element_text(size=20), legend.text=element_text(size=20))
 
 #import bird data####
-PBG_bird_data_raw<-read_excel("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/PBG_bird_data_Alice_edited/Qy_ExportPBGSurveyData_Mar2023.xlsx")
-PBG_bird_C1A<-read_excel("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/PBG_bird_data_Alice_edited/Qy_ExportPBGSurveyData_C1A_Apr2023.xlsx")
+PBG_bird_data_raw<-read_excel("C:/Users/Joshua/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/PBG_bird_data_Alice_edited/Qy_ExportPBGSurveyData_Mar2023.xlsx")
+PBG_bird_C1A<-read_excel("C:/Users/Joshua/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/PBG_bird_data_Alice_edited/Qy_ExportPBGSurveyData_C1A_Apr2023.xlsx")
 unique(PBG_bird_C1A$Year)
 #2019 data is missing for C1A-Not collected
-PBG_bird_class<-read_excel("C:/Users/JAAJOWELE/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/PBG_bird_data_Alice_edited/KNZSpecies.xlsx")
+PBG_bird_class<-read_excel("C:/Users/Joshua/OneDrive - UNCG/UNCG PHD/PhD Wyoming_One Drive/PHD Wyoming/Thesis/PBG synthesis/PBG_bird_data_Alice_edited/KNZSpecies.xlsx")
 
 #merge PBG and ABG data and remove unwanted rows####
 PBG_bird_merge<-PBG_bird_data_raw%>%
@@ -159,41 +159,33 @@ check_model(yrsincef_bird_model_lm)
 qqnorm(resid(yrsincef_bird_model_lm))
 #using lm or lmer produces the same F value and P value
 
-
-#visuals for treatment without interaction
-yrsincef_bird_viz_yr<-yrsincef_bird_anlys%>%
-  group_by(yrsince_fire)%>%
-  summarise(total=mean(tot_max, na.rm=T),
-            se_total=SE_function(tot_max))
-
-ggplot(yrsincef_bird_viz_yr, aes(yrsince_fire, total, fill=yrsince_fire))+
-  geom_col(width=.5) +
-  geom_errorbar(aes(ymax=total+se_total, ymin=total-se_total),width=0.1)+
+#multicomparison of fixed effect while accounting for year
+testInteractions(yrsincef_bird_model_lm, pairwise = "yrsince_fire")
+# #fixed effect visual
+model_fixed_count<-interactionMeans(yrsincef_bird_model_lm, factors="yrsince_fire")
+#replacing spaces in column names with underscore 
+names(model_fixed_count)<-str_replace_all(names(model_fixed_count), " ","_")
+#df for visuals from model estimates
+model_fixed_count_viz<-model_fixed_count%>%
+  mutate(bird_count=exp(adjusted_mean),
+         count_upper=exp(adjusted_mean+std._error),
+         count_lower=exp(adjusted_mean-std._error))
+ggplot(model_fixed_count_viz,aes(x=yrsince_fire,fill=yrsince_fire))+
+  geom_bar(stat = "identity",aes(y=bird_count))+
+  geom_errorbar(aes(ymin=count_lower,
+                    ymax=count_upper),width=0.2,linetype=1)+
   scale_fill_manual(values=c("#F0E442", "#994F00", "#999999", "#0072B2"))+
   ylab("Bird count")
 
-#year and trt significant. needs multicomparison
+
 #use the ghlt for multicomparison
 #install.packages("multcomp")
 library(multcomp)
 yrsincefire_comp<- glht(yrsincef_bird_model_lm, linfct=mcp(yrsince_fire="Tukey"))
-print(summary(yrsincefire_comp))
+print(summary(yrsincefire_comp))#same outcome as with testinteraction!
 #ALL P-ADJUSTED 
 
-#visuals
-yrsincef_bird_viz_yr<-yrsincef_bird_anlys%>%
-  group_by(yrsince_fire, Year)%>%
-  summarise(total=mean(tot_max, na.rm=T),
-            se_total=SE_function(tot_max))%>%
-  group_by(yrsince_fire)%>%
-  summarise(total=mean(total, na.rm=T),
-            se_total=mean(se_total, na.rm=T))
 
-ggplot(yrsincef_bird_viz_yr, aes(yrsince_fire, total, fill=yrsince_fire))+
-  geom_col(width=.5) +
-  geom_errorbar(aes(ymax=total+se_total, ymin=total-se_total),width=0.1)+
-  scale_fill_manual(values=c( "#F0E442", "#994F00", "#999999", "#0072B2"))+
-  ylab("Bird count")
 
 #community metrics with all species####
 yrsin_bird_comm<-Yrs_since_fire_bird%>%
@@ -242,6 +234,22 @@ check_model(bird_rich_model)
 yrsincefire_rich<- glht(bird_rich_model, linfct=mcp(yrsince_fire="Tukey"))
 print(summary(yrsincefire_rich))
 
+#visual
+model_fixed_rich<-interactionMeans(bird_rich_model, factors="yrsince_fire")
+#replacing spaces in column names with underscore 
+names(model_fixed_rich)<-str_replace_all(names(model_fixed_rich), " ","_")
+#df for visuals from model estimates
+model_fixed_rich_viz<-model_fixed_rich%>%
+  mutate(bird_rich=exp(adjusted_mean),
+         rich_upper=exp(adjusted_mean+SE_of_link),
+         rich_lower=exp(adjusted_mean-SE_of_link))
+ggplot(model_fixed_rich_viz,aes(x=yrsince_fire,fill=yrsince_fire))+
+  geom_bar(stat = "identity",aes(y=bird_rich))+
+  geom_errorbar(aes(ymin=rich_lower,
+                    ymax=rich_upper),width=0.05,linetype=1)+
+  scale_fill_manual(values=c("#F0E442", "#994F00", "#999999", "#0072B2"))+
+  ylab("Bird rich")
+
 #Evenness
 bird_evar_model<-lmer(Evar~yrsince_fire+Year+(1|Transect),
                       data=bird_rich_diver)
@@ -249,65 +257,82 @@ anova(bird_evar_model)
 summary(bird_evar_model)
 qqnorm(resid(bird_evar_model))
 check_model(bird_evar_model)
+#visual
+model_fixed_even<-interactionMeans(bird_evar_model, factors="yrsince_fire")
+#replacing spaces in column names with underscore 
+names(model_fixed_even)<-str_replace_all(names(model_fixed_even), " ","_")
+#df for visuals from model estimates
+model_fixed_even_viz<-model_fixed_even%>%
+  mutate(bird_even=adjusted_mean,
+         even_upper=adjusted_mean+SE_of_link,
+         even_lower=adjusted_mean-SE_of_link)
+ggplot(model_fixed_even_viz,aes(x=yrsince_fire,fill=yrsince_fire))+
+  geom_bar(stat = "identity",aes(y=bird_even))+
+  geom_errorbar(aes(ymin=even_lower,
+                    ymax=even_upper),width=0.05,linetype=1)+
+  scale_fill_manual(values=c("#F0E442", "#994F00", "#999999", "#0072B2"))+
+  ylab("Bird evenness")
+
+
 #Visual
 #dataframe for geompoint
-bird_rich_diver_viz<-bird_rich_diver%>%
-  group_by(Year, yrsince_fire)%>%
-  summarise(rich=mean(richness,na.rm=T),
-            rich_se=SE_function(richness),
-            diver=mean(Shannon,na.rm=T),
-            diver_se=SE_function(Shannon),
-            evar=mean(Evar,na.rm=T),
-            evar_se=SE_function(Evar))
-#dataframe for bargraph
-bird_rich_diver_bar<-bird_rich_diver%>%
-  group_by(Year,yrsince_fire)%>%
-  summarise_at(vars(Shannon:Evar),mean,na.rm=T)%>%
-  mutate(SE_rich=SE_function(richness),
-            SE_evar=SE_function(Evar))%>%
-group_by(yrsince_fire)%>%
-  summarise(rich=mean(richness,na.rm=T),
-            rich_se=mean(SE_rich),
-            evar=mean(Evar,na.rm=T),
-            evar_se=mean(SE_evar))
- 
-#richness
-#geompoint 
-ggplot(bird_rich_diver_viz, aes(Year, rich, col = yrsince_fire,
-                                fill=yrsince_fire, linetype=yrsince_fire)) +
-  geom_point(size=2, col="black") +
-  geom_path(aes(as.numeric(Year))) +
-  geom_errorbar(aes(ymin = rich - rich_se, 
-                    ymax = rich + rich_se),
-                width=0.1, col="black", linetype=1) +
-  scale_colour_manual(values=c( "#F0E442", "#994F00", "#999999", "#0072B2"))+
-  ylab("Bird richness")
-#bargraph
-ggplot(bird_rich_diver_bar, aes(yrsince_fire, rich, fill=yrsince_fire))+
-  geom_col(width=.5) +
-  geom_errorbar(aes(ymin = rich - rich_se, 
-                    ymax = rich + rich_se),width=0.1)+
-  scale_fill_manual(values=c("#F0E442", "#994F00", "#999999", "#0072B2"))+
-  ylab("Bird richness")
-
-#Evar
-#geompoint 
-ggplot(bird_rich_diver_viz, aes(Year, evar, col = yrsince_fire,
-                                fill=yrsince_fire, linetype=yrsince_fire)) +
-  geom_point(size=2, col="black") +
-  geom_path(aes(as.numeric(Year))) +
-  geom_errorbar(aes(ymin = evar - evar_se, 
-                    ymax = evar + evar_se),
-                width=0.1, col="black", linetype=1) +
-  scale_colour_manual(values=c( "#F0E442", "#994F00", "#999999", "#0072B2"))+
-  ylab("Bird evenness")
-#bargraph
-ggplot(bird_rich_diver_bar, aes(yrsince_fire, evar, fill=yrsince_fire))+
-  geom_col(width=.5) +
-  geom_errorbar(aes(ymin = evar - evar_se, 
-                    ymax = evar + evar_se),width=0.1)+
-  scale_fill_manual(values=c("#F0E442", "#994F00", "#999999", "#0072B2"))+
-  ylab("Bird evenness")
+# bird_rich_diver_viz<-bird_rich_diver%>%
+#   group_by(Year, yrsince_fire)%>%
+#   summarise(rich=mean(richness,na.rm=T),
+#             rich_se=SE_function(richness),
+#             diver=mean(Shannon,na.rm=T),
+#             diver_se=SE_function(Shannon),
+#             evar=mean(Evar,na.rm=T),
+#             evar_se=SE_function(Evar))
+# #dataframe for bargraph
+# bird_rich_diver_bar<-bird_rich_diver%>%
+#   group_by(Year,yrsince_fire)%>%
+#   summarise_at(vars(Shannon:Evar),mean,na.rm=T)%>%
+#   mutate(SE_rich=SE_function(richness),
+#             SE_evar=SE_function(Evar))%>%
+# group_by(yrsince_fire)%>%
+#   summarise(rich=mean(richness,na.rm=T),
+#             rich_se=mean(SE_rich),
+#             evar=mean(Evar,na.rm=T),
+#             evar_se=mean(SE_evar))
+#  
+# #richness
+# #geompoint 
+# ggplot(bird_rich_diver_viz, aes(Year, rich, col = yrsince_fire,
+#                                 fill=yrsince_fire, linetype=yrsince_fire)) +
+#   geom_point(size=2, col="black") +
+#   geom_path(aes(as.numeric(Year))) +
+#   geom_errorbar(aes(ymin = rich - rich_se, 
+#                     ymax = rich + rich_se),
+#                 width=0.1, col="black", linetype=1) +
+#   scale_colour_manual(values=c( "#F0E442", "#994F00", "#999999", "#0072B2"))+
+#   ylab("Bird richness")
+# #bargraph
+# ggplot(bird_rich_diver_bar, aes(yrsince_fire, rich, fill=yrsince_fire))+
+#   geom_col(width=.5) +
+#   geom_errorbar(aes(ymin = rich - rich_se, 
+#                     ymax = rich + rich_se),width=0.1)+
+#   scale_fill_manual(values=c("#F0E442", "#994F00", "#999999", "#0072B2"))+
+#   ylab("Bird richness")
+# 
+# #Evar
+# #geompoint 
+# ggplot(bird_rich_diver_viz, aes(Year, evar, col = yrsince_fire,
+#                                 fill=yrsince_fire, linetype=yrsince_fire)) +
+#   geom_point(size=2, col="black") +
+#   geom_path(aes(as.numeric(Year))) +
+#   geom_errorbar(aes(ymin = evar - evar_se, 
+#                     ymax = evar + evar_se),
+#                 width=0.1, col="black", linetype=1) +
+#   scale_colour_manual(values=c( "#F0E442", "#994F00", "#999999", "#0072B2"))+
+#   ylab("Bird evenness")
+# #bargraph
+# ggplot(bird_rich_diver_bar, aes(yrsince_fire, evar, fill=yrsince_fire))+
+#   geom_col(width=.5) +
+#   geom_errorbar(aes(ymin = evar - evar_se, 
+#                     ymax = evar + evar_se),width=0.1)+
+#   scale_fill_manual(values=c("#F0E442", "#994F00", "#999999", "#0072B2"))+
+#   ylab("Bird evenness")
 
 #grassland bird species
 #total grass bird count for year since fire
